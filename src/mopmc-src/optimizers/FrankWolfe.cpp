@@ -3,7 +3,8 @@
 //
 
 #include "FrankWolfe.h"
-#include "../convex-functions/auxiliary/Lincom.h"
+#include "../auxiliary/Lincom.h"
+#include "../auxiliary/Sorting.h"
 #include <cmath>
 #include <iostream>
 
@@ -59,7 +60,7 @@ namespace mopmc::optimization::optimizers {
                 }
                 case AWAY_STEP: {
                     updateWithForwardOrAwayStep();
-                    std::cout<< "xNew: " << xNew << "\n";
+                    //std::cout<< "xNew: " << xNew << "\n";
                     break;
                 }
                 case BLENDED: {
@@ -96,7 +97,7 @@ namespace mopmc::optimization::optimizers {
                 }
                 case SIMPLEX_GD: {
                     updateWithSimplexGradientDescent(Vertices);
-                    std::cout<< "xNew: " << xNew << "\n";
+                    //std::cout<< "xNew: " << xNew << "\n";
                     break;
                 }
             }
@@ -143,65 +144,71 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     void FrankWolfe<V>::updateWithSimplexGradientDescent(const std::vector<Vector<V>> &Vertices) {
-        uint64_t n = activeSet.size();
-        Vector<V> dAlphaRaw = Vector<V>::Zero(n);
-        //std::cout << "actionSet: {";
-        for (auto i: activeSet) {
-            dAlphaRaw(i) += dXCurrent.dot(Vertices[i]);
-            //std::cout << i;
+        Vector<V> dAlpha = Vector<V>::Zero(size);
+        for (int64_t i = 0; i < size; ++i) {
+            dAlpha(i) += dXCurrent.dot(Vertices[i]);
         }
-        //std::cout <<"}\n";
-        //std::cout << "dAlphaRaw:" << dAlphaRaw <<"\n";
-        Vector<V> dAlpha = dAlphaRaw - (dAlphaRaw.sum() / this->size) * dAlphaRaw;
-        //std::cout << "dAlpha:" << dAlpha <<"\n";
-        if (dAlpha.isZero()) {
-            const auto ind_ptr = activeSet.begin();
-            activeSet.clear();
-            activeSet.insert(*ind_ptr);
-            alpha.setZero();
-            alpha(*ind_ptr) = static_cast<V>(1.);
-            xNewEx = Vertices[*ind_ptr];
+        auto valueIndices = mopmc::optimization::auxiliary::Sorting<V>::argsort(dAlpha, mopmc::optimization::auxiliary::SORTING_DIRECTION::ASCENT);
+        Eigen::ArrayXd dAlphaAry = dAlpha.array();
+        Eigen::ArrayXd dAlphaAryTmp = dAlphaAry;
+        int64_t pivot, nNullVertices = 0;
+        for (pivot = 0; pivot < size; ++pivot) {
+            dAlphaAryTmp = dAlpha.array() - dAlpha(valueIndices[pivot]);
+            for (int64_t j = pivot; j < size; ++j) {
+                if (!activeSet.count(valueIndices[j])) {
+                    dAlphaAryTmp(valueIndices[j]) = 0.;
+                    nNullVertices += 1;
+                }
+            }
+            if (dAlphaAryTmp.sum() <= 0) {
+                break;
+            }
+        }
+        if (pivot == 0 || pivot == size) {
+            dAlpha.setZero();
+            return;
+        }
+        dAlphaAryTmp -= (dAlphaAryTmp.sum() / (size - nNullVertices));
+        for (int64_t j = pivot; j < size; ++j) {
+            dAlphaAryTmp = static_cast<V>(0.);
+        }
+        dAlpha = dAlphaAryTmp.matrix();
+        V lambda = std::numeric_limits<V>::max();
+        uint64_t ind = size;
+        for (uint64_t i = 0; i < size; ++i) {
+            if (dAlpha(i) > 0.) {
+                if (alpha(i) / dAlpha(i) < lambda) {
+                    lambda = alpha(i) / dAlpha(i);
+                    ind = i;
+                }
+            }
+        }
+        if (ind == size) {
+            std::cout << "alpha: " << alpha << "\n";
+            std::cout << "dAlpha: " << dAlpha << "\n";
+        }
+        assert(ind != size);
+        xNewEx = xCurrent;
+        for (uint64_t i = 0; i < size; ++i) {
+            xNewEx -= (lambda * dAlpha(i)) * Vertices[i];
+        }
+        if (this->fn->value(xNewEx) <= this->fn->value(xCurrent)) {
             xNew = xNewEx;
+            gamma = 1.0;
         } else {
-            V e = 0.;
-            uint64_t indMax = n;
-            for (auto i: activeSet) {
-                if (dAlpha(i) > 0) {
-                    if (alpha(i) / dAlpha(i) < e) {
-                        e = alpha(i) / dAlpha(i);
-                        indMax = i;
-                    }
-                }
-            }
-            xNewEx = xCurrent;
-            for (auto i: activeSet) {
-                xNewEx -= e * dAlpha(i) * Vertices[i];
-            }
-            if (this->fn->value(xCurrent) < this->fn->value(xNewEx)) {
-                xNew = xNewEx;
-                activeSet.erase(indMax);
-                gamma = 1.0;
-            } else {
-                gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewEx, 1.0);
-                xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewEx;
-            }
-            for (auto i : activeSet) {
-                alpha(i) = (1 - gamma) * alpha(i) + gamma * (alpha(i) - e * dAlpha(i));
-            }
-            /*
-            for (uint_fast64_t i = 0; i < this->size; ++i) {
-                if (activeSet.count(i)) {
-                    alpha(i) = (1 - gamma) * alpha(i) + gamma * (alpha(i) - e * cProj(i));
-                } else {
-                    alpha(i) = 0. ;
-                }
-            }
-            const V p = alpha.sum();
-            for (auto i: activeSet) {
-                alpha(i) /= p;
-            }
-             */
+            gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewEx, 1.0);
+            xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewEx;
         }
+        alpha -= lambda * dAlpha;
+        for (uint64_t i = 0; i < size; ++i) {
+            if (dAlpha(i) < 0.) {
+                activeSet.insert(i);
+            }
+        }
+        if (gamma == 1.0) {
+            activeSet.erase(ind);
+        }
+        assert(alpha.sum() > 0.);
     }
 
     template<typename V>

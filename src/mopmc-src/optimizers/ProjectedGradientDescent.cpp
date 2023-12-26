@@ -3,7 +3,7 @@
 //
 
 #include "ProjectedGradientDescent.h"
-#include "../convex-functions/auxiliary/Lincom.h"
+#include "../auxiliary/Lincom.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -95,7 +95,7 @@ namespace mopmc::optimization::optimizers {
     Vector<V> ProjectedGradientDescent<V>::argminUnitSimplexProjection(Vector<V> &iniPoint,
                                                                        const std::vector<Vector<V>> &Phi) {
 
-        mopmc::optimization::convex_functions::auxiliary::LinearCombination<V> lincom(this->fn, Phi);
+        mopmc::optimization::auxiliary::LinearCombination<V> lincom(this->fn, Phi);
 
         uint64_t maxIter = 1e5;
         uint64_t k = Phi.size();
@@ -152,7 +152,8 @@ namespace mopmc::optimization::optimizers {
     Vector<V> ProjectedGradientDescent<V>::projectToUnitSimplex(Vector<V> &x) {
         assert(x.size() > 0);
         uint64_t m = x.size();
-        std::vector<uint64_t> ids = argsort(x);
+        //std::vector<uint64_t> ids = argsort(x);
+        std::vector<uint64_t> ids = mopmc::optimization::auxiliary::Sorting<V>::argsort(x, mopmc::optimization::auxiliary::SORTING_DIRECTION::DECENT);
         V tmpsum = static_cast<V>(0.), tmax;
         bool bget = false;
         for (uint_fast64_t i = 0; i < m - 1; ++i) {

@@ -5,11 +5,12 @@
 #ifndef MOPMC_PROJECTEDGRADIENTDESCENT_H
 #define MOPMC_PROJECTEDGRADIENTDESCENT_H
 
-#include <vector>
-#include <Eigen/Dense>
-#include <memory>
+#include "../auxiliary/Sorting.h"
 #include "../convex-functions/BaseConvexFunction.h"
 #include "BaseOptimizer.h"
+#include <Eigen/Dense>
+#include <memory>
+#include <vector>
 
 namespace mopmc::optimization::optimizers{
 
@@ -26,10 +27,9 @@ namespace mopmc::optimization::optimizers{
     class ProjectedGradientDescent : public BaseOptimizer<V>{
     public:
 
-        explicit ProjectedGradientDescent(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
+        //explicit ProjectedGradientDescent(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
 
         ProjectedGradientDescent(ProjectionType type, mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
-
 
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
 

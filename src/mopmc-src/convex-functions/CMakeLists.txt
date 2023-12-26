@@ -1,5 +1,4 @@
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
-add_subdirectory(auxiliary)
 
 list(
         APPEND Sources

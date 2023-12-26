@@ -5,16 +5,14 @@
 #ifndef MOPMC_LINCOM_H
 #define MOPMC_LINCOM_H
 
-#include <memory>
+#include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>
-#include "../BaseConvexFunction.h"
+#include <memory>
 
-namespace mopmc::optimization::convex_functions::auxiliary {
+namespace mopmc::optimization::auxiliary {
 
     template<typename V>
     using Vector =  Eigen::Matrix<V, Eigen::Dynamic, 1>;
-    template<typename V>
-    using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V>
     class LinearCombination {

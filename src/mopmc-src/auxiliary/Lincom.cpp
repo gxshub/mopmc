@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Lincom.h"
 
-namespace mopmc::optimization::convex_functions::auxiliary {
+namespace mopmc::optimization::auxiliary {
 
     template<typename V>
     LinearCombination<V>::LinearCombination(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
