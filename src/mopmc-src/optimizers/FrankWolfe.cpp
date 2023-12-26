@@ -151,9 +151,10 @@ namespace mopmc::optimization::optimizers {
         auto valueIndices = mopmc::optimization::auxiliary::Sorting<V>::argsort(dAlpha, mopmc::optimization::auxiliary::SORTING_DIRECTION::ASCENT);
         Eigen::ArrayXd dAlphaAry = dAlpha.array();
         Eigen::ArrayXd dAlphaAryTmp = dAlphaAry;
-        int64_t pivot, nNullVertices = 0;
+        int64_t pivot, nNullVertices;
         for (pivot = 0; pivot < size; ++pivot) {
             dAlphaAryTmp = dAlpha.array() - dAlpha(valueIndices[pivot]);
+            nNullVertices = 0;
             for (int64_t j = pivot; j < size; ++j) {
                 if (!activeSet.count(valueIndices[j])) {
                     dAlphaAryTmp(valueIndices[j]) = 0.;
@@ -164,13 +165,13 @@ namespace mopmc::optimization::optimizers {
                 break;
             }
         }
-        if (pivot == 0 || pivot == size) {
+        if (pivot == 0) {
             dAlpha.setZero();
             return;
         }
-        dAlphaAryTmp -= (dAlphaAryTmp.sum() / (size - nNullVertices));
-        for (int64_t j = pivot; j < size; ++j) {
-            dAlphaAryTmp = static_cast<V>(0.);
+        const V c = dAlphaAryTmp.sum() / (size - nNullVertices);
+        for (int64_t i = 0; i < size; ++i) {
+            dAlphaAryTmp(i) -= c;
         }
         dAlpha = dAlphaAryTmp.matrix();
         V lambda = std::numeric_limits<V>::max();
@@ -183,32 +184,30 @@ namespace mopmc::optimization::optimizers {
                 }
             }
         }
-        if (ind == size) {
-            std::cout << "alpha: " << alpha << "\n";
-            std::cout << "dAlpha: " << dAlpha << "\n";
-        }
         assert(ind != size);
         xNewEx = xCurrent;
         for (uint64_t i = 0; i < size; ++i) {
             xNewEx -= (lambda * dAlpha(i)) * Vertices[i];
         }
-        if (this->fn->value(xNewEx) <= this->fn->value(xCurrent)) {
+        V chi = this->fn->value(xCurrent) - this->fn->value(xNewEx);
+        gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewEx, 1.0);
+        xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewEx;
+        if (this->fn->value(xCurrent) - this->fn->value(xNew) < chi / 0.75) {
             xNew = xNewEx;
             gamma = 1.0;
-        } else {
-            gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewEx, 1.0);
-            xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewEx;
         }
-        alpha -= lambda * dAlpha;
+        alpha -= (gamma * lambda) * dAlpha;
         for (uint64_t i = 0; i < size; ++i) {
             if (dAlpha(i) < 0.) {
                 activeSet.insert(i);
             }
         }
+        assert(alpha.sum() > 0.);
         if (gamma == 1.0) {
             activeSet.erase(ind);
+            alpha(ind) = 0.;
+            alpha /= alpha.sum();
         }
-        assert(alpha.sum() > 0.);
     }
 
     template<typename V>

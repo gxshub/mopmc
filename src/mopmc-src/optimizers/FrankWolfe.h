@@ -21,6 +21,8 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
+    template<typename V>
+    using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     enum FWOption {
         SIMPLEX_GD,
