@@ -6,6 +6,8 @@ list(
         "${dir}/Sorting.h"
         "${dir}/Lincom.cpp"
         "${dir}/Lincom.h"
+        "${dir}/Trigonometry.cpp"
+        "${dir}/Trigonometry.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

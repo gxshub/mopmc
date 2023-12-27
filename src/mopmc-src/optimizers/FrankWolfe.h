@@ -46,25 +46,20 @@ namespace mopmc::optimization::optimizers {
         FWOption fwOption{};
         Vector<V> alpha;
         std::set<uint64_t> activeSet;
-        //bool doLineSearch{true};
 
     private:
         Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
-        void updateWithSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);
-        void updateWithForwardOrAwayStep();
-        void computeForwardStepIndexAndVector(const std::vector<Vector<V>> &Vertices);
-        void computeAwayStepIndexAndVector(const std::vector<Vector<V>> &Vertices);
-        void initialize(const std::vector<Vector<V>> &Vertices);
+        void initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale);
+        void simplexGradientDecentUpdate(const std::vector<Vector<V>> &Vertices);
+        void forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps,
+                                     uint64_t &awyInd, Vector<V> &awyVec, V &awyEps,
+                                     V &gamma, V &gammaMax, bool &isFwd);
+        void checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps);
+        void checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps);
 
-        const V tolerance{1.e-8}, toleranceCosine = std::cos(90.01 / 180. * M_PI);
-        const V scale1{0.5}, scale2{0.5};
         int64_t dimension{}, size{};
-        Vector<V> xCurrent, xNew, xNewEx, dXCurrent;
-        const uint64_t maxIter = 1e2;
-        V gamma, gammaMax, epsFwd, epsAwy, stepSize, delta;
-        uint64_t fwdInd{}, awyInd{};
-        Vector<V> fwdVec, awyVec;
-        bool isFwd{};
+        Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
+
     };
 }// namespace mopmc::optimization::optimizers
 

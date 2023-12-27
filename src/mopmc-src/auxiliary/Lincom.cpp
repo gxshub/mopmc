@@ -8,6 +8,9 @@
 namespace mopmc::optimization::auxiliary {
 
     template<typename V>
+    LinearCombination<V>::LinearCombination(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f) : fn(f) {}
+
+    template<typename V>
     LinearCombination<V>::LinearCombination(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                                             const std::vector<Vector<V>> &Points) :
             fn(f), P(Points){}
@@ -41,6 +44,19 @@ namespace mopmc::optimization::auxiliary {
             y += (x(i) * this->P[i]);
         }
         return this->fn->value(y);
+    }
+
+    template<typename V>
+    Vector<V> LinearCombination<V>::combine(const std::vector<Vector<V>> &Points, const Vector<V> &coeffs) {
+        assert(!Points.empty());
+        assert(Points.size() == coeffs.size());
+        uint64_t m = Points[0].size();
+        Vector<V> y(m);
+        y.setZero();
+        for (uint_fast64_t i = 0; i < coeffs.size(); ++i) {
+            y += (coeffs(i) * Points[i]);
+        }
+        return y;
     }
 
     template class LinearCombination<double>;

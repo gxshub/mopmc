@@ -17,9 +17,11 @@ namespace mopmc::optimization::auxiliary {
     template<typename V>
     class LinearCombination {
     public:
+        explicit LinearCombination(mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn);
         explicit LinearCombination(mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn,
                                    const std::vector<Vector<V>> &Points);
 
+        static Vector<V> combine(const std::vector<Vector<V>> &Points, const Vector<V> &coeffs);
         V value(Vector<V> &x);
         Vector<V> gradient(Vector<V> &x);
 
