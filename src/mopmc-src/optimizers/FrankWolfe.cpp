@@ -20,8 +20,7 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     Vector<V> FrankWolfe<V>::argmin(const std::vector<Vector<V>> &Vertices) {
 
-
-        const uint64_t maxIter = 1e2;
+        const uint64_t maxIter = 1e3;
         const V tolerance{1.e-8}, toleranceCosine = std::cos(90.01 / 180. * M_PI);
         const V scale1{0.5}, scale2{0.5};
 
@@ -35,9 +34,7 @@ namespace mopmc::optimization::optimizers {
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
-            //computeForwardStepIndexAndVector(Vertices);
             checkForwardStep(Vertices, fwdInd, fwdVec, epsFwd);
-            //computeAwayStepIndexAndVector(Vertices);
             checkAwayStep(Vertices, awyInd, awyVec, epsAwy);
             if (epsFwd <= tolerance) {
                 std::cout << "FW loop exits due to small tolerance: " << epsFwd << "\n";
@@ -60,14 +57,11 @@ namespace mopmc::optimization::optimizers {
                     break;
                 }
                 case AWAY_STEP: {
-                    //updateWithForwardOrAwayStep();
                     forwardOrAwayStepUpdate(fwdInd, fwdVec, epsFwd, awyInd, awyVec, epsAwy, gamma, gammaMax, isFwd);
-                    //std::cout<< "xNew: " << xNew << "\n";
                     break;
                 }
                 case BLENDED: {
                     if (epsFwd + epsAwy >= delta) {
-                        //updateWithForwardOrAwayStep();
                         forwardOrAwayStepUpdate(fwdInd, fwdVec, epsFwd, awyInd, awyVec, epsAwy, gamma, gammaMax, isFwd);
                     } else {
                         int feasible = -1;
@@ -81,7 +75,7 @@ namespace mopmc::optimization::optimizers {
                         } else {
                             printf("[Warning] ret = %i\n", feasible);
                             ++t;
-                            break;
+                            return xNew;
                             //throw std::runtime_error("linopt error");
                         }
                     }
@@ -100,11 +94,10 @@ namespace mopmc::optimization::optimizers {
                 }
                 case SIMPLEX_GD: {
                     simplexGradientDecentUpdate(Vertices);
-                    //simplexGradientDescentUpdate(Vertices);
-                    //std::cout<< "xNew: " << xNew << "\n";
                     break;
                 }
             }
+            std::cout << "f(xNew): " << this->fn->value(xNew) <<"\n";
             ++t;
         }
         std::cout << "Frank-Wolfe stops at iteration: " << t << "\n";
@@ -115,23 +108,18 @@ namespace mopmc::optimization::optimizers {
     void FrankWolfe<V>::initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale) {
         if (Vertices.empty())
             throw std::runtime_error("The set of vertices cannot be empty");
-
         size = Vertices.size();
         dimension = Vertices[0].size();
         xCurrent.resize(dimension);
         xNew.resize(dimension);
         xNewTmp.resize(dimension);
-
         alpha.conservativeResize(size);
         alpha(size - 1) = static_cast<V>(0.);
-
         if (size == 1) {
             alpha(0) = static_cast<V>(1.);
-            activeSet.insert(0);
+            activeVertices.insert(0);
         }
-
         xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices, alpha);
-
         delta = std::numeric_limits<V>::min();
         for (uint_fast64_t i = 0; i < size; ++i) {
             const V c = (this->fn->gradient(xNew)).dot(xNew - Vertices[i]) / scale;
@@ -155,7 +143,7 @@ namespace mopmc::optimization::optimizers {
             dAlphaAryTmp = dAlpha.array() - dAlpha(valueIndices[pivot]);
             nNullVertices = 0;
             for (int64_t j = pivot; j < size; ++j) {
-                if (!activeSet.count(valueIndices[j])) {
+                if (!activeVertices.count(valueIndices[j])) {
                     dAlphaAryTmp(valueIndices[j]) = 0.;
                     nNullVertices += 1;
                 }
@@ -170,7 +158,11 @@ namespace mopmc::optimization::optimizers {
         }
         const V c = dAlphaAryTmp.sum() / (size - nNullVertices);
         for (int64_t i = 0; i < size; ++i) {
-            dAlphaAryTmp(i) -= c;
+            if (i >= pivot && !activeVertices.count(valueIndices[i])) {
+                dAlphaAryTmp(valueIndices[i]) = 0.;
+            } else {
+                dAlphaAryTmp(valueIndices[i]) -= c;
+            }
         }
         dAlpha = dAlphaAryTmp.matrix();
         V lambda = std::numeric_limits<V>::max();
@@ -198,12 +190,14 @@ namespace mopmc::optimization::optimizers {
         alpha -= (gamma * lambda) * dAlpha;
         for (uint64_t i = 0; i < size; ++i) {
             if (dAlpha(i) < 0.) {
-                activeSet.insert(i);
+                activeVertices.insert(i);
             }
         }
+        if (alpha.sum() <= 0.) {std::cout << "alpha before assert(alpha.sum() > 0.): " <<
+        alpha <<"\n";}
         assert(alpha.sum() > 0.);
         if (gamma == 1.0) {
-            activeSet.erase(ind);
+            activeVertices.erase(ind);
             alpha(ind) = 0.;
             alpha /= alpha.sum();
         }
@@ -228,10 +222,10 @@ namespace mopmc::optimization::optimizers {
 
         if (isFwd) {
             if (gamma == gammaMax) {
-                this->activeSet.clear();
-                this->activeSet.insert(fwdInd);
+                this->activeVertices.clear();
+                this->activeVertices.insert(fwdInd);
             } else {
-                this->activeSet.insert(fwdInd);
+                this->activeVertices.insert(fwdInd);
             }
 
             for (uint_fast64_t l = 0; l < this->size; ++l) {
@@ -242,7 +236,7 @@ namespace mopmc::optimization::optimizers {
             this->alpha(fwdInd) = (static_cast<V>(1.) - gamma) * this->alpha(fwdInd) + gamma;
         } else {
             if (gamma == gammaMax) {
-                this->activeSet.erase(awyInd);
+                this->activeVertices.erase(awyInd);
             }
             for (uint_fast64_t l = 0; l < this->size; ++l) {
                 if (l != awyInd) {
@@ -258,7 +252,7 @@ namespace mopmc::optimization::optimizers {
     void FrankWolfe<V>::checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps) {
         awyInd = 0;
         V inc = std::numeric_limits<V>::min();
-        for (auto j: this->activeSet) {
+        for (auto j: this->activeVertices) {
             if (Vertices[j].dot(dXCurrent) > inc) {
                 inc = Vertices[j].dot(dXCurrent);
                 awyInd = j;

@@ -20,11 +20,17 @@ namespace mopmc::optimization::convex_functions {
     class MSE : public BaseConvexFunction<V> {
     public:
         explicit MSE(const Vector<V> &c, const uint64_t &n);
-
         V value(const Vector<V> &x) override;
-
         Vector<V> subgradient(const Vector<V> &x) override;
 
+    };
+
+    template<typename V>
+    class RMSE : public BaseConvexFunction<V> {
+    public:
+        explicit RMSE(const Vector<V> &c, const uint64_t &n);
+        V value(const Vector<V> &x) override;
+        Vector<V> subgradient(const Vector<V> &x) override;
     };
 }// namespace mopmc::optimization::convex_functions
 

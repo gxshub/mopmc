@@ -24,7 +24,7 @@ namespace mopmc::queries {
 
         const T toleranceDistanceToMinimum{1.e-6};
         const T toleranceSmallGradient{1.e-8};
-        const T toleranceNearestPointImprovement{1.e-6};
+        const T toleranceNearestPointImprovement{1.e-8};
         const uint_fast64_t maxIter{200};
         T epsilonDistanceToMinimum, epsilonSmallGradient, epsilonNearestPointImprovement;
         uint_fast64_t iter = 0;

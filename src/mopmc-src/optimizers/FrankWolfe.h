@@ -36,16 +36,14 @@ namespace mopmc::optimization::optimizers {
     class FrankWolfe : public BaseOptimizer<V> {
     public:
         explicit FrankWolfe() = default;
-
         explicit FrankWolfe(FWOption optMethod, mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
-
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
 
         mopmc::optimization::optimizers::LinOpt<V> linOpt;
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
         FWOption fwOption{};
         Vector<V> alpha;
-        std::set<uint64_t> activeSet;
+        std::set<uint64_t> activeVertices;
 
     private:
         Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
@@ -59,6 +57,7 @@ namespace mopmc::optimization::optimizers {
 
         int64_t dimension{}, size{};
         Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
+        std::set<uint64_t> nullVertices;
 
     };
 }// namespace mopmc::optimization::optimizers
