@@ -14,7 +14,7 @@ namespace mopmc::optimization::optimizers {
     LineSearcher<V>::LineSearcher(convex_functions::BaseConvexFunction<V> *f) : f_(f) {}
 
     template<typename V>
-    V LineSearcher<V>::findOptimalDecentDistance(Vector<V> vLeft, Vector<V> vRight, V lambdaMax) {
+    V LineSearcher<V>::findOptimalRelativeDistance(Vector<V> vLeft, Vector<V> vRight, V lambdaMax) {
 
         const V epsilon2 = 1e-12;
         this->vLeft_ = vLeft;

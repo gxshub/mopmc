@@ -13,15 +13,65 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int FrankWolfe<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
-        point = argmin(Vertices);
+        point = argmin_v2(Vertices);
         return 0;
     }
+
+    template<typename V>
+    Vector<V> FrankWolfe<V>::argmin_v2(const std::vector<Vector<V>> &Vertices) {
+
+        initialize(Vertices);
+        const uint64_t maxIter = 1e3;
+        uint64_t t = 0;
+        while (t < maxIter) {
+            xCurrent = xNew;
+            dXCurrent = this->fn->subgradient(xCurrent);
+            if (checkExit(Vertices)) {
+                break;
+            }
+            switch (this->fwOption) {
+                case SIMPLEX_GD: {
+                    simplexGradientDecentUpdate(Vertices);
+                    break;
+                }
+                case AWAY_STEP: {
+                    forwardOrAwayStepUpdate(Vertices);
+                    break;
+                }
+                default: {
+                    throw std::runtime_error("Selected FW option not implemented in this version");
+                }
+            }
+            ++t;
+        }
+        std::cout << "Frank-Wolfe loop stops at iteration: " << t << ", nearest distance: "<< this->fn->value(xNew) << "\n";
+        return xNew;
+    }
+
+    template<typename V>
+    bool FrankWolfe<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
+        V cosTolerance = std::cos(90.001 / 180.0 * M_PI);
+        bool exit = false;
+        V cosMin = 1.;
+        for (int i = 0; i < size; ++i) {
+            const V cos = mopmc::optimization::auxiliary::Trigonometry<V>::cosine(Vertices[i]-xCurrent, dXCurrent, 0.);
+            if (cosMin > cos) {
+                cosMin = cos;
+            }
+        }
+        if (cosMin > cosTolerance) {
+            std::cout << "FW loop exits due to small cosine (" << cosMin << ")\n";
+            exit = true;
+        }
+        return exit;
+    }
+
 
     template<typename V>
     Vector<V> FrankWolfe<V>::argmin(const std::vector<Vector<V>> &Vertices) {
 
         const uint64_t maxIter = 1e3;
-        const V tolerance{1.e-8}, toleranceCosine = std::cos(90.01 / 180. * M_PI);
+        const V tolerance{1.e-6}, toleranceCosine = std::cos(90.001 / 180.0 * M_PI);
         const V scale1{0.5}, scale2{0.5};
 
         V gamma, gammaMax, epsFwd, epsAwy, stepSize, delta;
@@ -36,28 +86,40 @@ namespace mopmc::optimization::optimizers {
             dXCurrent = this->fn->subgradient(xCurrent);
             checkForwardStep(Vertices, fwdInd, fwdVec, epsFwd);
             checkAwayStep(Vertices, awyInd, awyVec, epsAwy);
+            /*
             if (epsFwd <= tolerance) {
                 std::cout << "FW loop exits due to small tolerance: " << epsFwd << "\n";
                 ++t;
                 break;
             }
-
-            if (mopmc::optimization::auxiliary::Trigonometry<V>::cosine(fwdVec, dXCurrent, 0.) > toleranceCosine) {
-                std::cout << "FW loop exits due to small cosine: " << mopmc::optimization::auxiliary::Trigonometry<V>::cosine(fwdVec, dXCurrent, 0.) << "\n";
+             */
+            V cosMax = 1.;
+            for (int i = 0; i < size; ++i) {
+                const V cos = mopmc::optimization::auxiliary::Trigonometry<V>::cosine(Vertices[i]-xCurrent, dXCurrent, 0.);
+                if (cosMax > cos) {
+                    cosMax = cos;
+                }
+            }
+            if (cosMax > toleranceCosine) {
+                std::cout << "FW loop exits due to small cosine: " << cosMax << "\n";
                 ++t;
                 break;
             }
 
             switch (this->fwOption) {
-                case LINOPT: {
-                    PolytopeType polytopeType = PolytopeType::Vertex;
-                    this->linOpt.optimizeVtx(Vertices, polytopeType, dXCurrent, xNewTmp);
-                    gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewTmp);
-                    xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
+                case SIMPLEX_GD: {
+                    simplexGradientDecentUpdate(Vertices);
                     break;
                 }
                 case AWAY_STEP: {
                     forwardOrAwayStepUpdate(fwdInd, fwdVec, epsFwd, awyInd, awyVec, epsAwy, gamma, gammaMax, isFwd);
+                    break;
+                }
+                case LINOPT: {
+                    PolytopeType polytopeType = PolytopeType::Vertex;
+                    this->linOpt.optimizeVtx(Vertices, polytopeType, dXCurrent, xNewTmp);
+                    gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
+                    xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
                     break;
                 }
                 case BLENDED: {
@@ -68,7 +130,7 @@ namespace mopmc::optimization::optimizers {
                         this->linOpt.checkPointInConvexHull(Vertices, (xCurrent - dXCurrent * delta), feasible);
                         if (feasible == 0) {
                             xNewTmp = xCurrent - dXCurrent * delta;
-                            gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewTmp, static_cast<V>(1.));
+                            gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, static_cast<V>(1.));
                             xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
                         } else if (feasible == 2) {
                             delta *= static_cast<V>(0.5);
@@ -85,24 +147,38 @@ namespace mopmc::optimization::optimizers {
                     this->linOpt.findMaximumFeasibleStep(Vertices, dXCurrent, xCurrent, stepSize);
                     if (stepSize > delta * scale2) {
                         xNewTmp = xCurrent - dXCurrent * stepSize;
-                        gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewTmp, static_cast<V>(1.));
+                        gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, static_cast<V>(1.));
                         xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
                     } else {
                         delta *= static_cast<V>(0.5);
                     }
                     break;
                 }
-                case SIMPLEX_GD: {
-                    simplexGradientDecentUpdate(Vertices);
-                    break;
-                }
             }
-            std::cout << "f(xNew): " << this->fn->value(xNew) <<"\n";
             ++t;
         }
-        std::cout << "Frank-Wolfe stops at iteration: " << t << "\n";
+        std::cout << "Frank-Wolfe loop stops at iteration: " << t << ", nearest distance: "<< this->fn->value(xNew) << "\n";
         return xNew;
     }
+
+    template<typename V>
+    void FrankWolfe<V>::initialize(const std::vector<Vector<V>> &Vertices) {
+        if (Vertices.empty())
+            throw std::runtime_error("The set of vertices cannot be empty");
+        size = Vertices.size();
+        dimension = Vertices[0].size();
+        xCurrent.resize(dimension);
+        xNew.resize(dimension);
+        xNewTmp.resize(dimension);
+        alpha.conservativeResize(size);
+        alpha(size - 1) = static_cast<V>(0.);
+        if (size == 1) {
+            alpha(0) = static_cast<V>(1.);
+            activeVertices.insert(0);
+        }
+        xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices, alpha);
+    }
+
 
     template<typename V>
     void FrankWolfe<V>::initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale) {
@@ -135,74 +211,87 @@ namespace mopmc::optimization::optimizers {
         for (int64_t i = 0; i < size; ++i) {
             dAlpha(i) += dXCurrent.dot(Vertices[i]);
         }
-        auto valueIndices = mopmc::optimization::auxiliary::Sorting<V>::argsort(dAlpha, mopmc::optimization::auxiliary::SORTING_DIRECTION::ASCENT);
-        Eigen::ArrayXd dAlphaAry = dAlpha.array();
-        Eigen::ArrayXd dAlphaAryTmp = dAlphaAry;
-        int64_t pivot, nNullVertices;
-        for (pivot = 0; pivot < size; ++pivot) {
-            dAlphaAryTmp = dAlpha.array() - dAlpha(valueIndices[pivot]);
-            nNullVertices = 0;
-            for (int64_t j = pivot; j < size; ++j) {
-                if (!activeVertices.count(valueIndices[j])) {
-                    dAlphaAryTmp(valueIndices[j]) = 0.;
-                    nNullVertices += 1;
+        auto sortedIndices = mopmc::optimization::auxiliary::Sorting<V>::ascendingArgsort(dAlpha);
+        Vector<V> dAlphaTmp(size);
+        int64_t offsetIndex, numNullVertices = size - activeVertices.size();
+        for (offsetIndex = 0; offsetIndex < size; ++offsetIndex) {
+            if (!activeVertices.count(sortedIndices[offsetIndex])) {
+                numNullVertices -= 1;
+            }
+            for (uint64_t i = 0; i < size; ++i) {
+                if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
+                    dAlphaTmp(sortedIndices[i]) = dAlpha(sortedIndices[i]) - dAlpha(sortedIndices[offsetIndex]);
+                } else {
+                    dAlphaTmp(sortedIndices[i]) = static_cast<V>(0.);
                 }
             }
-            if (dAlphaAryTmp.sum() <= 0) {
+            if (dAlphaTmp.sum() <= 0) {
                 break;
             }
         }
-        if (pivot == 0) {
+        if (offsetIndex == 0) {
             dAlpha.setZero();
             return;
         }
-        const V c = dAlphaAryTmp.sum() / (size - nNullVertices);
+        const V offset = dAlpha.sum() / (size - numNullVertices);
         for (int64_t i = 0; i < size; ++i) {
-            if (i >= pivot && !activeVertices.count(valueIndices[i])) {
-                dAlphaAryTmp(valueIndices[i]) = 0.;
+            if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
+                dAlpha(sortedIndices[i]) -= offset;
             } else {
-                dAlphaAryTmp(valueIndices[i]) -= c;
+                dAlpha(sortedIndices[i]) = 0.;
             }
         }
-        dAlpha = dAlphaAryTmp.matrix();
-        V lambda = std::numeric_limits<V>::max();
-        uint64_t ind = size;
-        for (uint64_t i = 0; i < size; ++i) {
-            if (dAlpha(i) > 0.) {
-                if (alpha(i) / dAlpha(i) < lambda) {
-                    lambda = alpha(i) / dAlpha(i);
-                    ind = i;
+        V step = std::numeric_limits<V>::max();
+        uint64_t resetIndex = size;
+        for (uint64_t vertexIndex = 0; vertexIndex < size; ++vertexIndex) {
+            if (dAlpha(vertexIndex) > 0.) {
+                if (alpha(vertexIndex) / dAlpha(vertexIndex) < step) {
+                    step = alpha(vertexIndex) / dAlpha(vertexIndex);
+                    resetIndex = vertexIndex;
                 }
             }
         }
-        assert(ind != size);
+        assert(resetIndex != size);
         xNewTmp = xCurrent;
         for (uint64_t i = 0; i < size; ++i) {
-            xNewTmp -= (lambda * dAlpha(i)) * Vertices[i];
+            xNewTmp -= (step * dAlpha(i)) * Vertices[i];
         }
-        V chi = this->fn->value(xCurrent) - this->fn->value(xNewTmp);
-        V gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewTmp, 1.0);
-        xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
-        if (this->fn->value(xCurrent) - this->fn->value(xNew) < chi / 0.75) {
+        V gamma = static_cast<V>(1.0);
+        if (this->fn->value(xCurrent) >= this->fn->value(xNewTmp)) {
             xNew = xNewTmp;
-            gamma = 1.0;
         }
-        alpha -= (gamma * lambda) * dAlpha;
+        else {
+            gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, 1.0);
+            xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
+        }
+        alpha -= (gamma * step) * dAlpha;
         for (uint64_t i = 0; i < size; ++i) {
             if (dAlpha(i) < 0.) {
                 activeVertices.insert(i);
             }
         }
-        if (alpha.sum() <= 0.) {std::cout << "alpha before assert(alpha.sum() > 0.): " <<
-        alpha <<"\n";}
-        assert(alpha.sum() > 0.);
+        //assert(alpha.sum() > 0.);
         if (gamma == 1.0) {
-            activeVertices.erase(ind);
-            alpha(ind) = 0.;
-            alpha /= alpha.sum();
+            activeVertices.erase(resetIndex);
+            /*
+            alpha(resetIndex) = 0.;
+            if (alpha.sum() != 1.0) {
+                alpha /= alpha.sum();
+            }
+             */
         }
     }
 
+    template<typename V>
+    void FrankWolfe<V>::forwardOrAwayStepUpdate(const std::vector<Vector<V>> &Vertices) {
+        V gamma, gammaMax, epsFwd, epsAwy;
+        uint64_t fwdInd{}, awyInd{};
+        Vector<V> fwdVec, awyVec;
+        bool isFwd{};
+        checkForwardStep(Vertices, fwdInd, fwdVec, epsFwd);
+        checkAwayStep(Vertices, awyInd, awyVec, epsAwy);
+        forwardOrAwayStepUpdate(fwdInd, fwdVec, epsFwd, awyInd, awyVec, epsAwy, gamma, gammaMax, isFwd);
+    }
 
     template<typename V>
     void FrankWolfe<V>::forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps,
@@ -218,7 +307,7 @@ namespace mopmc::optimization::optimizers {
             gammaMax = this->alpha(awyInd) / (static_cast<V>(1.) - this->alpha(awyInd));
         }
 
-        gamma = this->lineSearcher.findOptimalDecentDistance(xCurrent, xNewTmp, gammaMax);
+        gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, gammaMax);
 
         if (isFwd) {
             if (gamma == gammaMax) {

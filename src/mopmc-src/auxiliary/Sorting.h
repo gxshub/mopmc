@@ -20,6 +20,12 @@ namespace mopmc::optimization::auxiliary {
     class Sorting {
     public:
         static std::vector<size_t> argsort(const Vector<V> &vec, SORTING_DIRECTION direction = SORTING_DIRECTION::ASCENT);
+        static std::vector<size_t> ascendingArgsort(const Vector<V> &vec) {
+            return argsort(vec, SORTING_DIRECTION::ASCENT);
+        }
+        static std::vector<size_t> descendingArgsort(const Vector<V> &vec) {
+            return argsort(vec, SORTING_DIRECTION::DECENT);
+        }
     };
 
 }// namespace mopmc::optimization::auxiliary

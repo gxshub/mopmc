@@ -26,8 +26,8 @@ namespace mopmc::optimization::optimizers {
 
     enum FWOption {
         SIMPLEX_GD,
-        LINOPT,
         AWAY_STEP,
+        LINOPT,
         BLENDED,
         BLENDED_STEP_OPT
     };
@@ -47,13 +47,17 @@ namespace mopmc::optimization::optimizers {
 
     private:
         Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
+        Vector<V> argmin_v2(const std::vector<Vector<V>> &Vertices);
         void initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale);
+        void initialize(const std::vector<Vector<V>> &Vertices);
         void simplexGradientDecentUpdate(const std::vector<Vector<V>> &Vertices);
         void forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps,
                                      uint64_t &awyInd, Vector<V> &awyVec, V &awyEps,
                                      V &gamma, V &gammaMax, bool &isFwd);
+        void forwardOrAwayStepUpdate(const std::vector<Vector<V>> &Vertices);
         void checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps);
         void checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps);
+        bool checkExit(const std::vector<Vector<V>> &Vertices);
 
         int64_t dimension{}, size{};
         Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;

@@ -22,7 +22,7 @@ namespace mopmc::optimization::optimizers {
         explicit LineSearcher() = default;
         explicit LineSearcher(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f_);
 
-        V findOptimalDecentDistance(Vector<V> vLeft, Vector<V> vRight, V lambdaMax = static_cast<V>(1.));
+        V findOptimalRelativeDistance(Vector<V> vLeft, Vector<V> vRight, V lambdaMax = static_cast<V>(1.));
 
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *f_;
         Vector<V> vLeft_, vRight_;
