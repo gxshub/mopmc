@@ -27,8 +27,6 @@ namespace mopmc::optimization::optimizers{
     class ProjectedGradientDescent : public BaseOptimizer<V>{
     public:
 
-        //explicit ProjectedGradientDescent(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
-
         ProjectedGradientDescent(ProjectionType type, mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
 
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;

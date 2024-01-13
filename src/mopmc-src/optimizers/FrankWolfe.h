@@ -46,15 +46,15 @@ namespace mopmc::optimization::optimizers {
         std::set<uint64_t> activeVertices;
 
     private:
-        Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
+        [[deprecated]] Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
         Vector<V> argmin_v2(const std::vector<Vector<V>> &Vertices);
-        void initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale);
+        [[deprecated]] void initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale);
         void initialize(const std::vector<Vector<V>> &Vertices);
-        void simplexGradientDecentUpdate(const std::vector<Vector<V>> &Vertices);
-        void forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps,
-                                     uint64_t &awyInd, Vector<V> &awyVec, V &awyEps,
+        void performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);
+        void forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
+                                     uint64_t &awyInd, Vector<V> &awyVec,
                                      V &gamma, V &gammaMax, bool &isFwd);
-        void forwardOrAwayStepUpdate(const std::vector<Vector<V>> &Vertices);
+        void performForwardOrAwayStepDescent(const std::vector<Vector<V>> &Vertices);
         void checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps);
         void checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps);
         bool checkExit(const std::vector<Vector<V>> &Vertices);
