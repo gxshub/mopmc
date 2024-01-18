@@ -50,74 +50,85 @@ namespace mopmc {
                                                                                              preparedModel);
         clock_t time2 = clock();
 
-        auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), data.thresholds.size());
-        std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
-        switch (queryOptions.CONVEX_FUN) {
-            case QueryOptions::MSE: {
-                fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
-                break;
-            }
-            case QueryOptions::SE: {
-                fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        new mopmc::optimization::convex_functions::EuclideanDistance<ValueType>(h));
-                break;
-            }
 
-            case QueryOptions::VAR: {
-                fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        new mopmc::optimization::convex_functions::Variance<ValueType>(h.size()));
-                break;
-            }
-            case QueryOptions::SD: {
-                fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        new mopmc::optimization::convex_functions::StandDeviation<ValueType>(h.size()));
-                break;
-            }
-        }
-        std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>> optimizer;
-        switch (queryOptions.PRIMARY_OPTIMIZER) {
-            case QueryOptions::BLENDED: {
-                optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                        new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                mopmc::optimization::optimizers::FWOption::BLENDED, &*fn));
-                break;
-            }
-            case QueryOptions::BLENDED_STEP_OPT: {
-                optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                        new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                mopmc::optimization::optimizers::FWOption::BLENDED_STEP_OPT, &*fn));
-                break;
-            }
-            case QueryOptions::AWAY_STEP: {
-                optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                        new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                mopmc::optimization::optimizers::FWOption::AWAY_STEP, &*fn));
-                break;
-            }
-            case QueryOptions::LINOPT: {
-                optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                        new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                mopmc::optimization::optimizers::FWOption::LINOPT, &*fn));
-                break;
-            }
-            case QueryOptions::SIMPLEX_GD: {
-                optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                        new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn));
-                break;
-            }
-            case QueryOptions::PGD: {
-                optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                        new mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType>(
-                                mopmc::optimization::optimizers::ProjectionType::UnitSimplex, &*fn));
-                break;
-            }
-        }
-        mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
         mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType> cudaVIHandler(&data);
-        mopmc::queries::ConvexQuery2<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
-        q.query();
+        switch (queryOptions.QUERY_TYPE) {
+            case QueryOptions::ACHIEVABILITY: {
+                mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &cudaVIHandler);
+                q.query();
+                break;
+            }
+            case QueryOptions::CONVEX: {
+                auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), data.thresholds.size());
+                std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
+                switch (queryOptions.CONVEX_FUN) {
+                    case QueryOptions::MSE: {
+                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                                new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                        break;
+                    }
+                    case QueryOptions::SE: {
+                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                                new mopmc::optimization::convex_functions::EuclideanDistance<ValueType>(h));
+                        break;
+                    }
+
+                    case QueryOptions::VAR: {
+                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                                new mopmc::optimization::convex_functions::Variance<ValueType>(h.size()));
+                        break;
+                    }
+                    case QueryOptions::SD: {
+                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                                new mopmc::optimization::convex_functions::StandDeviation<ValueType>(h.size()));
+                        break;
+                    }
+                }
+                std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>> optimizer;
+                switch (queryOptions.PRIMARY_OPTIMIZER) {
+                    case QueryOptions::BLENDED: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::BLENDED, &*fn));
+                        break;
+                    }
+                    case QueryOptions::BLENDED_STEP_OPT: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::BLENDED_STEP_OPT, &*fn));
+                        break;
+                    }
+                    case QueryOptions::AWAY_STEP: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::AWAY_STEP, &*fn));
+                        break;
+                    }
+                    case QueryOptions::LINOPT: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::LINOPT, &*fn));
+                        break;
+                    }
+                    case QueryOptions::SIMPLEX_GD: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn));
+                        break;
+                    }
+                    case QueryOptions::PGD: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType>(
+                                        mopmc::optimization::optimizers::ProjectionType::UnitSimplex, &*fn));
+                        break;
+                    }
+                }
+                mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
+                mopmc::queries::ConvexQuery2<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
+                q.query();
+                break;
+            }
+        }
         clock_t time3 = clock();
 
         std::cout << "       TIME STATISTICS        \n";

@@ -17,6 +17,7 @@ int main (int ac, char *av[]) {
                 ("props", po::value<string>(), "property file")
                 ("fn", po::value<string>(), "convex function")
                 ("popt", po::value<string>(), "inner optimizer")
+                ("query-type,Q", po::value<string>(), "query type")
                 ;
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
@@ -34,6 +35,17 @@ int main (int ac, char *av[]) {
         }
 
         mopmc::QueryOptions queryOptions{};
+        if (vm.count("query-type")) {
+            const auto& s = vm["query-type"].as<string>();
+            if (s == "achievability") {
+                queryOptions.QUERY_TYPE = mopmc::QueryOptions::ACHIEVABILITY;
+            } else if (s == "convex") {
+                queryOptions.QUERY_TYPE = mopmc::QueryOptions::CONVEX;
+            } else {
+                cout << "not supported convex type\n";
+                return 1;
+            }
+        }
         if (vm.count("fn")) {
             const auto& s = vm["fn"].as<string>();
             if (s == "mse") {
