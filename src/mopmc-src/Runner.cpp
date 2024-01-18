@@ -15,6 +15,7 @@
 #include "optimizers/ProjectedGradientDescent.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
+#include "queries/ConvexQuery2.h"
 #include <Eigen/Dense>
 #include <cstdio>
 #include <ctime>
@@ -117,8 +118,7 @@ namespace mopmc {
                 break;
             }
         }
-        mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(
-                mopmc::optimization::optimizers::ProjectionType::NearestHyperplane, &*fn);
+        mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
         mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType> cudaVIHandler(&data);
         mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
         q.query();
@@ -132,64 +132,4 @@ namespace mopmc {
 
         return true;
     }
-    /*
-    bool run(std::string const &path_to_model, std::string const &property_string) {
-
-        assert (typeid(ValueType) == typeid(double));
-        assert (typeid(IndexType) == typeid(uint64_t));
-
-        storm::Environment env;
-        clock_t time0 = clock();
-        auto preprocessedResult = mopmc::ModelBuilder<ModelType>::preprocess(path_to_model, property_string, env);
-        clock_t time05 = clock();
-        //mopmc::wrapper::StormModelCheckingWrapper<ModelType> stormModelCheckingWrapper(preprocessedResult);
-        //stormModelCheckingWrapper.performMultiObjectiveModelChecking(env);
-        auto preparedModel = mopmc::ModelBuilder<ModelType>::build(preprocessedResult);
-        clock_t time1 = clock();
-        auto data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform_i32_v2(preprocessedResult,
-                                                                                             preparedModel);
-        clock_t time2 = clock();
-
-
-        //threshold
-        auto h = Eigen::Map<Vector<ValueType >>(data.thresholds.data(), data.thresholds.size());
-        //convex functon
-        //mopmc::optimization::convex_functions::EuclideanDistance<ValueType> eud(h);
-        mopmc::optimization::convex_functions::MSE<ValueType> mse(h, data.objectiveCount);
-
-        //optimizers
-        mopmc::optimization::optimizers::FrankWolfe<ValueType> fw(mopmc::optimization::optimizers::FWOption::LINOPT,
-                                                                  &mse);
-        mopmc::optimization::optimizers::FrankWolfe<ValueType> fw1(mopmc::optimization::optimizers::FWOption::BLENDED,
-                                                                   &mse);
-        mopmc::optimization::optimizers::FrankWolfe<ValueType> fw2(
-                mopmc::optimization::optimizers::FWOption::BLENDED_STEP_OPT, &mse);
-        mopmc::optimization::optimizers::FrankWolfe<ValueType> fw3(mopmc::optimization::optimizers::FWOption::AWAY_STEP,
-                                                                   &mse);
-        mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(
-                mopmc::optimization::optimizers::ProjectionType::NearestHyperplane, &mse);
-        mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD1(
-                mopmc::optimization::optimizers::ProjectionType::UnitSimplex, &mse);
-        //value-iteration solver
-        mopmc::value_iteration::gpu::CudaValueIterationHandler<double> cudaVIHandler(&data);
-
-        //mopmc::queries::ConvexQuery<ValueType, int> q(data, &mse, &fw, &projectedGD, &cudaVIHandler);
-        //mopmc::queries::ConvexQuery<ValueType, int> q(data, &mse, &fw1, &projectedGD, &cudaVIHandler);
-        //mopmc::queries::ConvexQuery<ValueType, int> q(data, &eud, &fw2, &projectedGD, &cudaVIHandler);
-        mopmc::queries::ConvexQuery<ValueType, int> q(data, &mse, &fw3, &projectedGD, &cudaVIHandler);
-        //mopmc::queries::ConvexQuery<ValueType, int> q(data, &fn, &projectedGD1, &projectedGD, &cudaVIHandler);
-        //mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &cudaVIHandler);
-        q.query();
-        //q.hybridQuery(hybrid::ThreadSpecialisation::GPU);
-        clock_t time3 = clock();
-
-        std::cout << "       TIME STATISTICS        \n";
-        printf("Model building stage 1: %.3f seconds.\n", double(time05 - time0) / CLOCKS_PER_SEC);
-        printf("Model building stage 2: %.3f seconds.\n", double(time1 - time05) / CLOCKS_PER_SEC);
-        printf("Input data transformation: %.3f seconds.\n", double(time2 - time1) / CLOCKS_PER_SEC);
-        printf("Model checking: %.3f seconds.\n", double(time3 - time2) / CLOCKS_PER_SEC);
-
-        return true;
-
-    }*/
 }// namespace mopmc

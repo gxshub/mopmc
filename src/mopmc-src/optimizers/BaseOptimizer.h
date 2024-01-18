@@ -24,7 +24,7 @@ namespace mopmc::optimization::optimizers {
         virtual int minimize (Vector<V> &point, const std::vector<Vector<V>> &Vertices) { return 1; }
 
         virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices,
-                     const std::vector<Vector<V>> &Weights) { return 1; }
+                     const std::vector<Vector<V>> &Directions) { return 1; }
 
         virtual int minimize () { return 1; }
 

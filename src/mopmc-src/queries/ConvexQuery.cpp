@@ -33,7 +33,7 @@ namespace mopmc::queries {
             std::cout << "Main loop: Iteration " << iter << "\n";
             if (!Vertices.empty()) {
                 innerPointNew = innerPointCurrent;
-                this->primaryOptimizer->minimize(innerPointNew, Vertices);
+                this->innerOptimizer->minimize(innerPointNew, Vertices);
 
                 if (Vertices.size() >= 2) {
                     epsilonNearestPointImprovement = (innerPointCurrent - innerPointNew).template lpNorm<Eigen::Infinity>();
@@ -72,11 +72,11 @@ namespace mopmc::queries {
 
             if (WeightVectors.size() == 1 || weightVector.dot(vertex) < weightVector.dot(outerPoint)) {
                 outerPoint = innerPointCurrent;
-                this->secondaryOptimizer->minimize(outerPoint, Vertices, WeightVectors);
+                this->outerOptimizer->minimize(outerPoint, Vertices, WeightVectors);
             }
             epsilonDistanceToMinimum = std::abs(this->fn->value(innerPointCurrent) - this->fn->value(outerPoint));
             if (epsilonDistanceToMinimum < toleranceDistanceToMinimum) {
-                std::cout << "loop exit due to small distance on minimum (" << epsilonDistanceToMinimum << ")\n";
+                std::cout << "loop exit due to small gap between inner and outer points (" << epsilonDistanceToMinimum << ")\n";
                 ++iter;
                 break;
             }
@@ -94,8 +94,8 @@ namespace mopmc::queries {
             std::cout << innerPointNew(i) << " ";
         }
         std::cout << "]\n"
-                  << "Approximate distance: " << this->fn->value(innerPointNew)
-                  //<< "Approximate distance between " << fn.value(vb) << " and " << fn.value(vt)
+                  << "Approximate distance (at inner point): " << this->fn->value(innerPointNew)
+                  << "\nApproximate distance (at outer point): " << this->fn->value(outerPoint)
                   << "\n----------------------------------------------\n";
     }
 

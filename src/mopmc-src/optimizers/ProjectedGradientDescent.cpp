@@ -9,33 +9,9 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
+#include <set>
 
 namespace mopmc::optimization::optimizers {
-
-    /**
-    * Argsort(for descending sort)
-    * @param V array element type
-    * @param vec input array
-    * @return indices w.r.t sorted array
-    */
-    template<typename V>
-    std::vector<size_t> argsort(const Vector<V> &vec) {
-        std::vector<size_t> indices(vec.size());
-        std::iota(indices.begin(), indices.end(), 0);
-        std::sort(indices.begin(), indices.end(),
-                  [&vec](int left, int right) -> bool {
-                      // sort indices according to corresponding array element
-                      return vec(left) > vec(right);
-                  });
-
-        return indices;
-    }
-
-    template<typename V>
-    ProjectedGradientDescent<V>::ProjectedGradientDescent(ProjectionType type,
-                                                          convex_functions::BaseConvexFunction<V> *f)
-        : projectionType(type), BaseOptimizer<V>(f) {}
-
 
     template<typename V>
     int ProjectedGradientDescent<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
@@ -49,37 +25,43 @@ namespace mopmc::optimization::optimizers {
             this->alpha.resize(Vertices.size());
             this->alpha(alpha.size() - 1) = static_cast<V>(0.);
         }
-        this->point_ = argminUnitSimplexProjection(this->alpha, Vertices);
-        point = this->point_;
+        this->optimalPoint = argminUnitSimplexProjection(this->alpha, Vertices);
+        point = this->optimalPoint;
         return 0;
     }
 
     template<typename V>
     int ProjectedGradientDescent<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices,
-                                              const std::vector<Vector<V>> &Weights) {
-        assert(this->projectionType == ProjectionType::NearestHyperplane);
-        assert(!Vertices.empty() && Vertices.size() == Weights.size());
-        this->point_ = argminNearestHyperplane(point, Vertices, Weights);
-        point = this->point_;
+                                              const std::vector<Vector<V>> &Directions) {
+        assert(!Vertices.empty() && Vertices.size() == Directions.size());
+        this->optimalPoint = minimizeByAdaptiveStepSize(point, Vertices, Directions);
+        //this->optimalPoint = minimizeByFixedStepSize(point, Vertices, Directions);
+        point = this->optimalPoint;
         return 0;
     }
 
     template<typename V>
-    Vector<V> ProjectedGradientDescent<V>::argminNearestHyperplane(Vector<V> &iniPoint,
-                                                                   const std::vector<Vector<V>> &Phi,
-                                                                   const std::vector<Vector<V>> &W) {
+    Vector<V> ProjectedGradientDescent<V>::minimizeByAdaptiveStepSize(const Vector<V> &point,
+                                                                      const std::vector<Vector<V>> &Vertices,
+                                                                      const std::vector<Vector<V>> &Directions) {
+        const uint64_t maxIter = 1000;
+        const V beta = static_cast<V>(0.8);
+        const V epsilon = static_cast<V>(1.e-8);
+        V gamma = static_cast<V>(1.);
 
-        uint64_t maxIter = 1000;
-        uint64_t m = iniPoint.size();
-        V gamma = static_cast<V>(0.1);
-        V epsilon = static_cast<V>(1.e-8);
-        Vector<V> xCurrent = iniPoint, xNew(m), xTemp(m);
+        const uint64_t m = point.size();
+        Vector<V> xCurrent = point, xNew(m), xTemp(m);
         Vector<V> grad(m);
         uint_fast64_t it;
         for (it = 0; it < maxIter; ++it) {
             grad = this->fn->subgradient(xCurrent);
-            xTemp = xCurrent - gamma * grad;//it + static_cast<V>(1.))
-            xNew = projectToNearestHyperplane(xTemp, Phi, W);
+            const V g = grad.template lpNorm<2>();
+            if (this->fn->value(xCurrent - grad) > this->fn->value(xCurrent) - gamma * 0.5 * std::pow(g, 2)) {
+                gamma *= beta;
+
+            }
+            xTemp = xCurrent - gamma * grad;
+            xNew = projectToHalfSpaces(xTemp, Vertices, Directions);
             V error = (xNew - xCurrent).template lpNorm<1>();
             if (error < epsilon) {
                 xCurrent = xNew;
@@ -87,8 +69,58 @@ namespace mopmc::optimization::optimizers {
             }
             xCurrent = xNew;
         }
-        std::cout << "*Projected GD* stops at iteration " << it << "\n";
-        return xCurrent;
+        std::cout << "*Projected GD* stops at iteration: " << it << ", near distance: " << this->fn->value(xNew) << "\n";
+        return xNew;
+    }
+
+    template<typename V>
+    Vector<V> ProjectedGradientDescent<V>::minimizeByFixedStepSize(const Vector<V> &point,
+                                                                   const std::vector<Vector<V>> &Vertices,
+                                                                   const std::vector<Vector<V>> &Directions) {
+
+        const uint64_t maxIter = 10000;
+        const V epsilon = static_cast<V>(1.e-8);
+        const V gamma = static_cast<V>(0.001);
+
+        const uint64_t m = point.size();
+        Vector<V> xCurrent = point, xNew(m), xTemp(m);
+        Vector<V> grad(m);
+        uint_fast64_t it;
+        for (it = 0; it < maxIter; ++it) {
+            grad = this->fn->subgradient(xCurrent);
+            xTemp = xCurrent - gamma * grad;
+            xNew = projectToHalfSpaces(xTemp, Vertices, Directions);
+            V error = (xNew - xCurrent).template lpNorm<1>();
+            if (error < epsilon) {
+                xCurrent = xNew;
+                break;
+            }
+            xCurrent = xNew;
+        }
+        std::cout << "*Projected GD* stops at iteration: " << it << ", near distance: " << this->fn->value(xNew) << "\n";
+        return xNew;
+    }
+
+    template<typename V>
+    Vector<V> ProjectedGradientDescent<V>::projectToHalfSpaces(const Vector<V> &point,
+                                                               const std::vector<Vector<V>> &Vertices,
+                                                               const std::vector<Vector<V>> &Directions) {
+        uint64_t m = Vertices[0].size();
+        uint64_t ind = m;
+        Vector<V> pointProj = point;
+        V furthest = static_cast<V>(0.);
+        for (uint_fast64_t i = 0; i < Vertices.size(); ++i) {
+            const Vector<V> &w = Directions[i];
+            V distance = w.dot(point - Vertices[i]) / std::pow(w.template lpNorm<2>(), 2);
+            if (distance > furthest) {
+                furthest = distance;
+                ind = i;
+            }
+        }
+        if (ind < m) {
+            pointProj = point - (furthest * Directions[ind]);
+        }
+        return pointProj;
     }
 
     template<typename V>

@@ -26,19 +26,19 @@ namespace mopmc::queries {
                            mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *priOpt,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *secOpt):
-                           data_(data), fn(f), primaryOptimizer(priOpt), secondaryOptimizer(secOpt){};
+                           data_(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt){};
         explicit BaseQuery(const mopmc::QueryData<V,I> &data,
                            mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *priOpt,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *secOpt,
                            mopmc::value_iteration::BaseVIHandler<V> *valueIterSolver):
-                data_(data), fn(f), primaryOptimizer(priOpt), secondaryOptimizer(secOpt), VIhandler(valueIterSolver){};
+                data_(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt), VIhandler(valueIterSolver){};
 
         virtual void query() = 0 ;
 
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn;
-        mopmc::optimization::optimizers::BaseOptimizer<V> *primaryOptimizer;
-        mopmc::optimization::optimizers::BaseOptimizer<V> *secondaryOptimizer;
+        mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer;
+        mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer;
         mopmc::value_iteration::BaseVIHandler<V> *VIhandler;
         mopmc::QueryData<V, I> data_;
     };
