@@ -6,7 +6,7 @@
 #define MOPMC_HYBRIDCONTROLLER_H
 
 #include "Looper.h"
-#include "mopmc-src/hybrid-computing/Problem.h"
+#include "mopmc-src/future/hybrid-computing/Problem.h"
 
 namespace hybrid {
 

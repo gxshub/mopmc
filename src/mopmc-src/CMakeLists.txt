@@ -1,10 +1,10 @@
 add_subdirectory(solvers)
-add_subdirectory(hybrid-computing)
 add_subdirectory(queries)
 add_subdirectory(convex-functions)
 add_subdirectory(optimizers)
 add_subdirectory(auxiliary)
 add_subdirectory(storm-wrappers)
+add_subdirectory(future)
 add_subdirectory(_legacy)
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 

@@ -5,12 +5,11 @@
 #ifndef MOPMC_FRANKWOLFE_H
 #define MOPMC_FRANKWOLFE_H
 
-#include "../convex-functions/BaseConvexFunction.h"
-#include "../convex-functions/TotalReLU.h"
 #include "BaseOptimizer.h"
 #include "LinOpt.h"
 #include "LineSearch.h"
 #include "PolytopeTypeEnum.h"
+#include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cassert>
@@ -62,7 +61,6 @@ namespace mopmc::optimization::optimizers {
         int64_t dimension{}, size{};
         Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
         std::set<uint64_t> nullVertices;
-
     };
 }// namespace mopmc::optimization::optimizers
 

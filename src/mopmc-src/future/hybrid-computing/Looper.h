@@ -17,7 +17,7 @@
 #include <Eigen/Sparse>
 #include "Problem.h"
 #include "Utilities.h"
-#include "../QueryData.h"
+#include "mopmc-src/QueryData.h"
 #include "mopmc-src/solvers/CudaValueIteration.cuh"
 namespace hybrid {
 using namespace mopmc;

@@ -4,7 +4,7 @@
 
 #ifndef MOPMC_KLDISTANCE_H
 #define MOPMC_KLDISTANCE_H
-#include "BaseConvexFunction.h"
+#include "mopmc-src/convex-functions/BaseConvexFunction.h"
 
 namespace mopmc::optimization::convex_functions {
 

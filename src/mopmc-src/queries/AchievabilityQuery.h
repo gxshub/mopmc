@@ -15,8 +15,6 @@
 #include "../optimizers/LinOpt.h"
 #include "../optimizers/PolytopeTypeEnum.h"
 #include "../solvers/BaseValueIteration.h"
-#include "mopmc-src/hybrid-computing/Looper.h"
-#include "mopmc-src/hybrid-computing/Problem.h"
 
 namespace mopmc::queries {
 

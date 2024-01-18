@@ -8,7 +8,6 @@
 #include "convex-functions/EuclideanDistance.h"
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
-#include "mopmc-src/hybrid-computing/Problem.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
 #include "mopmc-src/storm-wrappers/StormModelCheckingWrapper.h"
 #include "optimizers/FrankWolfe.h"
@@ -45,8 +44,6 @@ namespace mopmc {
         clock_t time0 = clock();
         auto preprocessedResult = mopmc::ModelBuilder<ModelType>::preprocess(path_to_model, property_string, env);
         clock_t time05 = clock();
-        //mopmc::wrapper::StormModelCheckingWrapper<ModelType> stormModelCheckingWrapper(preprocessedResult);
-        //stormModelCheckingWrapper.performMultiObjectiveModelChecking(env);
         auto preparedModel = mopmc::ModelBuilder<ModelType>::build(preprocessedResult);
         clock_t time1 = clock();
         auto data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform_i32_v2(preprocessedResult,

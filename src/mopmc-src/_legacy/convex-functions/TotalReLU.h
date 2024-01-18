@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <Eigen/Dense>
-#include "BaseConvexFunction.h"
+#include "mopmc-src/convex-functions/BaseConvexFunction.h"
 
 namespace mopmc::optimization::convex_functions {
 
