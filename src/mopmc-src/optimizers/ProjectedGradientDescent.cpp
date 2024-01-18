@@ -44,7 +44,7 @@ namespace mopmc::optimization::optimizers {
     Vector<V> ProjectedGradientDescent<V>::minimizeByAdaptiveStepSize(const Vector<V> &point,
                                                                       const std::vector<Vector<V>> &Vertices,
                                                                       const std::vector<Vector<V>> &Directions) {
-        const uint64_t maxIter = 1000;
+        const uint64_t maxIter = 2000;
         const V beta = static_cast<V>(0.8);
         const V epsilon = static_cast<V>(1.e-8);
         V gamma = static_cast<V>(1.);

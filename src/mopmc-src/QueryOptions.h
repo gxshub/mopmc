@@ -22,6 +22,4 @@ namespace mopmc {
     };
 }
 
-
-
 #endif //MOPMC_QUERYOPTIONS_H

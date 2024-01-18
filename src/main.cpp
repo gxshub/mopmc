@@ -16,7 +16,7 @@ int main (int ac, char *av[]) {
                 ("prism", po::value<string>(), "prism model file")
                 ("props", po::value<string>(), "property file")
                 ("fn", po::value<string>(), "convex function")
-                ("popt", po::value<string>(), "primary optimizer")
+                ("popt", po::value<string>(), "inner optimizer")
                 ;
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);

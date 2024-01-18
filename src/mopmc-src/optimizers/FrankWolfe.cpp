@@ -50,7 +50,7 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     bool FrankWolfe<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
-        const V cosTolerance = std::cos(90.001 / 180.0 * M_PI);
+        const V cosTolerance = std::cos(90.0001 / 180.0 * M_PI);
         bool exit = false;
         V cosMin = 1.;
         for (int i = 0; i < size; ++i) {

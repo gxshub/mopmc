@@ -14,7 +14,6 @@
 #include "optimizers/FrankWolfe.h"
 #include "optimizers/ProjectedGradientDescent.h"
 #include "queries/AchievabilityQuery.h"
-#include "queries/ConvexQuery.h"
 #include "queries/ConvexQuery2.h"
 #include <Eigen/Dense>
 #include <cstdio>
@@ -120,7 +119,7 @@ namespace mopmc {
         }
         mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
         mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType> cudaVIHandler(&data);
-        mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
+        mopmc::queries::ConvexQuery2<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
         q.query();
         clock_t time3 = clock();
 

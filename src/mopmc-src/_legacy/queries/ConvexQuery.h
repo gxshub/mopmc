@@ -3,11 +3,11 @@
 //
 #ifndef MOPMC_CONVEXXQUERY_H
 #define MOPMC_CONVEXXQUERY_H
-#include <storm/storage/SparseMatrix.h>
+#include "mopmc-src/QueryData.h"
+#include "mopmc-src/queries/BaseQuery.h"
 #include <Eigen/Sparse>
 #include <storm/api/storm.h>
-#include "BaseQuery.h"
-#include "../QueryData.h"
+#include <storm/storage/SparseMatrix.h>
 
 namespace mopmc::queries {
 

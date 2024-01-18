@@ -33,7 +33,6 @@ namespace mopmc::queries {
             : BaseQuery<T, I>(data, VIHandler) {};
 
         void query() override;
-        void hybridQuery(hybrid::ThreadSpecialisation archPref);
     };
 }
 

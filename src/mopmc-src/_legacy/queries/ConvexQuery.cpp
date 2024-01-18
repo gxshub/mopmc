@@ -20,7 +20,8 @@ namespace mopmc::queries {
         std::vector<Vector<T>> Vertices, WeightVectors;
         Vector<T> innerPointCurrent(n_objs), innerPointNew(n_objs), outerPoint(n_objs);
         Vector<T> vertex(n_objs), weightVector(n_objs);
-        weightVector.setConstant(static_cast<T>(1.0) / n_objs);
+        // initial direction
+        weightVector.setConstant(static_cast<T>(-1.0) / n_objs);
 
         const T toleranceDistanceToMinimum{1.e-6};
         const T toleranceSmallGradient{1.e-8};
