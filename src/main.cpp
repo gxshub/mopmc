@@ -12,12 +12,12 @@ int main (int ac, char *av[]) {
     try {
         po::options_description desc("Allowed options");
         desc.add_options()
-                ("help", "produce help message")
-                ("prism", po::value<string>(), "prism model file")
-                ("props", po::value<string>(), "property file")
-                ("fn", po::value<string>(), "convex function")
-                ("popt", po::value<string>(), "inner optimizer")
-                ("query-type,Q", po::value<string>(), "query type")
+                ("help,H", "produce help message")
+                ("prism,M", po::value<string>(), "prism model file")
+                ("props,P", po::value<string>(), "property file")
+                ("loss,L", po::value<string>(), "convex function")
+                ("inner-optim,I", po::value<string>(), "inner optimizer")
+                ("query,Q", po::value<string>(), "query type")
                 ;
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
@@ -35,8 +35,8 @@ int main (int ac, char *av[]) {
         }
 
         mopmc::QueryOptions queryOptions{};
-        if (vm.count("query-type")) {
-            const auto& s = vm["query-type"].as<string>();
+        if (vm.count("query")) {
+            const auto& s = vm["query"].as<string>();
             if (s == "achievability") {
                 queryOptions.QUERY_TYPE = mopmc::QueryOptions::ACHIEVABILITY;
             } else if (s == "convex") {
@@ -46,8 +46,8 @@ int main (int ac, char *av[]) {
                 return 1;
             }
         }
-        if (vm.count("fn")) {
-            const auto& s = vm["fn"].as<string>();
+        if (vm.count("loss")) {
+            const auto& s = vm["loss"].as<string>();
             if (s == "mse") {
                 queryOptions.CONVEX_FUN = mopmc::QueryOptions::MSE;
             } else if (s == "se") {
@@ -61,23 +61,23 @@ int main (int ac, char *av[]) {
                 return 1;
             }
         }
-        if (vm.count("popt")) {
-            const auto& s = vm["popt"].as<string>();
+        if (vm.count("inner-optim")) {
+            const auto& s = vm["inner-optim"].as<string>();
             if (s == "away-step") {
                 queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::AWAY_STEP;
+            } else if (s == "si-gd") {
+                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::SIMPLEX_GD;
             } else if (s == "linopt") {
                 queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::LINOPT;
             } else if (s == "blended") {
                 queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::BLENDED;
             } else if (s == "blended-step-opt") {
                 queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::BLENDED_STEP_OPT;
-            } else if (s == "si-gd") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::SIMPLEX_GD;
             } else if (s == "pgd") {
                 queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::PGD;
             }
             else {
-                cout << "not supported primary optimizer\n";
+                cout << "not supported inner optimizer\n";
                 return 1;
             }
         }

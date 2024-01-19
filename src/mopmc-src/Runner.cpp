@@ -86,6 +86,18 @@ namespace mopmc {
                 }
                 std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>> optimizer;
                 switch (queryOptions.PRIMARY_OPTIMIZER) {
+                    case QueryOptions::SIMPLEX_GD: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn));
+                        break;
+                    }
+                    case QueryOptions::AWAY_STEP: {
+                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
+                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
+                                        mopmc::optimization::optimizers::FWOption::AWAY_STEP, &*fn));
+                        break;
+                    }
                     case QueryOptions::BLENDED: {
                         optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
                                 new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
@@ -98,22 +110,10 @@ namespace mopmc {
                                         mopmc::optimization::optimizers::FWOption::BLENDED_STEP_OPT, &*fn));
                         break;
                     }
-                    case QueryOptions::AWAY_STEP: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::AWAY_STEP, &*fn));
-                        break;
-                    }
                     case QueryOptions::LINOPT: {
                         optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
                                 new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
                                         mopmc::optimization::optimizers::FWOption::LINOPT, &*fn));
-                        break;
-                    }
-                    case QueryOptions::SIMPLEX_GD: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn));
                         break;
                     }
                     case QueryOptions::PGD: {
