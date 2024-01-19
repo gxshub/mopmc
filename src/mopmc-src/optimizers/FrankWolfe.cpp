@@ -296,13 +296,6 @@ namespace mopmc::optimization::optimizers {
                     forwardOrAwayStepUpdate(fwdInd, fwdVec, awyInd, awyVec, gamma, gammaMax, isFwd);
                     break;
                 }
-                case LINOPT: {
-                    PolytopeType polytopeType = PolytopeType::Vertex;
-                    this->linOpt.optimizeVtx(Vertices, polytopeType, dXCurrent, xNewTmp);
-                    gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
-                    xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
-                    break;
-                }
                 case BLENDED: {
                     if (epsFwd + epsAwy >= delta) {
                         forwardOrAwayStepUpdate(fwdInd, fwdVec, awyInd, awyVec, gamma, gammaMax, isFwd);

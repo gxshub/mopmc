@@ -1,31 +1,39 @@
 # 01
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<=14.0 [ F \"tasks_complete\" ], R{\"energy\"}<=1.25 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<=14.0 [ F \"tasks_complete\" ], R{\"energy\"}<=1.25 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<=14.0 [ F \"tasks_complete\" ], R{\"energy\"}<=1.25 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<=14.0 [ F \"tasks_complete\" ], R{\"energy\"}<=1.25 [  F \"tasks_complete\" ])"
 
 Storm: true
 MOPMC: true
 
 # 02
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<=12.5 [ F \"tasks_complete\" ], R{\"energy\"}<=1.2 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<=12.5 [ F \"tasks_complete\" ], R{\"energy\"}<=1.2 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 12.5 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 12.5 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2 [  F \"tasks_complete\" ])"
 
 Storm: false
 MOMPC: false
 
 # 03
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<=13.5 [ F \"tasks_complete\" ], R{\"energy\"}<=1.2 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<=13.5 [ F \"tasks_complete\" ], R{\"energy\"}<=1.2 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 13.5 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 13.5 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2 [  F \"tasks_complete\" ])"
 
 Storm: false
 MOMPC: false
 
 # 04
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<=14 [ F \"tasks_complete\" ], R{\"energy\"}<=1.2 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<=14 [ F \"tasks_complete\" ], R{\"energy\"}<=1.2 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 14 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 14 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2 [  F \"tasks_complete\" ])"
 
 
 Storm: false
@@ -34,7 +42,8 @@ MOMPC: false
 # 05
 /home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<=14 [ F \"tasks_complete\" ], R{\"energy\"}<=1.25 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 14 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.25 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 14 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.25 [  F \"tasks_complete\" ])"
 
 Storm: true
 MOMPC: true
@@ -42,39 +51,48 @@ MOMPC: true
 # 06
 /home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<= 11.77777778 [ F \"tasks_complete\" ], R{\"energy\"}<=1.5 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 11.77777778 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.5 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 11.77777778 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.5 [  F \"tasks_complete\" ])"
 
 Storm: true
 MOMPC: true
 
 # 07
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<= 11.776 [ F \"tasks_complete\" ], R{\"energy\"}<=1.5 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<= 11.776 [ F \"tasks_complete\" ], R{\"energy\"}<=1.5 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 11.776 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.5 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+ -P "multi(R{\"time\"}<= 11.776 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.5 [  F \"tasks_complete\" ])"
 
 Storm: false
 MOMPC: false
 
 # 08
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<= 11.778 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<= 11.778 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 11.778 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 11.778 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
 
 Storm: false
 MOMPC: false
 
 # 09
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.224666667 [  F \"tasks_complete\" ])"
 
 Storm: true
 MOMPC: true
 
 # 10
-/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2246 [  F \"tasks_complete\" ])"
+/home/guoxin/Downloads/storm/build/bin/storm --prism examples/multiobj_scheduler05.nm \
+--prop "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2246 [  F \"tasks_complete\" ])"
 
-./build/mopmc examples/multiobj_scheduler05.nm "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2246 [  F \"tasks_complete\" ])"
+./build/mopmc -Q achievability -M examples/multiobj_scheduler05.nm \
+-P "multi(R{\"time\"}<= 16 [ F \"tasks_complete\" ], R{\"energy\"}<= 1.2246 [  F \"tasks_complete\" ])"
 
 Storm: false
 MOMPC: false

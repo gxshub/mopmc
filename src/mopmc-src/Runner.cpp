@@ -9,7 +9,6 @@
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
-#include "mopmc-src/storm-wrappers/StormModelCheckingWrapper.h"
 #include "optimizers/FrankWolfe.h"
 #include "optimizers/ProjectedGradientDescent.h"
 #include "queries/AchievabilityQuery.h"
@@ -85,7 +84,7 @@ namespace mopmc {
                     }
                 }
                 std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>> optimizer;
-                switch (queryOptions.PRIMARY_OPTIMIZER) {
+                switch (queryOptions.INNER_OPTIMIZER) {
                     case QueryOptions::SIMPLEX_GD: {
                         optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
                                 new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
@@ -110,12 +109,6 @@ namespace mopmc {
                                         mopmc::optimization::optimizers::FWOption::BLENDED_STEP_OPT, &*fn));
                         break;
                     }
-                    case QueryOptions::LINOPT: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::LINOPT, &*fn));
-                        break;
-                    }
                     case QueryOptions::PGD: {
                         optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
                                 new mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType>(
@@ -136,7 +129,6 @@ namespace mopmc {
         printf("Model building stage 2: %.3f seconds.\n", double(time1 - time05) / CLOCKS_PER_SEC);
         printf("Input data transformation: %.3f seconds.\n", double(time2 - time1) / CLOCKS_PER_SEC);
         printf("Model checking: %.3f seconds.\n", double(time3 - time2) / CLOCKS_PER_SEC);
-
         return true;
     }
 }// namespace mopmc

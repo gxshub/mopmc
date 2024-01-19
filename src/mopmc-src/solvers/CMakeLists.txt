@@ -7,6 +7,8 @@ list(
         "${dir}/CuFunctions.h"
         "${dir}/CudaValueIteration.cu"
         "${dir}/CudaValueIteration.cuh"
+        "${dir}/WarmUp.cu"
+        "${dir}/WarmUp.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

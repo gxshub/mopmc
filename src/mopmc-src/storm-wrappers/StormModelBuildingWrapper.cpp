@@ -3,21 +3,20 @@
 //
 
 #include "StormModelBuildingWrapper.h"
+#include <Eigen/Sparse>
+#include <iostream>
+#include <storm-parsers/api/storm-parsers.h>
+#include <storm/adapters/EigenAdapter.h>
+#include <storm/api/storm.h>
+#include <storm/environment/Environment.h>
+#include <storm/environment/modelchecker/MultiObjectiveModelCheckerEnvironment.h>
+#include <storm/modelchecker/multiobjective/pcaa/StandardMdpPcaaWeightVectorChecker.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessor.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessorResult.h>
+#include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectiveRewardAnalysis.h>
 #include <storm/models/sparse/Mdp.h>
-#include <storm/api/storm.h>
-#include <storm-parsers/api/storm-parsers.h>
 #include <storm/storage/prism/Program.h>
 #include <string>
-#include <iostream>
-#include <storm/environment/modelchecker/MultiObjectiveModelCheckerEnvironment.h>
-#include <storm/environment/Environment.h>
-#include <storm/modelchecker/multiobjective/pcaa/StandardMdpPcaaWeightVectorChecker.h>
-#include <Eigen/Sparse>
-#include <storm/adapters/EigenAdapter.h>
-#include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectiveRewardAnalysis.h>
-//#include "legacy/model-checking/MOPMCModelChecking.h"
 
 namespace mopmc {
 
@@ -68,8 +67,7 @@ namespace mopmc {
         }
         //Confine the property (syntax) to achievability query
         // We will convert it to a convex query.
-        if (prepResult.queryType != storm::modelchecker::multiobjective::preprocessing
-        ::SparseMultiObjectivePreprocessorResult<M>::QueryType::Achievability) {
+        if (prepResult.queryType != storm::modelchecker::multiobjective::preprocessing ::SparseMultiObjectivePreprocessorResult<M>::QueryType::Achievability) {
             throw std::runtime_error("The input property should be achievability query type.");
         }
 
@@ -86,4 +84,4 @@ namespace mopmc {
 
 
     template class ModelBuilder<storm::models::sparse::Mdp<double>>;
-}
+}// namespace mopmc

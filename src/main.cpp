@@ -64,17 +64,15 @@ int main (int ac, char *av[]) {
         if (vm.count("inner-optim")) {
             const auto& s = vm["inner-optim"].as<string>();
             if (s == "away-step") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::AWAY_STEP;
+                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::AWAY_STEP;
             } else if (s == "si-gd") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::SIMPLEX_GD;
-            } else if (s == "linopt") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::LINOPT;
+                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::SIMPLEX_GD;
             } else if (s == "blended") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::BLENDED;
+                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::BLENDED;
             } else if (s == "blended-step-opt") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::BLENDED_STEP_OPT;
+                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::BLENDED_STEP_OPT;
             } else if (s == "pgd") {
-                queryOptions.PRIMARY_OPTIMIZER = mopmc::QueryOptions::PGD;
+                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::PGD;
             }
             else {
                 cout << "not supported inner optimizer\n";

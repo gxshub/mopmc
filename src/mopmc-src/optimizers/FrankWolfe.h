@@ -26,7 +26,6 @@ namespace mopmc::optimization::optimizers {
     enum FWOption {
         SIMPLEX_GD,
         AWAY_STEP,
-        LINOPT,
         BLENDED,
         BLENDED_STEP_OPT
     };
