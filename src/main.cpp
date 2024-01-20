@@ -50,12 +50,10 @@ int main (int ac, char *av[]) {
             const auto& s = vm["loss"].as<string>();
             if (s == "mse") {
                 queryOptions.CONVEX_FUN = mopmc::QueryOptions::MSE;
-            } else if (s == "se") {
-                queryOptions.CONVEX_FUN = mopmc::QueryOptions::SE;
+            } else if (s == "eud") {
+                queryOptions.CONVEX_FUN = mopmc::QueryOptions::EUD;
             } else if (s == "var") {
                 queryOptions.CONVEX_FUN = mopmc::QueryOptions::VAR;
-            } else if (s == "sd") {
-                queryOptions.CONVEX_FUN = mopmc::QueryOptions::SD;
             } else {
                 cout << "not supported convex function\n";
                 return 1;

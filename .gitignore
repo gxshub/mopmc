@@ -454,3 +454,4 @@ cmake-build-default/Testing/Temporary/LastTest.log
 /cmake-build-debug/
 /.idea/
 /.cache/
+/CMakeFiles/CMakeSystem.cmake

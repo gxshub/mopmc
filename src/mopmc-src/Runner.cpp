@@ -66,7 +66,7 @@ namespace mopmc {
                                 new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
                         break;
                     }
-                    case QueryOptions::SE: {
+                    case QueryOptions::EUD: {
                         fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                 new mopmc::optimization::convex_functions::EuclideanDistance<ValueType>(h));
                         break;
@@ -75,11 +75,6 @@ namespace mopmc {
                     case QueryOptions::VAR: {
                         fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                 new mopmc::optimization::convex_functions::Variance<ValueType>(h.size()));
-                        break;
-                    }
-                    case QueryOptions::SD: {
-                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                                new mopmc::optimization::convex_functions::StandDeviation<ValueType>(h.size()));
                         break;
                     }
                 }

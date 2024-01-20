@@ -18,13 +18,11 @@ namespace mopmc {
         enum { ACHIEVABILITY,
                CONVEX } QUERY_TYPE;
         enum { MSE,
-               SE,
-               VAR,
-               SD } CONVEX_FUN;
+               EUD,
+               VAR} CONVEX_FUN;
         enum { BLENDED,
                BLENDED_STEP_OPT,
                AWAY_STEP,
-               //LINOPT,
                SIMPLEX_GD,
                PGD } INNER_OPTIMIZER,
                 OUTER_OPTIMIZER;
