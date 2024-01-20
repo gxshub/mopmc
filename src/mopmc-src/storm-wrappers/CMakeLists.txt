@@ -5,7 +5,6 @@ list(
         APPEND Sources
         "${dir}/StormModelBuildingWrapper.cpp"
         "${dir}/StormModelBuildingWrapper.h"
-        "${dir}/StormModelCheckingWrapper.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)
