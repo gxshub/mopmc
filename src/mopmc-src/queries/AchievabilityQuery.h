@@ -5,16 +5,15 @@
 #ifndef MOPMC_ACHIEVABILITYQUERY_H
 #define MOPMC_ACHIEVABILITYQUERY_H
 
+#include "BaseQuery.h"
+#include "mopmc-src/QueryData.h"
+#include "mopmc-src/optimizers/LinOpt.h"
+#include "mopmc-src/solvers/BaseValueIteration.h"
+#include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <memory>
 #include <thread>
-#include "BaseQuery.h"
-#include "../QueryData.h"
-#include "../solvers/CudaValueIteration.cuh"
-#include "../optimizers/LinOpt.h"
-#include "../optimizers/PolytopeTypeEnum.h"
-#include "../solvers/BaseValueIteration.h"
 
 namespace mopmc::queries {
 
@@ -26,12 +25,12 @@ namespace mopmc::queries {
     template<typename T, typename I>
     class AchievabilityQuery : public BaseQuery<T, I> {
     public:
-        explicit AchievabilityQuery(const mopmc::QueryData<T, I> &data) : BaseQuery<T, I>(data) {};
+        explicit AchievabilityQuery(const mopmc::QueryData<T, I> &data) : BaseQuery<T, I>(data){};
         explicit AchievabilityQuery(const mopmc::QueryData<T, I> &data, mopmc::value_iteration::BaseVIHandler<T> *VIHandler)
-            : BaseQuery<T, I>(data, VIHandler) {};
+            : BaseQuery<T, I>(data, VIHandler){};
 
         void query() override;
     };
-}
+}// namespace mopmc::queries
 
-#endif //MOPMC_ACHIEVABILITYQUERY_H
+#endif//MOPMC_ACHIEVABILITYQUERY_H

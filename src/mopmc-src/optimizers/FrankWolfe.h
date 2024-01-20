@@ -8,7 +8,6 @@
 #include "BaseOptimizer.h"
 #include "LinOpt.h"
 #include "LineSearch.h"
-#include "PolytopeTypeEnum.h"
 #include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>
 #include <algorithm>

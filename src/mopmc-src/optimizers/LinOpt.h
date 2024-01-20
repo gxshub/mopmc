@@ -5,18 +5,17 @@
 #ifndef MOPMC_LINOPT_H
 #define MOPMC_LINOPT_H
 
-#include "PolytopeTypeEnum.h"
-#include <vector>
+#include "lp_lib.h"
+#include <Eigen/Dense>
 #include <cassert>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdint>
-#include <numeric>
 #include <cstring>
-#include <stdexcept>
-#include <Eigen/Dense>
 #include <iostream>
-#include "lp_lib.h"
+#include <numeric>
+#include <stdexcept>
+#include <vector>
 
 namespace mopmc::optimization::optimizers {
 
@@ -28,7 +27,6 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     class LinOpt {
     public:
-
         int findOptimalSeparatingDirection(const std::vector<Vector<V>> &Vertices,
                                            const Vector<V> &gradient,
                                            const Vector<V> &sign,
@@ -42,8 +40,7 @@ namespace mopmc::optimization::optimizers {
         int findMaximumFeasibleStep(const std::vector<Vector<V>> &Vertices,
                                     const Vector<V> &gradient,
                                     Vector<V> point, V step);
-
     };
-}
+}// namespace mopmc::optimization::optimizers
 
-#endif //MOPMC_LINOPT_H
+#endif//MOPMC_LINOPT_H
