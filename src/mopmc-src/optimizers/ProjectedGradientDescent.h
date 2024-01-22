@@ -30,7 +30,7 @@ namespace mopmc::optimization::optimizers {
         explicit ProjectedGradientDescent(convex_functions::BaseConvexFunction<V> *f) : BaseOptimizer<V>(f){};
 
         ProjectedGradientDescent(ProjectionType type, mopmc::optimization::convex_functions::BaseConvexFunction<V> *f)
-            : projectionType(type), BaseOptimizer<V>(f) {};
+            : projectionType(type), BaseOptimizer<V>(f){};
 
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
 
@@ -51,6 +51,22 @@ namespace mopmc::optimization::optimizers {
         Vector<V> projectToHalfSpaces(const Vector<V> &point,
                                       const std::vector<Vector<V>> &Vertices,
                                       const std::vector<Vector<V>> &Directions);
+
+        Vector<V> dykstrasProjection(const Vector<V> &point,
+                                  const std::vector<Vector<V>> &Vertices,
+                                  const std::vector<Vector<V>> &Directions);
+
+        Vector<V> projectFromPointToHyperPlane(const Vector<V> &point, const Vector<V> &vertex, const Vector<V> &direction);
+
+        Vector<V> intersectLineWithHalfSpaces(const Vector<V> &point1,
+                                              const Vector<V> &point2,
+                                              const std::vector<Vector<V>> &Vertices,
+                                              const std::vector<Vector<V>> &Directions);
+
+        Vector<V> projectToHalfSpaces_v2(const Vector<V> &newPoint,
+                                         const Vector<V> &oriPoint,
+                                         const std::vector<Vector<V>> &Vertices,
+                                         const std::vector<Vector<V>> &Directions);
 
         Vector<V> projectToNearestHyperplane(Vector<V> &x,
                                              const std::vector<Vector<V>> &Phi,

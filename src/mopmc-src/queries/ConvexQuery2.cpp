@@ -47,8 +47,9 @@ namespace mopmc::queries {
             Directions.push_back(direction);
             if (Vertices.size() == 1) {
                 innerPoint = vertex;
-                outerPoint = vertex;
+                //outerPoint = vertex;
             }
+            outerPoint = innerPoint;
             this->outerOptimizer->minimize(outerPoint, Vertices, Directions);
             epsilonDistanceToMinimum = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (epsilonDistanceToMinimum < toleranceDistanceToMinimum) {
