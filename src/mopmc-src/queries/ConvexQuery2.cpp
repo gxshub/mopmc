@@ -42,12 +42,10 @@ namespace mopmc::queries {
             this->VIhandler->valueIteration(direction1);
             std::vector<T> vertex1 = this->VIhandler->getResults();
             vertex = VectorMap<T>(vertex1.data(), n_objs);
-
             Vertices.push_back(vertex);
             Directions.push_back(direction);
             if (Vertices.size() == 1) {
                 innerPoint = vertex;
-                //outerPoint = vertex;
             }
             outerPoint = innerPoint;
             this->outerOptimizer->minimize(outerPoint, Vertices, Directions);

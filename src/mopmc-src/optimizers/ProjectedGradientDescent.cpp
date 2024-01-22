@@ -46,39 +46,34 @@ namespace mopmc::optimization::optimizers {
         const uint64_t maxIter = 2000;
         const V beta = static_cast<V>(0.8);
         const V epsilon = static_cast<V>(1.e-6);
+        V gamma1 = static_cast<V>(1.);
 
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher(this->fn);
 
         const uint64_t m = point.size();
         const uint64_t n = Vertices.size();
-        Vector<V> xCurrent(point), xNew(m), xTemp(m), xGrad(m), xDir(m);
+        Vector<V> xCurrent(point), xNew(m), xTemp(m), xGrad(m);
         uint_fast64_t it;
-        V gamma = static_cast<V>(1e-3);
         for (it = 0; it < maxIter; ++it) {
             //xNew = projectToHalfSpaces(xTemp, Vertices, Directions);
-            //xNew = projectToHalfSpaces_v2(xTemp, xCurrent, Vertices, Directions);
-            //V gamma = static_cast<V>(1.);
+            V gamma = static_cast<V>(1.);
+            xGrad = this->fn->subgradient(xCurrent);
+            V g = xGrad.template lpNorm<2>();
+            while (this->fn->value(xCurrent - xGrad) > this->fn->value(xCurrent) - gamma * 0.5 * std::pow(g,2)) {
+                gamma *= beta;
+                if (gamma < 1e-2) {break;}
+            }
             xTemp = xCurrent - gamma * this->fn->subgradient(xCurrent);
             xNew = dykstrasProjection(xTemp, Vertices, Directions);
-            V gamma1 = lineSearcher.findOptimalRelativeDistance(xCurrent, xNew, 1.);
-            xCurrent = (1. - gamma1) * xCurrent + gamma1 * xNew;
-            //xGrad = this->fn->subgradient(xCurrent);
-            //xDir = xNew - xCurrent;
-            /*
-            while (this->fn->value(xCurrent - gamma * xDir) >
-                   this->fn->value(xCurrent) - gamma * 0.5 * (xGrad.dot(xDir))) {
-                    gamma *= beta;
-            }
-             */
-            //xCurrent += gamma * xDir;
+            gamma1 = lineSearcher.findOptimalRelativeDistance(xCurrent, xNew, 1.);
+            xNew = (1. - gamma1) * xCurrent + gamma1 * xNew;
             V error = (xNew - xCurrent).template lpNorm<1>();
-            //V error = (gamma * xDir).template lpNorm<1>();
-            //std::cout << "projected GD error: " << error << " at iteration: " << it << ", with gamma: " << gamma << "\n";
             if (error < epsilon) {
                 xCurrent = xNew;
                 std::cout << "Projected GD exits due to small tolerance (" << error << ")\n";
                 break;
             }
+            xCurrent = xNew;
         }
         std::cout << "*Projected GD* stops at iteration: " << it << ", nearest distance: " << this->fn->value(xNew) << "\n";
         return xNew;
@@ -143,9 +138,6 @@ namespace mopmc::optimization::optimizers {
                                                               const std::vector<Vector<V>> &Vertices,
                                                               const std::vector<Vector<V>> &Directions) {
 
-        const uint64_t maxIter = 100;
-        const V tolerance = 1e-5;
-
         const uint64_t m = Vertices[0].size();
         std::vector<int64_t> pointIndices;
         for (int64_t i = 0; i < Vertices.size(); ++i) {
@@ -167,6 +159,8 @@ namespace mopmc::optimization::optimizers {
             U[i].resize(m);
             Z[i] = Vector<V>::Zero(m);
         }
+        const uint64_t maxIter = 100;
+        const V tolerance = 1e-5;
         uint_fast64_t it = 1;
         V tol;
         while (it <maxIter) {
@@ -182,71 +176,7 @@ namespace mopmc::optimization::optimizers {
             }
             ++it;
         }
-        //std::cout << "[dykstras projection] iteration: " << it << ", tolerance: " << tol <<"\n";
-        //return intersectLineWithHalfSpaces(point, U[d], Vertices, Directions);
         return U[d];
-    }
-
-    template<typename V>
-    Vector<V> ProjectedGradientDescent<V>::projectToHalfSpaces_v2(const Vector<V> &newPoint,
-                                                                  const Vector<V> &oriPoint,
-                                                                  const std::vector<Vector<V>> &Vertices,
-                                                                  const std::vector<Vector<V>> &Directions) {
-        const uint64_t m = Vertices[0].size();
-        uint64_t ind;
-        Vector<V> prjPoint = newPoint;
-        V furthest;
-        uint64_t it = 0;
-        while (it < m) {
-            ind = m;
-            furthest = static_cast<V>(0.);
-            for (uint_fast64_t i = 0; i < Vertices.size(); ++i) {
-                const Vector<V> &w = Directions[i];
-                V distance = w.dot(prjPoint - Vertices[i]) / std::pow(w.template lpNorm<2>(), 2);
-                if (distance > furthest) {
-                    furthest = distance;
-                    ind = i;
-                }
-            }
-            if (ind < m) {
-                prjPoint = prjPoint - (furthest * Directions[ind]);
-            } else {
-                break;
-            }
-            ++it;
-        }
-        /*
-        V lambda = std::numeric_limits<V>::min();
-        for (uint_fast64_t i = 0; i < Vertices.size(); ++i) {
-            const Vector<V> &w = Directions[i];
-            const Vector<V> &r = Vertices[i];
-            const V a = w.dot(r - newPoint);
-            const V b = w.dot(prjPoint - newPoint);
-            //if (a < 0.) { std::cout << "a = " << a << "\n"; }
-            //assert(a >= 0.);
-            if (a > 0. & b != 0.) {
-                if (lambda < a / b) {
-                    lambda = a / b;
-                }
-            }
-        }
-        if (lambda > std::numeric_limits<V>::min()) {
-            prjPoint = newPoint + lambda * (prjPoint - newPoint);
-            //std::cout << "got here\n";
-        }
-         */
-        {
-            V furthest1 = static_cast<V>(0.);
-            for (uint_fast64_t i = 0; i < Vertices.size(); ++i) {
-                const Vector<V> &w = Directions[i];
-                V distance = w.dot(prjPoint - Vertices[i]) / std::pow(w.template lpNorm<2>(), 2);
-                if (distance > furthest1) {
-                    furthest1 = distance;
-                }
-            }
-            std::cout << "furthest1: " << furthest1 << "\n";
-        }
-        return prjPoint;
     }
 
     template<typename V>
@@ -305,27 +235,6 @@ namespace mopmc::optimization::optimizers {
             result += alphaNew(i) * Phi[i];
         }
         return result;
-    }
-
-    template<typename V>
-    Vector<V> ProjectedGradientDescent<V>::projectToNearestHyperplane(Vector<V> &x,
-                                                                      const std::vector<Vector<V>> &Phi,
-                                                                      const std::vector<Vector<V>> &W) {
-
-        assert(W.size() == Phi.size());
-        assert(!Phi.empty());
-        uint64_t m = Phi[0].size();
-        V shortest = std::numeric_limits<V>::max();
-        Vector<V> xProj = x;
-        for (uint_fast64_t i = 0; i < Phi.size(); ++i) {
-            V e = Phi[i].template lpNorm<2>();
-            V distance = W[i].dot(x - Phi[i]) / std::pow(e, 2);
-            if (distance > 0 && distance < shortest) {
-                shortest = distance;
-                xProj = x - (shortest * W[i]);
-            }
-        }
-        return xProj;
     }
 
     template<typename V>

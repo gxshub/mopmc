@@ -63,19 +63,11 @@ namespace mopmc::optimization::optimizers {
                                               const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions);
 
-        Vector<V> projectToHalfSpaces_v2(const Vector<V> &newPoint,
-                                         const Vector<V> &oriPoint,
-                                         const std::vector<Vector<V>> &Vertices,
-                                         const std::vector<Vector<V>> &Directions);
-
-        Vector<V> projectToNearestHyperplane(Vector<V> &x,
-                                             const std::vector<Vector<V>> &Phi,
-                                             const std::vector<Vector<V>> &W);
         Vector<V> argminUnitSimplexProjection(Vector<V> &weightVector,
                                               const std::vector<Vector<V>> &Points);
 
         Vector<V> projectToUnitSimplex(Vector<V> &x);
-        int64_t dimension{}, size{};
+
         Vector<V> optimalPoint;
         Vector<V> alpha;
     };
