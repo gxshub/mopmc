@@ -1,5 +1,5 @@
-# MOPMC with LTL Property Specifications
-Multi-objective Probabilistic Model Checking built on a C++ API of [Storm](https://www.stormchecker.org).
+# MOPMC: A GPU-Accelerated Probabilistic Model Checking Tool for Multi-Objective Convex Queries
+MOPMC built on a C++ API of [Storm](https://www.stormchecker.org).
 This project is built on the Storm project and to use it, Storm model checker needs to be build from 
 **source** with all dependencies. See [Storm](https://www.stormchecker.org) for installation details.
 
@@ -29,9 +29,7 @@ you should see something like:
 
 ```
 
-A further note on setting up your environment. 
-
-Cuda Toolkit has a mandatory action of adding the toolkit to the `PATH` variable. Add the 
+A further note on setting up the environment. Cuda Toolkit has a mandatory action of adding the toolkit to the `PATH` variable. Add the 
 following to `.bashrc` or `.profile`:
 ```bash
 export PATH=/usr/local/cuda-12.2/bin${PATH:+:${PATH}}
@@ -43,9 +41,9 @@ to `.bashrc` or `.profile`.
 ```bash
 export LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64 ${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 ```
-
 This avoids errors by the IDE debug compiler relating to setting `CMAKE_CUDA_ARCHITECTURES`.
 
+<!--
 If your IDE cannot find the Storm header files, you can specify the header search paths so that the Storm source directories
 can be indexed (see [Manage CMake project files](https://www.jetbrains.com/help/clion/managing-cmake-project-files.html#nonprj_files)).
 This can be done by adding the following line into the current [`CMakeList.txt`](./CMakeLists.txt) file:
@@ -53,6 +51,7 @@ This can be done by adding the following line into the current [`CMakeList.txt`]
 set(storm_INCLUDE_DIR, ./storm)
 ```
 where `storm` is a symlink to `<YOUR_STORM_ROOT_DIRECTORY>/build/src/storm` created in the project root.
+-->
 
 ## Getting Started
 
@@ -67,8 +66,16 @@ To test your build is working, run the executable using the convenience script:
 ```bash
 ./run.sh
 ```
+Alternatively, run:
+```
+./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex -L mse -I si-gd
+```
+or 
+```
+./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex -L eud -I si-gd
+```
 
-This project only computes multi-objective model checking of convex queries.
+<!-- This project only computes multi-objective model checking of convex queries. -->
 
 ## Development
 
