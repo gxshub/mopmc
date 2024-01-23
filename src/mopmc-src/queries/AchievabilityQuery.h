@@ -30,6 +30,18 @@ namespace mopmc::queries {
             : BaseQuery<T, I>(data, VIHandler){};
 
         void query() override;
+
+        [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
+            return iter;
+        }
+        [[nodiscard]] bool getResult() const {
+            return achievable;
+        }
+
+    private:
+        std::vector<Vector<T>> VertexVectors, WeightVectors;
+        uint_fast64_t iter{};
+        bool achievable{};
     };
 }// namespace mopmc::queries
 

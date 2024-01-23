@@ -2,11 +2,11 @@
 // Created by thomas on 5/09/23.
 //
 
-#include "ConvexQuery.h"
-#include <cassert>
-#include <numeric>
-#include <iostream>
+#include "ConvexQueryAux.h"
 #include "lp_lib.h"
+#include <cassert>
+#include <iostream>
+#include <numeric>
 
 namespace mopmc::solver::convex {
 

@@ -4,8 +4,8 @@ list(
         APPEND Sources
         "${dir}/ActionSelection.cu"
         "${dir}/ActionSelection.h"
-        "${dir}/ConvexQuery.cpp"
-        "${dir}/ConvexQuery.h"
+        "${dir}/ConvexQueryAux.cpp"
+        "${dir}/ConvexQueryAux.h"
         "${dir}/CudaOnlyValueIteration.cpp"
         "${dir}/CudaOnlyValueIteration.h"
         "${dir}/CuVISolver.cpp"

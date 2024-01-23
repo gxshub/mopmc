@@ -10,17 +10,17 @@
 #include "MultiObjectivePreprocessor.h"
 #include <storm/models/sparse/Mdp.h>
 
+#include "../solvers/ConvexQueryAux.h"
+#include "../solvers/InducedEquationSolver.h"
+#include "mopmc-src/solvers/WarmUp.h"
+#include <set>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectiveRewardAnalysis.h>
+#include <storm/modelchecker/prctl/helper/BaierUpperRewardBoundsComputer.h>
+#include <storm/modelchecker/prctl/helper/DsMpiUpperRewardBoundsComputer.h>
+#include <storm/solver/LinearEquationSolver.h>
 #include <storm/transformer/EndComponentEliminator.h>
 #include <storm/transformer/GoalStateMerger.h>
 #include <storm/utility/vector.h>
-#include <set>
-#include "../solvers/InducedEquationSolver.h"
-#include <storm/modelchecker/prctl/helper/DsMpiUpperRewardBoundsComputer.h>
-#include <storm/modelchecker/prctl/helper/BaierUpperRewardBoundsComputer.h>
-#include <storm/solver/LinearEquationSolver.h>
-#include "../solvers/ConvexQuery.h"
-#include "mopmc-src/solvers/WarmUp.h"
 
 namespace mopmc {
 namespace multiobjective {

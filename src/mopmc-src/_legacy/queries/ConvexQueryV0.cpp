@@ -3,7 +3,7 @@
 //
 
 
-#include "ConvexQuery.h"
+#include "ConvexQueryV0.h"
 #include <Eigen/Dense>
 #include <iostream>
 

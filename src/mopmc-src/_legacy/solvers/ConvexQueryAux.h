@@ -2,8 +2,8 @@
 // Created by thomas on 5/09/23.
 //
 
-#ifndef MOPMC_CONVEXQUERY_H
-#define MOPMC_CONVEXQUERY_H
+#ifndef MOPMC_CONVEXQUERYAUX_H
+#define MOPMC_CONVEXQUERYAUX_H
 
 #include <vector>
 #include <cstdint>
@@ -97,4 +97,4 @@ namespace mopmc::solver::convex {
             T threshold);
 
 }
-#endif //MOPMC_CONVEXQUERY_H
+#endif//MOPMC_CONVEXQUERYAUX_H

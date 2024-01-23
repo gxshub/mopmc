@@ -12,7 +12,7 @@
 #include "optimizers/FrankWolfe.h"
 #include "optimizers/ProjectedGradientDescent.h"
 #include "queries/AchievabilityQuery.h"
-#include "queries/ConvexQuery2.h"
+#include "queries/ConvexQuery.h"
 #include <Eigen/Dense>
 #include <cstdio>
 #include <ctime>
@@ -32,6 +32,9 @@ namespace mopmc {
     template<typename V>
     using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
 
+    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int>& q);
+    void printResult(const mopmc::queries::ConvexQuery<ValueType, int>& q);
+
     bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions queryOptions) {
         assert(typeid(ValueType) == typeid(double));
         assert(typeid(IndexType) == typeid(uint64_t));
@@ -49,12 +52,12 @@ namespace mopmc {
                                                                                              preparedModel);
         clock_t time2 = clock();
 
-
         mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType> cudaVIHandler(&data);
         switch (queryOptions.QUERY_TYPE) {
             case QueryOptions::ACHIEVABILITY: {
                 mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &cudaVIHandler);
                 q.query();
+                printResult(q);
                 break;
             }
             case QueryOptions::CONVEX: {
@@ -71,7 +74,6 @@ namespace mopmc {
                                 new mopmc::optimization::convex_functions::EuclideanDistance<ValueType>(h));
                         break;
                     }
-
                     case QueryOptions::VAR: {
                         fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                 new mopmc::optimization::convex_functions::Variance<ValueType>(h.size()));
@@ -112,8 +114,9 @@ namespace mopmc {
                     }
                 }
                 mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
-                mopmc::queries::ConvexQuery2<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
+                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
                 q.query();
+                printResult(q);
                 break;
             }
         }
@@ -125,5 +128,25 @@ namespace mopmc {
         printf("Input data transformation: %.3f seconds.\n", double(time2 - time1) / CLOCKS_PER_SEC);
         printf("Model checking: %.3f seconds.\n", double(time3 - time2) / CLOCKS_PER_SEC);
         return true;
+    }
+
+    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int>& q) {
+        std::cout << "----------------------------------------------\n";
+        std::cout << "Achievability Query terminates after " << q.getMainLoopIterationCount() << " iteration(s) \n";
+        std::cout << "OUTPUT: " << std::boolalpha << q.getResult() << "\n";
+        std::cout << "----------------------------------------------\n";
+    };
+
+    void printResult(const mopmc::queries::ConvexQuery<ValueType, int>& q) {
+        std::cout << "----------------------------------------------\n"
+                  << "CUDA CONVEX QUERY terminates after " << q.getMainLoopIterationCount() << " iteration(s)\n"
+                  << "Estimated nearest point to threshold : [";
+        for (int i = 0; i < q.getInnerOptimalPoint().size(); ++i) {
+            std::cout << q.getInnerOptimalPoint()(i) << " ";
+        }
+        std::cout << "]\n"
+                  << "Approximate distance (at inner point): " << q.getInnerOptimalValue()
+                  << "\nApproximate distance (at outer point): " << q.getOuterOptimalValue()
+                  << "\n----------------------------------------------\n";
     }
 }// namespace mopmc
