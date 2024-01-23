@@ -43,37 +43,36 @@ namespace mopmc::optimization::optimizers {
     Vector<V> ProjectedGradientDescent<V>::minimizeByAdaptiveStepSize(const Vector<V> &point,
                                                                       const std::vector<Vector<V>> &Vertices,
                                                                       const std::vector<Vector<V>> &Directions) {
+
+        mopmc::optimization::optimizers::LineSearcher<V> lineSearcher(this->fn);
         const uint64_t maxIter = 2000;
         const V beta = static_cast<V>(0.8);
         const V epsilon = static_cast<V>(1.e-6);
-        V gamma1 = static_cast<V>(1.);
-
-        mopmc::optimization::optimizers::LineSearcher<V> lineSearcher(this->fn);
-
-        const uint64_t m = point.size();
-        const uint64_t n = Vertices.size();
-        Vector<V> xCurrent(point), xNew(m), xTemp(m), xGrad(m);
-        uint_fast64_t it;
-        for (it = 0; it < maxIter; ++it) {
-            //xNew = projectToHalfSpaces(xTemp, Vertices, Directions);
-            V gamma = static_cast<V>(1.);
+        const uint64_t dim = point.size();
+        V gamma0(static_cast<V>(1e-2)), gamma1(static_cast<V>(1.));
+        Vector<V> xCurrent(point), xNew(dim), xTemp(dim), xGrad(dim);
+        uint_fast64_t it = 0;
+        while (it < maxIter) {
             xGrad = this->fn->subgradient(xCurrent);
+            gamma0 = static_cast<V>(1.);
             V g = xGrad.template lpNorm<2>();
-            while (this->fn->value(xCurrent - xGrad) > this->fn->value(xCurrent) - gamma * 0.5 * std::pow(g,2)) {
-                gamma *= beta;
-                if (gamma < 1e-2) {break;}
+            while (this->fn->value(xCurrent - xGrad) > this->fn->value(xCurrent) - gamma0 * 0.5 * std::pow(g, 2)) {
+                gamma0 *= beta;
+                if (gamma0 < 1e-2) { break; }
             }
-            xTemp = xCurrent - gamma * this->fn->subgradient(xCurrent);
-            xNew = dykstrasProjection(xTemp, Vertices, Directions);
-            gamma1 = lineSearcher.findOptimalRelativeDistance(xCurrent, xNew, 1.);
-            xNew = (1. - gamma1) * xCurrent + gamma1 * xNew;
+            xTemp = xCurrent - gamma0 * this->fn->subgradient(xCurrent);
+            xTemp = dykstrasProjection(xTemp, Vertices, Directions);
+            gamma1 = lineSearcher.findOptimalRelativeDistance(xCurrent, xTemp, 1.);
+            xNew = (1. - gamma1) * xCurrent + gamma1 * xTemp;
             V error = (xNew - xCurrent).template lpNorm<1>();
             if (error < epsilon) {
                 xCurrent = xNew;
+                ++it;
                 std::cout << "Projected GD exits due to small tolerance (" << error << ")\n";
                 break;
             }
             xCurrent = xNew;
+            ++it;
         }
         std::cout << "*Projected GD* stops at iteration: " << it << ", nearest distance: " << this->fn->value(xNew) << "\n";
         return xNew;
@@ -88,9 +87,9 @@ namespace mopmc::optimization::optimizers {
         const V epsilon = static_cast<V>(1.e-8);
         const V gamma = static_cast<V>(0.001);
 
-        const uint64_t m = point.size();
-        Vector<V> xCurrent = point, xNew(m), xTemp(m);
-        Vector<V> grad(m);
+        const uint64_t dim = point.size();
+        Vector<V> xCurrent = point, xNew(dim), xTemp(dim);
+        Vector<V> grad(dim);
         uint_fast64_t it;
         for (it = 0; it < maxIter; ++it) {
             grad = this->fn->subgradient(xCurrent);
@@ -120,7 +119,7 @@ namespace mopmc::optimization::optimizers {
                                                                        const Vector<V> &point2,
                                                                        const std::vector<Vector<V>> &Vertices,
                                                                        const std::vector<Vector<V>> &Directions) {
-        if ((point1 - point2).template lpNorm<1>() < 1e-12 ){
+        if ((point1 - point2).template lpNorm<1>() < 1e-12) {
             return point2;
         }
         V lambda = static_cast<V>(1.);
@@ -153,7 +152,7 @@ namespace mopmc::optimization::optimizers {
             return projectFromPointToHyperPlane(point, Vertices[idx], Directions[idx]);
         }
         const auto d = pointIndices.size();
-        std::vector<Vector<V>> U(d+1), Z(d);
+        std::vector<Vector<V>> U(d + 1), Z(d);
         U[d] = point;
         for (int64_t i = 0; i < d; ++i) {
             U[i].resize(m);
@@ -163,7 +162,7 @@ namespace mopmc::optimization::optimizers {
         const V tolerance = 1e-5;
         uint_fast64_t it = 1;
         V tol;
-        while (it <maxIter) {
+        while (it < maxIter) {
             tol = (U[0] - U[d]).template lpNorm<1>();
             if ((U[0] - U[d]).template lpNorm<1>() < tolerance) {
                 break;
@@ -171,8 +170,8 @@ namespace mopmc::optimization::optimizers {
             U[0] = U[d];
             for (int64_t i = 0; i < d; ++i) {
                 auto idx1 = pointIndices[i];
-                U[i+1] = projectFromPointToHyperPlane(U[i] + Z[i], Vertices[idx1], Directions[idx1]);
-                Z[i] = U[i] + Z[i] - U[i+1];
+                U[i + 1] = projectFromPointToHyperPlane(U[i] + Z[i], Vertices[idx1], Directions[idx1]);
+                Z[i] = U[i] + Z[i] - U[i + 1];
             }
             ++it;
         }
