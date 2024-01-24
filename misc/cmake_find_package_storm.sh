@@ -1,0 +1,2 @@
+#!/bin/bash
+cmake --find-package -DNAME=storm -DCOMPILER_ID=GNU -DLANGUAGE=C -DMODE=COMPILE -DCMAKE_FIND_DEBUG_MODE=ON
