@@ -2,18 +2,18 @@
 // Created by guoxin on 15/11/23.
 //
 
+#include "CudaFunctions.h"
 #include "CudaValueIteration.cuh"
-#include "CuFunctions.h"
-#include "mopmc-src/solvers/WarmUp.h"
+#include "mopmc-src/solvers/CudaWarmUp.h"
+#include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cusparse.h>
-#include <cublas_v2.h>
+#include <iostream>
 #include <thrust/copy.h>
 #include <thrust/count.h>
-#include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
-#include <iostream>
 
 
 #define CHECK_CUDA(func)                                                       \
@@ -148,6 +148,7 @@ namespace mopmc {
             int CudaValueIterationHandler<ValueType>::valueIteration(const std::vector<double> &w) {
                 this->valueIterationPhaseOne(w);
                 this->valueIterationPhaseTwo();
+                return EXIT_SUCCESS;
             }
 
             template<typename ValueType>

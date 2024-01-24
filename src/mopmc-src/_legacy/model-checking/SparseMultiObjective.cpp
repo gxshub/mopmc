@@ -12,7 +12,7 @@
 
 #include "../solvers/ConvexQueryAux.h"
 #include "../solvers/InducedEquationSolver.h"
-#include "mopmc-src/solvers/WarmUp.h"
+#include "mopmc-src/solvers/CudaWarmUp.h"
 #include <set>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectiveRewardAnalysis.h>
 #include <storm/modelchecker/prctl/helper/BaierUpperRewardBoundsComputer.h>

@@ -1,4 +1,4 @@
-#include "WarmUp.h"
+#include "CudaWarmUp.h"
 
 namespace mopmc {
 namespace kernels {

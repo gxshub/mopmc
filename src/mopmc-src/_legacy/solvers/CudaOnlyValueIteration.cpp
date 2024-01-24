@@ -4,12 +4,12 @@
 
 #include "CudaOnlyValueIteration.h"
 #include "ActionSelection.h"
-#include "mopmc-src/solvers/CuFunctions.h"
-#include <storm/storage/SparseMatrix.h>
+#include "mopmc-src/solvers/CudaFunctions.h"
 #include <Eigen/Sparse>
+#include <cublas_v2.h>
 #include <cuda_runtime_api.h>
 #include <cusparse.h>
-#include <cublas_v2.h>
+#include <storm/storage/SparseMatrix.h>
 //#include <thrust/copy.h>
 #include <thrust/reduce.h>
 #include <thrust/host_vector.h>

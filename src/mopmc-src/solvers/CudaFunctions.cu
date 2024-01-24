@@ -2,11 +2,6 @@
 // Created by guoxin on 8/11/23.
 //
 
-
-
-#define cudaAssert(condition) \
-    {if (!(condition)){ printf("Assertion %s failed!\n", #condition); asm("trap;"); } \
-
 namespace mopmc {
     namespace functions {
         namespace cuda {
@@ -35,16 +30,8 @@ namespace mopmc {
                 // arrCount is the number of states in the model
                 uint tid = threadIdx.x + blockIdx.x * blockDim.x;
                 if (tid < arrCount) {
-                    // do some stuff
                     int actionStart = enabledActions[tid];
                     int actionEnd = enabledActions[tid + 1];
-                    /*
-                    if(tid < arrCount - 1 ) {
-                        actionEnd = enabledActions[tid + 1];
-                    } else {
-                        actionEnd = numRows;
-                    }
-                     */
                     int maxIndex = pi[tid];
                     double maxValue = y[actionStart + maxIndex];
                     //double maxValue1 = x[tid];
@@ -65,9 +52,7 @@ namespace mopmc {
                 int gridSize;
 
                 cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, &maxValue1, 0, arrCount);
-
                 gridSize = (arrCount + blockSize - 1) / blockSize;
-
                 maxValue1<<<gridSize, blockSize>>>(y, x, enabledActions, pi, arrCount, numRows);
                 return 0;
             }
@@ -114,13 +99,11 @@ namespace mopmc {
                     for (int i = 0; i < incr; ++i) {
                         masking4nzz[start + i] = val;
                     }
-
                 }
             }
 
-
-            int binaryMaskingLauncher(const int* csrOffsets, const int *rowGroupIndices, const int *row2RowGroupMapping,
-                                      const int* pi, int *masking4rows, int* masking4nnz, int arrCount) {
+            int binaryMaskingLauncher(const int *csrOffsets, const int *rowGroupIndices, const int *row2RowGroupMapping,
+                                      const int *pi, int *masking4rows, int *masking4nnz, int arrCount) {
                 int blockSize;
                 int minGridSize;
                 int gridSize;
@@ -139,7 +122,6 @@ namespace mopmc {
                 // arrCount is the number of states in the model
                 uint tid = threadIdx.x + blockIdx.x * blockDim.x;
                 if (tid < arrCount) {
-                    // do some stuff
                     int actionStart = enabledActions[tid];
                     int actionEnd = enabledActions[tid + 1];
                     int maxIndex = pi[tid];
@@ -153,7 +135,6 @@ namespace mopmc {
                     }
                     x[tid] = maxValue;
                     pi[tid] = maxIndex;
-
                     //update binary pi
                     for (int action = 0; action < (actionEnd - actionStart); ++action) {
                         if (action == maxIndex) {
@@ -169,15 +150,11 @@ namespace mopmc {
                 int blockSize;
                 int minGridSize;
                 int gridSize;
-
                 cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, &maxValue2, 0, arrCount);
-
                 gridSize = (arrCount + blockSize - 1) / blockSize;
-
                 maxValue2<<<gridSize, blockSize>>>(y, x, enabledActions, pi, bpi, arrCount);
                 return 0;
             }
-
 
             __global__ void abs(const double *x, int k) {
                 uint tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -198,7 +175,6 @@ namespace mopmc {
                 abs<<<gridSize, blockSize>>>(x, k);
                 return 0;
             }
-
-        }
-    }
-}
+        }// namespace cuda
+    }// namespace functions
+}// namespace mopmc
