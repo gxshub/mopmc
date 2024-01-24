@@ -21,12 +21,7 @@ you should see something like:
 ```
 +---------------------------------------------------------------------------------------+
 | NVIDIA-SMI 535.113.01             Driver Version: 535.113.01   CUDA Version: 12.2     |
-|-----------------------------------------+----------------------+----------------------+
-| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
-|                                         |                      |               MIG M. |
-|=========================================+======================+======================|
-
++-----------------------------------------+----------------------+----------------------+
 ```
 
 A further note on setting up the environment. Cuda Toolkit has a mandatory action of adding the toolkit to the `PATH` variable. Add the 
