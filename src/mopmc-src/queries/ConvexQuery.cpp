@@ -14,10 +14,11 @@ namespace mopmc::queries {
         const uint64_t n_objs = this->data_.objectiveCount;
         Vector<T> threshold = Eigen::Map<Vector<T>>(this->data_.thresholds.data(), n_objs);
         Vector<T> vertex(n_objs), direction(n_objs);
-        direction.setConstant(static_cast<T>(-1.0) / n_objs); // initial direction
-        const T toleranceDistanceToMinimum{1.e-6}, toleranceSmallGradient{1.e-8}; // tolerances to exit
-        const uint_fast64_t maxIter{200};
-        T epsilonDistanceToMinimum, epsilonSmallGradient;
+        direction.setConstant(static_cast<T>(-1.0) / n_objs);// initial direction
+        const T toleranceDistanceToMinimum{1.e-6}, toleranceSmallGradient{1.e-8}, toleranceValueImpr{1.e-6};
+        const uint_fast64_t maxIter{100};
+        T epsilonDistanceToMinimum, epsilonSmallGradient, epsilonInnerValueImpr, epsilonOuterValueImpr;
+        T innerValueCurrent, innerValueNew, outerValueCurrent, outerValueNew;
         iter = 0;
         while (iter < maxIter) {
             std::cout << "Main loop: Iteration " << iter << "\n";
@@ -46,15 +47,27 @@ namespace mopmc::queries {
             this->outerOptimizer->minimize(outerPoint, Vertices, Directions);
             epsilonDistanceToMinimum = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (epsilonDistanceToMinimum < toleranceDistanceToMinimum) {
-                std::cout << "loop exit due to small gap between inner and outer points (" << epsilonDistanceToMinimum << ")\n";
+                std::cout << "loop exit due to small gap between inner and outer points ("
+                          << epsilonDistanceToMinimum << ")\n";
                 ++iter;
                 break;
             }
+            innerValueNew = this->fn->value(innerPoint);
+            outerValueNew = this->fn->value(outerPoint);
+            epsilonInnerValueImpr = (innerValueCurrent - innerValueNew) / std::max(std::abs(innerValueCurrent), 1.);
+            epsilonOuterValueImpr = (outerValueNew - outerValueCurrent) / std::max(std::abs(innerValueCurrent), 1.);
+            if (iter >= 2 && std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) < toleranceValueImpr) {
+                std::cout << "loop exit due to small relative improvement on (estimated) nearest points ("
+                          << std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) << ")\n";
+                ++iter;
+                break;
+            }
+            innerValueCurrent = innerValueNew;
+            outerValueCurrent = outerValueNew;
             ++iter;
         }
         this->VIhandler->exit();
     }
 
     template class ConvexQuery<double, int>;
-}
-
+}// namespace mopmc::queries
