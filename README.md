@@ -1,38 +1,53 @@
 # MOPMC: A GPU-Accelerated Probabilistic Model Checking Tool for Multi-Objective Convex Queries
-MOPMC built on a C++ API of [Storm](https://www.stormchecker.org).
+
+MOPMC is a multi-objective probabilistic model checking tool specialised for _convex queries_ on Markov Decision Processes (MDPs) with multiple objectives.
+A convex query returns an optimal point (and value) for a given convex function (viewed as a loss function) that is defined on the objective space.
+Examples of convex functions are Euclidean distance, MSE, variance, etc.
+Currently, only total reward objectives are supported.
+
+
+Built atop [Storm](https://www.stormchecker.org) C++ API of model parsing and building, MOPMC accepts a PRISM model file (for an MPD) and a PCTL/LTL property specification.
+<!-- MOPMC built on a C++ API of [Storm](https://www.stormchecker.org).
 This project is built on the Storm project and to use it, Storm model checker needs to be build from 
-**source** with all dependencies. See [Storm](https://www.stormchecker.org) for installation details.
+**source** with all dependencies. See [Storm](https://www.stormchecker.org) for installation details. -->
+One key feature of MOPMC is the utilisation of GPU hardware acceleration for valuation iterations.
 
-## Dependencies
+For benchmarking, MOPMC also implements the acheivability queries which are supported by other existing probabilistic model checking tools.
 
-This build is known to work on Ubuntu 20.04 LTS. Other linux flavours are possible however dependency setup
-can be tricky.
 
-Before starting, make sure that Storm and **all of its dependencies are installed** is installed. If not, see the [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html).
+## Getting Started
 
-This project uses cmake which should be bundled with Ninja. If Ninja is available you will be able
-to make use of the convenient configurations and build script.
+### Built from Source
 
-This project requires CUDA Toolkit 12.xx and the associated NVIDIA driver 525+. 
-This cuda toolkit is essential as it provides 64bit numeric types for the GPU and provides more modern
-sparse matrix multiplication algorithms from Nvidia CuSparse. If installed correctly, using the command `nvidia-smi`
-you should see something like:
+This build is known to work on Ubuntu 20.04 LTS.
 
+Before starting, Storm and its _dependencies_ are installed required to be installed. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the detailed installation procedure.
+This project is built with CMake (which is in Storm's dependences).
+
+<!-- This project uses cmake which should be bundled with Ninja. If Ninja is available you will be able
+to make use of the convenient configurations and build script.-->
+
+Installation of The CUDA Toolkit 12.xx (or above) is required.
+This version is essential as it provides 64bit numeric types for the GPU and provides more modern
+sparse matrix multiplication algorithms from NVIDIA CuSparse.
+See the [CUDA installation documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/) for detailed information.
+Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that each CUDA Toolkit version requires a minimum supported NVIDIA Driver version.
+For example, NVIDIA Driver 525 supports CUDA Toolkit 12.0.
+<!--
 ```
 +---------------------------------------------------------------------------------------+
-| NVIDIA-SMI 535.113.01             Driver Version: 535.113.01   CUDA Version: 12.2     |
+| NVIDIA-SMI 525.125.06             Driver Version: 525.125.06   CUDA Version: 12.2     |
 +-----------------------------------------+----------------------+----------------------+
 ```
+-->
 
-A further note on setting up the environment. Cuda Toolkit has a mandatory action of adding the toolkit to the `PATH` variable. Add the 
-following to `.bashrc` or `.profile`:
+After installation, append the toolkit to `PATH`, e.g., by adding the following line to either `.bashrc` or `.profile`:
+
 ```bash
 export PATH=/usr/local/cuda-12.2/bin${PATH:+:${PATH}}
 ```
 
-Additionally, if you develop in an IDE which builds based off cmake, such as CLion, then you will also 
-need to set the LD_LIBRARY_PATH to contain the toolkit's lib64 directory. This can also be added 
-to `.bashrc` or `.profile`. 
+Additionally, if an IDE, such as CLion, is used, then also set the `LD_LIBRARY_PATH` to contain the toolkit's lib64 directory. This can be done by adding the following line into to  either `.bashrc` or `.profile`:
 ```bash
 export LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64 ${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 ```
@@ -48,30 +63,34 @@ set(storm_INCLUDE_DIR, ./storm)
 where `storm` is a symlink to `<YOUR_STORM_ROOT_DIRECTORY>/build/src/storm` created in the project root.
 -->
 
-## Getting Started
+The process of compiling MOPMC from the source is as follows:
+Clone this project, `cd` into the project root, and execute
 
-First, clone and `cd` into the project then configure and compile the project. Execute
 ```
-mkdir build
-./configure.sh
-./build.sh
+mkdir build ; ./configure.sh ; ./build.sh
 ```
 
-To test your build is working, run the executable using the convenience script: 
+To test the	 build is working, run the executable using the convenience script:
 ```bash
-./run.sh
+./test-run.sh
 ```
-Alternatively, run:
+### Use Docker Container
+TODO
+
+### Running MOPMC
+To run a convex query:
+```bash
+./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex 
 ```
-./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex -L mse -I si-gd
-```
-or 
-```
-./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex -L eud -I si-gd
+
+To run an achievability query:
+```bash
+./build/mopmc -M examples/multiobj_scheduler05.nm -P examples/multiobj_scheduler05.pctl -Q achievability
 ```
 
 <!-- This project only computes multi-objective model checking of convex queries. -->
 
+<!--
 ## Development
 
 `src/main.cpp` is the entry point of the project. 
@@ -96,7 +115,4 @@ After model construction is complete, MOPMC model checking is conducted using
 the methods and classes in `src/mopmc-src/model-checking/MOPMCModelChecking.cpp(h)`.
 The class often makes reference to the solvers both `c++` and `CUDA` based located in
 `src/mopmc-src/solvers`.
-
-
-
-
+-->
