@@ -50,7 +50,7 @@ namespace mopmc::optimization::optimizers {
         const V epsilon = static_cast<V>(1.e-6);
         const uint64_t dim = point.size();
         V gamma0(static_cast<V>(1e-2)), gamma1(static_cast<V>(1.));
-        Vector<V> xCurrent(point), xNew(dim), xTemp(dim), xGrad(dim);
+        Vector<V> xCurrent(point), xNew(dim), xTemp(dim), xTemp1(dim), xGrad(dim);
         uint_fast64_t it = 0;
         while (it < maxIter) {
             xGrad = this->fn->subgradient(xCurrent);
@@ -61,9 +61,10 @@ namespace mopmc::optimization::optimizers {
                 if (gamma0 < 1e-2) { break; }
             }
             xTemp = xCurrent - gamma0 * this->fn->subgradient(xCurrent);
-            xTemp = dykstrasProjection(xTemp, Vertices, Directions);
-            gamma1 = lineSearcher.findOptimalRelativeDistance(xCurrent, xTemp, 1.);
-            xNew = (1. - gamma1) * xCurrent + gamma1 * xTemp;
+            xTemp1 = dykstrasProjection(xTemp, Vertices, Directions);
+            gamma1 = lineSearcher.findOptimalRelativeDistance(xCurrent, xTemp1, 1.);
+            xNew = (1. - gamma1) * xCurrent + gamma1 * xTemp1;
+            //assert(this->fn->value(xNew) <= this->fn->value(xCurrent));
             V error = (xNew - xCurrent).template lpNorm<1>();
             if (error < epsilon) {
                 xCurrent = xNew;
@@ -158,7 +159,7 @@ namespace mopmc::optimization::optimizers {
             U[i].resize(m);
             Z[i] = Vector<V>::Zero(m);
         }
-        const uint64_t maxIter = 100;
+        const uint64_t maxIter = 200;
         const V tolerance = 1e-5;
         uint_fast64_t it = 1;
         V tol;

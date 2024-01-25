@@ -20,6 +20,35 @@ namespace mopmc::optimization::optimizers {
         this->vLeft_ = vLeft;
         this->vRight_ = vRight;
         V lambda0 = static_cast<V>(0.), lambda1 = lambdaMax;
+        if (dg(lambda0) * dg(lambda1) >= static_cast<V>(0.)) {
+            if (g(lambda0) <= g(lambda1)) {
+                return lambda0;
+            } else {
+                return lambda1;
+            }
+        }
+        V delta = static_cast<V>(1.);
+        uint64_t iter = 0;
+        while (lambda1 - lambda0 > epsilon2 ) {
+            if (dg(lambda0) * dg(static_cast<V>(0.5) * (lambda0 + lambda1)) > static_cast<V>(0.) ) {
+                lambda0 = static_cast<V>(0.5) * (lambda0 + lambda1);
+            } else if (dg(lambda0) * dg(static_cast<V>(0.5) * (lambda0 + lambda1)) < static_cast<V>(0.)) {
+                lambda1 = static_cast<V>(0.5) * (lambda0 + lambda1);
+            } else {
+                break;
+            }
+            ++iter;
+        }
+        return static_cast<V>(0.5) * (lambda0 + lambda1);
+    }
+
+    template<typename V>
+    V LineSearcher<V>::findOptimalRelativeDistance_v0(Vector<V> vLeft, Vector<V> vRight, V lambdaMax) {
+
+        const V epsilon2 = 1e-12;
+        this->vLeft_ = vLeft;
+        this->vRight_ = vRight;
+        V lambda0 = static_cast<V>(0.), lambda1 = lambdaMax;
         if (dg(lambda0) == static_cast<V>(0.)) {
             return lambda0;
         }
@@ -38,7 +67,6 @@ namespace mopmc::optimization::optimizers {
             }
             ++iter;
         }
-
         return static_cast<V>(0.5) * (lambda0 + lambda1);
     }
 
