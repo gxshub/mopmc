@@ -15,8 +15,8 @@ int main (int ac, char *av[]) {
                 ("help,H", "produce help message")
                 ("prism,M", po::value<string>(), "prism model file")
                 ("props,P", po::value<string>(), "property file")
-                ("loss,L", po::value<string>(), "convex function")
-                ("inner-optim,I", po::value<string>(), "inner optimizer")
+                ("loss,L", po::value<string>()->default_value("mse"), "convex function")
+                ("fw-optimizer,O", po::value<string>()->default_value("si-gd"), "conditional gradient (Frank-Wolfe) optimizer")
                 ("query,Q", po::value<string>(), "query type")
                 ;
         po::variables_map vm;
@@ -32,6 +32,9 @@ int main (int ac, char *av[]) {
         if (vm.count("prism") && vm.count("props")) {
             modelFile = vm["prism"].as<string>();
             propsFile = vm["props"].as<string>();
+        } else {
+            cout << "model and/or property not specified\n";
+            return 1;
         }
 
         mopmc::QueryOptions queryOptions{};
@@ -42,7 +45,7 @@ int main (int ac, char *av[]) {
             } else if (s == "convex") {
                 queryOptions.QUERY_TYPE = mopmc::QueryOptions::CONVEX;
             } else {
-                cout << "not supported convex type\n";
+                cout << "not supported query type\n";
                 return 1;
             }
         }
@@ -59,8 +62,8 @@ int main (int ac, char *av[]) {
                 return 1;
             }
         }
-        if (vm.count("inner-optim")) {
-            const auto& s = vm["inner-optim"].as<string>();
+        if (vm.count("fw-optimizer")) {
+            const auto& s = vm["fw-optimizer"].as<string>();
             if (s == "away-step") {
                 queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::AWAY_STEP;
             } else if (s == "si-gd") {
