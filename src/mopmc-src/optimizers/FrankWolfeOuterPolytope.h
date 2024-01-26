@@ -9,6 +9,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cassert>
+#include <set>
 #include <vector>
 
 #ifndef MOPMC_FRANKWOLFEOUTEROPTIMIZATION_H
@@ -22,10 +23,12 @@ namespace mopmc::optimization::optimizers {
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V>
-    class FrankWolfeOuterOptimization : public BaseOptimizer<V> {
+    class FrankWolfeOuterPolytope : public BaseOptimizer<V> {
     public:
-        explicit FrankWolfeOuterOptimization() = default;
-        explicit FrankWolfeOuterOptimization(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
+        explicit FrankWolfeOuterPolytope() = default;
+        explicit FrankWolfeOuterPolytope(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f) : BaseOptimizer<V>(f) {
+            this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(f);
+        };
 
         int minimize(Vector<V> &point,
                      const std::vector<Vector<V>> &Vertices,
@@ -37,9 +40,8 @@ namespace mopmc::optimization::optimizers {
     private:
         int64_t dimension{}, size{};
         Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
-        std::vector<uint64_t> interiorHSIndices, exteriorHSIndices;
     };
-}
+}// namespace mopmc::optimization::optimizers
 
 
 #endif//MOPMC_FRANKWOLFEOUTEROPTIMIZATION_H

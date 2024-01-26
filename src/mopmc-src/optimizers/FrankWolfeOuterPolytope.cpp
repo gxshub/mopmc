@@ -2,42 +2,45 @@
 // Created by guoxin on 26/01/24.
 //
 
-#include "FrankWolfeOuterOptimization.h"
+#include "FrankWolfeOuterPolytope.h"
 
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int FrankWolfeOuterOptimization<V>::minimize(Vector<V> &point,
-                                                const std::vector<Vector<V>> &Vertices,
-                                                const std::vector<Vector<V>> &Directions){
+    int FrankWolfeOuterPolytope<V>::minimize(Vector<V> &point,
+                                                 const std::vector<Vector<V>> &Vertices,
+                                                 const std::vector<Vector<V>> &Directions) {
         size = Vertices.size();
         dimension = point.size();
         xNew = point;
+        std::set<uint64_t> exteriorHSIndices, interiorHSIndices;
         Vector<V> descentDirection(dimension);
         const uint64_t maxIter = 20;
+        bool exit = false;
         uint64_t t = 0;
         while (t < maxIter) {
             xCurrent = xNew;
-            Vector<V> slop = -1 * (this->fn->subgradient(xCurrent));
+            Vector<V> slope = -1 * (this->fn->subgradient(xCurrent));
             for (uint64_t i = 0; i < size; ++i) {
-                if (Directions[i].dot(point - Vertices[i]) < 1e-16) {
-                    exteriorHSIndices.emplace_back(i);
+                if (Directions[i].dot(Vertices[i] - xCurrent) < 1e-30) {
+                    exteriorHSIndices.insert(i);
                 } else {
-                    interiorHSIndices.emplace_back(i);
+                    interiorHSIndices.insert(i);
                 }
             }
             if (exteriorHSIndices.empty()) {
-                descentDirection = slop;
+                descentDirection = slope;
             } else if (exteriorHSIndices.size() == 1) {
-                const Vector<V> &w = Directions[exteriorHSIndices[0]];
-                descentDirection = slop - (slop.dot(w)) * slop;
+                auto elem = exteriorHSIndices.begin();
+                const Vector<V> &w = Directions[*elem];
+                descentDirection = slope - (slope.dot(w)) * w;
             } else {
-                this->linOpt.findOptimalProjectedDescentDirection(Directions, exteriorHSIndices, slop,
+                this->linOpt.findOptimalProjectedDescentDirection(Directions, exteriorHSIndices, slope,
                                                                   descentDirection);
                 for (auto i: exteriorHSIndices) {
                     if (Directions[i].dot(descentDirection) > 0) {
                         point = xNew;
-                        return 0;
+                        exit = true;
                     }
                 }
             }
@@ -45,7 +48,7 @@ namespace mopmc::optimization::optimizers {
             for (auto i: interiorHSIndices) {
                 const Vector<V> &w = Directions[i];
                 if (w.dot(descentDirection) > 0) {
-                    V lambda_x = w.dot(Vertices[i] - descentDirection) / (w.dot(descentDirection));
+                    V lambda_x = w.dot(Vertices[i] - xCurrent) / (w.dot(descentDirection));
                     if (lambda > lambda_x) {
                         lambda = lambda_x;
                     }
@@ -54,12 +57,13 @@ namespace mopmc::optimization::optimizers {
             xNewTmp = xCurrent + lambda * descentDirection;
             lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
             xNew = (1. - lambda) * xCurrent + lambda * xNewTmp;
-
             ++t;
+            if (exit) break;
         }
+        std::cout << "Frank-Wolfe outer optimization  loop stops at iteration: " << t << ", nearest distance: " << this->fn->value(xNew) << "\n";
         point = xNew;
         return 0;
     }
 
-    template class FrankWolfeOuterOptimization<double>;
-}
+    template class FrankWolfeOuterPolytope<double>;
+}// namespace mopmc::optimization::optimizers
