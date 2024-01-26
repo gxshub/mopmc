@@ -16,7 +16,7 @@ int main (int ac, char *av[]) {
                 ("prism,M", po::value<string>(), "prism model file")
                 ("props,P", po::value<string>(), "property file")
                 ("loss,L", po::value<string>()->default_value("mse"), "convex function")
-                ("fw-optimizer,O", po::value<string>()->default_value("si-gd"), "conditional gradient (Frank-Wolfe) optimizer")
+                //("fw-optimizer,O", po::value<string>()->default_value("si-gd"), "conditional gradient (Frank-Wolfe) optimizer")
                 ("query,Q", po::value<string>(), "query type")
                 ;
         po::variables_map vm;
@@ -62,6 +62,7 @@ int main (int ac, char *av[]) {
                 return 1;
             }
         }
+        /*
         if (vm.count("fw-optimizer")) {
             const auto& s = vm["fw-optimizer"].as<string>();
             if (s == "away-step") {
@@ -80,6 +81,7 @@ int main (int ac, char *av[]) {
                 return 1;
             }
         }
+         */
         mopmc::run(modelFile, propsFile, queryOptions);
     }
     catch(exception& e) {

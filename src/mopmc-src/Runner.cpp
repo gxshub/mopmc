@@ -81,6 +81,7 @@ namespace mopmc {
                         break;
                     }
                 }
+                /*
                 std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>> optimizer;
                 switch (queryOptions.INNER_OPTIMIZER) {
                     case QueryOptions::SIMPLEX_GD: {
@@ -114,9 +115,11 @@ namespace mopmc {
                         break;
                     }
                 }
-                mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
-                mopmc::optimization::optimizers::FrankWolfeOuterPolytope<ValueType> outerFW(&*fn);
-                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &*optimizer, &outerFW, &cudaVIHandler);
+                 */
+                mopmc::optimization::optimizers::FrankWolfe<ValueType> innerOptimizer(mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn);
+                //mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
+                mopmc::optimization::optimizers::FrankWolfeOuterPolytope<ValueType> outerOptimizer(&*fn);
+                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &cudaVIHandler);
                 q.query();
                 printResult(q);
                 break;
