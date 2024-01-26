@@ -318,15 +318,15 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int LinOpt<V>::findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
-                                                        const std::vector<uint64_t> &exteriorIndices,
-                                                        const Vector<V> &gradient,
+                                                        const std::set<uint64_t> &exteriorIndices,
+                                                        const Vector<V> &slope,
                                                         Vector<V> &descentDirection){
         lprec *lp;
         int n_cols, *col_no = NULL, ret = 0;
         V *row = NULL;
 
         assert(!exteriorIndices.empty());
-        n_cols = (int) gradient.size(); // number of variables in the model
+        n_cols = (int) slope.size(); // number of variables in the model
         lp = make_lp(0, n_cols);
         if (lp == NULL)
             ret = 1; // couldn't construct a new model
@@ -337,7 +337,7 @@ namespace mopmc::optimization::optimizers {
             if ((col_no == NULL) || (row == NULL))
                 ret = 2;
         }
-        Vector<V> sign(gradient.size());
+        Vector<V> sign(slope.size());
         if (ret == 0) {
             set_add_rowmode(lp, TRUE);
             // constraints
@@ -345,23 +345,23 @@ namespace mopmc::optimization::optimizers {
                 for (int j = 0; j < n_cols; ++j) {
                     col_no[j] = j + 1;
                     row[j] = (Directions[i])(j);
-                    if (!add_constraintex(lp, n_cols, row, col_no, LE, 0.)){
-                        ret = 3;
-                    }
+                }
+                if (!add_constraintex(lp, n_cols, row, col_no, LE, 0.)){
+                    ret = 3;
                 }
             }
             for (int j = 0; j < n_cols; ++j) {
                 col_no[j] = j + 1;
                 row[j] = sign[j];
             }
-            if (!add_constraintex(lp, n_cols - 1, row, col_no, EQ, 1.))
+            if (!add_constraintex(lp, n_cols, row, col_no, EQ, 1.))
                 ret = 3;
         }
         if (ret == 0) {
             set_add_rowmode(lp, FALSE); // rowmode should be turned off again when done building the model
             for (int j = 0; j < n_cols; ++j) {
                 col_no[j] = j + 1;
-                row[j] = gradient[j];
+                row[j] = slope[j];
             }
             if (!set_obj_fnex(lp, n_cols, row, col_no))
                 ret = 4;

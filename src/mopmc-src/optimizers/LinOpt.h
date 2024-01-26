@@ -16,6 +16,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+#include <set>
 
 namespace mopmc::optimization::optimizers {
 
@@ -34,8 +35,8 @@ namespace mopmc::optimization::optimizers {
                                            V &gap);
 
         int findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
-                                                 const std::vector<uint64_t> &exteriorIndices,
-                                                 const Vector<V> &gradient,
+                                                 const std::set<uint64_t> &exteriorIndices,
+                                                 const Vector<V> &slope,
                                                  Vector<V> &descentDirection);
 
         int checkPointInConvexHull(const std::vector<Vector<V>> &Vertices,
