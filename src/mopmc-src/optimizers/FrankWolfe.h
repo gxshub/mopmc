@@ -44,7 +44,6 @@ namespace mopmc::optimization::optimizers {
 
     private:
         [[deprecated]] Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
-        Vector<V> argmin_v2(const std::vector<Vector<V>> &Vertices);
         [[deprecated]] void initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale);
         void initialize(const std::vector<Vector<V>> &Vertices);
         void performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);

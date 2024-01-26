@@ -13,13 +13,7 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int FrankWolfe<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
-        point = argmin_v2(Vertices);
-        return 0;
-    }
-
-    template<typename V>
-    Vector<V> FrankWolfe<V>::argmin_v2(const std::vector<Vector<V>> &Vertices) {
-
+        //point = argmin_v2(Vertices);
         initialize(Vertices);
         const uint64_t maxIter = 1e3;
         uint64_t t = 0;
@@ -45,7 +39,8 @@ namespace mopmc::optimization::optimizers {
             ++t;
         }
         std::cout << "Frank-Wolfe loop stops at iteration: " << t << ", nearest distance: "<< this->fn->value(xNew) << "\n";
-        return xNew;
+        point = xNew;
+        return 0;
     }
 
     template<typename V>
