@@ -318,7 +318,7 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int LinOpt<V>::findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
-                                                        const std::vector<int64_t> &exteriorIndices,
+                                                        const std::vector<uint64_t> &exteriorIndices,
                                                         const Vector<V> &gradient,
                                                         Vector<V> &descentDirection){
         lprec *lp;

@@ -34,7 +34,7 @@ namespace mopmc::optimization::optimizers {
                                            V &gap);
 
         int findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
-                                                 const std::vector<int64_t> &exteriorIndices,
+                                                 const std::vector<uint64_t> &exteriorIndices,
                                                  const Vector<V> &gradient,
                                                  Vector<V> &descentDirection);
 
