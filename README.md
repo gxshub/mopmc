@@ -1,18 +1,16 @@
 # MOPMC: A GPU-Accelerated Probabilistic Model Checking Tool for Multi-Objective Convex Queries
 
 MOPMC is a multi-objective probabilistic model checking tool specialised for _convex queries_ on Markov Decision Processes (MDPs) with multiple objectives.
-A convex query returns an optimal point (and value) for a given convex function (viewed as a loss function) that is defined on the objective space.
+A convex query returns an (approximately) optimal point (and value) for a given convex function (viewed as a loss function) that is defined on the objective space.
 Examples of convex functions are Euclidean distance, MSE, variance, etc.
 Currently, only total reward objectives are supported.
 
 
-Built atop [Storm](https://www.stormchecker.org) C++ API of model parsing and building, MOPMC accepts a PRISM model file (for an MPD) and a PCTL/LTL property specification.
-<!-- MOPMC built on a C++ API of [Storm](https://www.stormchecker.org).
-This project is built on the Storm project and to use it, Storm model checker needs to be build from 
-**source** with all dependencies. See [Storm](https://www.stormchecker.org) for installation details. -->
-One key feature of MOPMC is the utilisation of GPU hardware acceleration for valuation iterations.
+Built atop [Storm](https://www.stormchecker.org)'s C++ API of model parsing and building, MOPMC accepts a PRISM model file (an MDP) and a PCTL/LTL property specification.
+One key feature of MOPMC is the utilisation of GPU hardware acceleration for valuation-iteration computing.
+The convex queries can scale to a large number of objectives.
 
-For benchmarking, MOPMC also implements the acheivability queries which are supported by other existing probabilistic model checking tools.
+For benchmarking, MOPMC also implements the acheivability queries, which are supported by other existing probabilistic model checking tools.
 
 
 ## Getting Started
