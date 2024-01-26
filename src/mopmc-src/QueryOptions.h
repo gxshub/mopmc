@@ -20,12 +20,6 @@ namespace mopmc {
         enum { MSE,
                EUD,
                VAR} CONVEX_FUN;
-        enum { BLENDED,
-               BLENDED_STEP_OPT,
-               AWAY_STEP,
-               SIMPLEX_GD,
-               PGD } INNER_OPTIMIZER,
-                OUTER_OPTIMIZER;
         enum { CUDA_VI } VI;
     };
 }// namespace mopmc

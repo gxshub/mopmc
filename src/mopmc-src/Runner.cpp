@@ -81,43 +81,7 @@ namespace mopmc {
                         break;
                     }
                 }
-                /*
-                std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>> optimizer;
-                switch (queryOptions.INNER_OPTIMIZER) {
-                    case QueryOptions::SIMPLEX_GD: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn));
-                        break;
-                    }
-                    case QueryOptions::AWAY_STEP: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::AWAY_STEP, &*fn));
-                        break;
-                    }
-                    case QueryOptions::BLENDED: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::BLENDED, &*fn));
-                        break;
-                    }
-                    case QueryOptions::BLENDED_STEP_OPT: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::FrankWolfe<ValueType>(
-                                        mopmc::optimization::optimizers::FWOption::BLENDED_STEP_OPT, &*fn));
-                        break;
-                    }
-                    case QueryOptions::PGD: {
-                        optimizer = std::unique_ptr<mopmc::optimization::optimizers::BaseOptimizer<ValueType>>(
-                                new mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType>(
-                                        mopmc::optimization::optimizers::ProjectionType::UnitSimplex, &*fn));
-                        break;
-                    }
-                }
-                 */
                 mopmc::optimization::optimizers::FrankWolfe<ValueType> innerOptimizer(mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn);
-                //mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
                 mopmc::optimization::optimizers::FrankWolfeOuterPolytope<ValueType> outerOptimizer(&*fn);
                 mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &cudaVIHandler);
                 q.query();

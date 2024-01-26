@@ -12,12 +12,11 @@ int main (int ac, char *av[]) {
     try {
         po::options_description desc("Allowed options");
         desc.add_options()
-                ("help,H", "produce help message")
-                ("prism,M", po::value<string>(), "prism model file")
-                ("props,P", po::value<string>(), "property file")
-                ("loss,L", po::value<string>()->default_value("mse"), "convex function")
-                //("fw-optimizer,O", po::value<string>()->default_value("si-gd"), "conditional gradient (Frank-Wolfe) optimizer")
-                ("query,Q", po::value<string>(), "query type")
+                ("help,h", "produce help message")
+                ("model,m", po::value<string>(), "model")
+                ("prop,p", po::value<string>(), "multi-objective property")
+                ("loss,l", po::value<string>()->default_value("mse"), "convex function")
+                ("query,q", po::value<string>(), "query type (convex or achievability)")
                 ;
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
@@ -62,26 +61,6 @@ int main (int ac, char *av[]) {
                 return 1;
             }
         }
-        /*
-        if (vm.count("fw-optimizer")) {
-            const auto& s = vm["fw-optimizer"].as<string>();
-            if (s == "away-step") {
-                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::AWAY_STEP;
-            } else if (s == "si-gd") {
-                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::SIMPLEX_GD;
-            } else if (s == "blended") {
-                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::BLENDED;
-            } else if (s == "blended-step-opt") {
-                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::BLENDED_STEP_OPT;
-            } else if (s == "pgd") {
-                queryOptions.INNER_OPTIMIZER = mopmc::QueryOptions::PGD;
-            }
-            else {
-                cout << "not supported inner optimizer\n";
-                return 1;
-            }
-        }
-         */
         mopmc::run(modelFile, propsFile, queryOptions);
     }
     catch(exception& e) {

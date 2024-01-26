@@ -19,8 +19,8 @@ For benchmarking, MOPMC also implements the acheivability queries, which are sup
 
 This build is known to work on Ubuntu 20.04 LTS.
 
-Before starting, Storm and its _dependencies_ are installed required to be installed. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the detailed installation procedure.
-This project is built with CMake (which is in Storm's dependences).
+Before starting, install Storm and its _dependencies_ from source code. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the installation procedure.
+This project is built with CMake (which is included in Storm's dependences).
 
 <!-- This project uses cmake which should be bundled with Ninja. If Ninja is available you will be able
 to make use of the convenient configurations and build script.-->
@@ -78,12 +78,12 @@ TODO
 ### Running MOPMC
 To run a convex query:
 ```bash
-./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex 
+./build/mopmc -m examples/dive_and_rise/dive_and_rise.nm -p examples/dive_and_rise/dive_and_rise_prop_100.props -q convex 
 ```
 
 To run an achievability query:
 ```bash
-./build/mopmc -M examples/multiobj_scheduler05.nm -P examples/multiobj_scheduler05.pctl -Q achievability
+./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability
 ```
 
 <!-- This project only computes multi-objective model checking of convex queries. -->
