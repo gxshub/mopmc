@@ -33,6 +33,11 @@ namespace mopmc::optimization::optimizers {
                                            Vector<V> &weightVector,
                                            V &gap);
 
+        int findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
+                                                 const std::vector<int64_t> &exteriorIndices,
+                                                 const Vector<V> &gradient,
+                                                 Vector<V> &descentDirection);
+
         int checkPointInConvexHull(const std::vector<Vector<V>> &Vertices,
                                    const Vector<V> &point,
                                    int &feasible);
