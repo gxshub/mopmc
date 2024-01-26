@@ -5,9 +5,9 @@
 #ifndef MOPMC_PROJECTEDGRADIENTDESCENT_H
 #define MOPMC_PROJECTEDGRADIENTDESCENT_H
 
-#include "../auxiliary/Sorting.h"
-#include "../convex-functions/BaseConvexFunction.h"
-#include "BaseOptimizer.h"
+#include "mopmc-src/auxiliary/Sorting.h"
+#include "mopmc-src/convex-functions/BaseConvexFunction.h"
+#include "mopmc-src/optimizers/BaseOptimizer.h"
 #include <Eigen/Dense>
 #include <memory>
 #include <vector>

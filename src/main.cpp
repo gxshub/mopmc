@@ -15,7 +15,7 @@ int main (int ac, char *av[]) {
                 ("help,h", "produce help message")
                 ("model,m", po::value<string>(), "model")
                 ("prop,p", po::value<string>(), "multi-objective property")
-                ("loss,l", po::value<string>()->default_value("mse"), "convex function")
+                ("loss,l", po::value<string>()->default_value("mse"), "convex function (mse, eud or var)")
                 ("query,q", po::value<string>(), "query type (convex or achievability)")
                 ;
         po::variables_map vm;
@@ -28,9 +28,9 @@ int main (int ac, char *av[]) {
         }
 
         string modelFile, propsFile;
-        if (vm.count("prism") && vm.count("props")) {
-            modelFile = vm["prism"].as<string>();
-            propsFile = vm["props"].as<string>();
+        if (vm.count("model") && vm.count("prop")) {
+            modelFile = vm["model"].as<string>();
+            propsFile = vm["prop"].as<string>();
         } else {
             cout << "model and/or property not specified\n";
             return 1;

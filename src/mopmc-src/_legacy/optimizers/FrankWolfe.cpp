@@ -3,9 +3,9 @@
 //
 
 #include "FrankWolfe.h"
-#include "../auxiliary/Lincom.h"
-#include "../auxiliary/Sorting.h"
-#include "../auxiliary/Trigonometry.h"
+#include "mopmc-src/auxiliary/Lincom.h"
+#include "mopmc-src/auxiliary/Sorting.h"
+#include "mopmc-src/auxiliary/Trigonometry.h"
 #include <cmath>
 #include <iostream>
 

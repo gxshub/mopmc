@@ -16,6 +16,7 @@ namespace mopmc::optimization::optimizers {
         std::set<uint64_t> exteriorHSIndices, interiorHSIndices;
         Vector<V> descentDirection(dimension);
         const uint64_t maxIter = 20;
+        const V tol = 1e-12;
         bool exit = false;
         uint64_t t = 0;
         while (t < maxIter) {
@@ -58,7 +59,7 @@ namespace mopmc::optimization::optimizers {
             lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
             xNew = (1. - lambda) * xCurrent + lambda * xNewTmp;
             ++t;
-            if (exit) break;
+            if (exit || this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
         std::cout << "Frank-Wolfe outer optimization  loop stops at iteration: " << t << ", nearest distance: " << this->fn->value(xNew) << "\n";
         point = xNew;

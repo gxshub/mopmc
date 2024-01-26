@@ -9,9 +9,8 @@
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
-#include "optimizers/FrankWolfe.h"
+#include "optimizers/FrankWolfeInnerPolytope.h"
 #include "optimizers/FrankWolfeOuterPolytope.h"
-#include "optimizers/ProjectedGradientDescent.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
 #include <Eigen/Dense>
@@ -81,7 +80,7 @@ namespace mopmc {
                         break;
                     }
                 }
-                mopmc::optimization::optimizers::FrankWolfe<ValueType> innerOptimizer(mopmc::optimization::optimizers::FWOption::SIMPLEX_GD, &*fn);
+                mopmc::optimization::optimizers::FrankWolfeInnerPolytope<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::FrankWolfeOuterPolytope<ValueType> outerOptimizer(&*fn);
                 mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &cudaVIHandler);
                 q.query();

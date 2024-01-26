@@ -2,8 +2,8 @@
 // Created by guoxin on 24/11/23.
 //
 
-#ifndef MOPMC_FRANKWOLFE_H
-#define MOPMC_FRANKWOLFE_H
+#ifndef MOPMC_FRANKWOLFEINNERPOLYTOPE_H
+#define MOPMC_FRANKWOLFEINNERPOLYTOPE_H
 
 #include "BaseOptimizer.h"
 #include "LinOpt.h"
@@ -22,18 +22,16 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
-    enum FWOption {
-        SIMPLEX_GD,
-        AWAY_STEP,
-        BLENDED,
-        BLENDED_STEP_OPT
-    };
+    enum FWOption { SIMPLEX_GD, AWAY_STEP };
 
     template<typename V>
-    class FrankWolfe : public BaseOptimizer<V> {
+    class FrankWolfeInnerPolytope : public BaseOptimizer<V> {
     public:
-        explicit FrankWolfe() = default;
-        explicit FrankWolfe(FWOption optMethod, mopmc::optimization::convex_functions::BaseConvexFunction<V> *f);
+        explicit FrankWolfeInnerPolytope() = default;
+        explicit FrankWolfeInnerPolytope(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
+                                         FWOption optMethod=FWOption::SIMPLEX_GD) : BaseOptimizer<V>(f), fwOption(optMethod) {
+            this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(f);
+        }
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
 
         mopmc::optimization::optimizers::LinOpt<V> linOpt;
@@ -43,8 +41,6 @@ namespace mopmc::optimization::optimizers {
         std::set<uint64_t> activeVertices;
 
     private:
-        [[deprecated]] Vector<V> argmin(const std::vector<Vector<V>> &Vertices);
-        [[deprecated]] void initialize(const std::vector<Vector<V>> &Vertices, V &delta, const V &scale);
         void initialize(const std::vector<Vector<V>> &Vertices);
         void performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);
         void forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
@@ -61,4 +57,4 @@ namespace mopmc::optimization::optimizers {
     };
 }// namespace mopmc::optimization::optimizers
 
-#endif//MOPMC_FRANKWOLFE_H
+#endif//MOPMC_FRANKWOLFEINNERPOLYTOPE_H

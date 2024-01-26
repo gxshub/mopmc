@@ -3,8 +3,8 @@
 //
 
 #include "ProjectedGradientDescent.h"
-#include "LineSearch.h"
 #include "mopmc-src/auxiliary/Lincom.h"
+#include "mopmc-src/optimizers/LineSearch.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
