@@ -56,7 +56,7 @@ namespace mopmc::queries {
             outerValueNew = this->fn->value(outerPoint);
             epsilonInnerValueImpr = (innerValueCurrent - innerValueNew) / std::max(std::abs(innerValueCurrent), 1.);
             epsilonOuterValueImpr = (outerValueNew - outerValueCurrent) / std::max(std::abs(innerValueCurrent), 1.);
-            if (iter >= 2 && std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) < toleranceValueImpr) {
+            if (iter >= 10 && std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) < toleranceValueImpr) {
                 std::cout << "loop exit due to small relative improvement on (estimated) nearest points ("
                           << std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) << ")\n";
                 ++iter;
