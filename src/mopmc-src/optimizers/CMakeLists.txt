@@ -5,6 +5,8 @@ list(
         "${dir}/BaseOptimizer.h"
         "${dir}/FrankWolfe.cpp"
         "${dir}/FrankWolfe.h"
+        "${dir}/FrankWolfeOuterOptimization.cpp"
+        "${dir}/FrankWolfeOuterOptimization.h"
         "${dir}/LinOpt.cpp"
         "${dir}/LinOpt.h"
         "${dir}/LineSearch.cpp"
