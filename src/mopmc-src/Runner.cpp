@@ -10,6 +10,7 @@
 #include "convex-functions/Variance.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
 #include "optimizers/FrankWolfe.h"
+#include "optimizers/FrankWolfeOuterPolytope.h"
 #include "optimizers/ProjectedGradientDescent.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
@@ -114,7 +115,8 @@ namespace mopmc {
                     }
                 }
                 mopmc::optimization::optimizers::ProjectedGradientDescent<ValueType> projectedGD(&*fn);
-                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &*optimizer, &projectedGD, &cudaVIHandler);
+                mopmc::optimization::optimizers::FrankWolfeOuterPolytope<ValueType> outerFW(&*fn);
+                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &*optimizer, &outerFW, &cudaVIHandler);
                 q.query();
                 printResult(q);
                 break;
