@@ -2,10 +2,10 @@
 // Created by guoxin on 24/11/23.
 //
 
+#include "FrankWolfeInnerPolytope.h"
 #include "mopmc-src/auxiliary/Lincom.h"
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
-#include "FrankWolfeInnerPolytope.h"
 #include <cmath>
 #include <iostream>
 
@@ -37,7 +37,7 @@ namespace mopmc::optimization::optimizers {
             }
             ++t;
         }
-        std::cout << "Frank-Wolfe loop stops at iteration: " << t << ", nearest distance: "<< this->fn->value(xNew) << "\n";
+        std::cout << "Inner optimization, FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
         point = xNew;
         return 0;
     }
@@ -48,7 +48,7 @@ namespace mopmc::optimization::optimizers {
         bool exit = false;
         V cosMin = 1.;
         for (int i = 0; i < size; ++i) {
-            const V cos = mopmc::optimization::auxiliary::Trigonometry<V>::cosine(Vertices[i]-xCurrent, dXCurrent, 0.);
+            const V cos = mopmc::optimization::auxiliary::Trigonometry<V>::cosine(Vertices[i] - xCurrent, dXCurrent, 0.);
             if (cosMin > cos) {
                 cosMin = cos;
             }
@@ -64,13 +64,16 @@ namespace mopmc::optimization::optimizers {
     void FrankWolfeInnerPolytope<V>::initialize(const std::vector<Vector<V>> &Vertices) {
         if (Vertices.empty())
             throw std::runtime_error("The set of vertices cannot be empty");
+        const auto prvSize = size;
         size = Vertices.size();
         dimension = Vertices[0].size();
         xCurrent.resize(dimension);
         xNew.resize(dimension);
         xNewTmp.resize(dimension);
         alpha.conservativeResize(size);
-        alpha(size - 1) = static_cast<V>(0.);
+        for (uint64_t i = prvSize; i < size; ++i) {
+            alpha(i) = static_cast<V>(0.);
+        }
         if (size == 1) {
             alpha(0) = static_cast<V>(1.);
             activeVertices.insert(0);
@@ -134,8 +137,7 @@ namespace mopmc::optimization::optimizers {
         if (this->fn->value(xCurrent) >= this->fn->value(xNewTmp)) {
             xNew = xNewTmp;
             activeVertices.erase(resetIndex);
-        }
-        else {
+        } else {
             gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, 1.0);
             xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
         }
@@ -164,8 +166,8 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     void FrankWolfeInnerPolytope<V>::forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
-                                                uint64_t &awyInd, Vector<V> &awyVec,
-                                                V &gamma, V &gammaMax, bool &isFwd) {
+                                                             uint64_t &awyInd, Vector<V> &awyVec,
+                                                             V &gamma, V &gammaMax, bool &isFwd) {
         if (static_cast<V>(-1.) * dXCurrent.dot(fwdVec - awyVec) >= 0.) {
             isFwd = true;
             xNewTmp = xCurrent + fwdVec;

@@ -51,7 +51,7 @@ namespace mopmc::optimization::optimizers {
         void checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps);
         bool checkExit(const std::vector<Vector<V>> &Vertices);
 
-        int64_t dimension{}, size{};
+        int64_t dimension{}, size{0};
         Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
         std::set<uint64_t> nullVertices;
     };
