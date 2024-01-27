@@ -8,8 +8,8 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int FrankWolfeOuterPolytope<V>::minimize(Vector<V> &point,
-                                                 const std::vector<Vector<V>> &Vertices,
-                                                 const std::vector<Vector<V>> &Directions) {
+                                             const std::vector<Vector<V>> &Vertices,
+                                             const std::vector<Vector<V>> &Directions) {
         size = Vertices.size();
         dimension = point.size();
         xNew = point;
@@ -61,7 +61,7 @@ namespace mopmc::optimization::optimizers {
             ++t;
             if (exit || this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
-        std::cout << "Frank-Wolfe outer optimization  loop stops at iteration: " << t << ", nearest distance: " << this->fn->value(xNew) << "\n";
+        std::cout << "Outer optimization, FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
         point = xNew;
         return 0;
     }

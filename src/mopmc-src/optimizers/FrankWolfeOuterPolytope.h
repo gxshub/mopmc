@@ -39,7 +39,7 @@ namespace mopmc::optimization::optimizers {
 
     private:
         int64_t dimension{}, size{};
-        Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
+        Vector<V> xCurrent, xNew, xNewTmp;
     };
 }// namespace mopmc::optimization::optimizers
 
