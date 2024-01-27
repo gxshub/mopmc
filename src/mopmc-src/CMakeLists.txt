@@ -7,7 +7,7 @@ add_subdirectory(queries)
 add_subdirectory(solvers)
 add_subdirectory(storm-wrappers)
 add_subdirectory(_future)
-add_subdirectory(_legacy)
+#add_subdirectory(_legacy)
 
 list(
         APPEND Sources
