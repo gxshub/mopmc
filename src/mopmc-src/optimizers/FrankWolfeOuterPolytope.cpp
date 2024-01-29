@@ -10,8 +10,9 @@ namespace mopmc::optimization::optimizers {
     int FrankWolfeOuterPolytope<V>::minimize(Vector<V> &point,
                                              const std::vector<Vector<V>> &Vertices,
                                              const std::vector<Vector<V>> &Directions) {
-        size = Vertices.size();
+
         dimension = point.size();
+        size = Vertices.size();
         xNew = point;
         std::set<uint64_t> exteriorHSIndices, interiorHSIndices;
         Vector<V> descentDirection(dimension);
@@ -40,11 +41,11 @@ namespace mopmc::optimization::optimizers {
                                                                   descentDirection);
                 for (auto i: exteriorHSIndices) {
                     if (Directions[i].dot(descentDirection) > 0) {
-                        point = xNew;
                         exit = true;
                     }
                 }
             }
+            if (exit) { break; }
             V lambda = static_cast<V>(1000);
             for (auto i: interiorHSIndices) {
                 const Vector<V> &w = Directions[i];
@@ -59,9 +60,10 @@ namespace mopmc::optimization::optimizers {
             lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
             xNew = (1. - lambda) * xCurrent + lambda * xNewTmp;
             ++t;
-            if (exit || this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
+            if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
         std::cout << "Outer optimization, FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+        //assert(this->fn->value(xNew) <= this->fn->value(point));
         point = xNew;
         return 0;
     }

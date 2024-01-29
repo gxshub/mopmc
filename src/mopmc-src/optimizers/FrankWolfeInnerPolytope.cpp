@@ -64,17 +64,17 @@ namespace mopmc::optimization::optimizers {
     void FrankWolfeInnerPolytope<V>::initialize(const std::vector<Vector<V>> &Vertices) {
         if (Vertices.empty())
             throw std::runtime_error("The set of vertices cannot be empty");
-        const auto prvSize = size;
+        const auto sizePrv = size;
         size = Vertices.size();
         dimension = Vertices[0].size();
         xCurrent.resize(dimension);
         xNew.resize(dimension);
         xNewTmp.resize(dimension);
         alpha.conservativeResize(size);
-        for (uint64_t i = prvSize; i < size; ++i) {
+        for (uint64_t i = sizePrv; i < size; ++i) {
             alpha(i) = static_cast<V>(0.);
         }
-        if (size == 1) {
+        if (sizePrv == 0) {
             alpha(0) = static_cast<V>(1.);
             activeVertices.insert(0);
         }
