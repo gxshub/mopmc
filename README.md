@@ -29,8 +29,7 @@ Installation of The CUDA Toolkit 12.xx (or above) is required.
 This version is essential as it provides 64bit numeric types for the GPU and provides more modern
 sparse matrix multiplication algorithms from NVIDIA CuSparse.
 See the [CUDA installation documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/) for detailed information.
-Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that each CUDA Toolkit version requires a minimum supported NVIDIA Driver version.
-For example, NVIDIA Driver 525 supports CUDA Toolkit 12.0.
+Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that the [version compactibility](https://docs.nvidia.com/deploy/cuda-compatibility/#minor-version-compatibility) between the CUDA Toolkit and the NVIDIA Driver.
 <!--
 ```
 +---------------------------------------------------------------------------------------+
