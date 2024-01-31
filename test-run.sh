@@ -1,5 +1,5 @@
 #!/bin/bash
 
 #/build/mopmc --help
-#./build/mopmc -M examples/dive_and_rise/dive_and_rise.nm -P examples/dive_and_rise/dive_and_rise_prop_100.props -Q convex -L mse -I si-gd
-./build/mopmc -M examples/multiobj_scheduler05.nm -P examples/multiobj_scheduler05.pctl -Q achievability
+#./build/mopmc -m examples/dive_and_rise/dive_and_rise.nm -p examples/dive_and_rise/dive_and_rise_prop_100.props -q convex -l mse
+./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability
