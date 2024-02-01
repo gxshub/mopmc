@@ -8,8 +8,8 @@ Examples of convex functions are Euclidean distance, MSE, variance, etc.
 Currently, only total reward objectives are supported.
 
 
-Built on top of [Storm](https://www.stormchecker.org)'s C++ API of model parsing and building, 
-MOPMC accepts a PRISM model file (for an MDP) and a PCTL/LTL property specification.
+Built on top of [Storm](https://www.stormchecker.org)'s model parsing and building C++ API, 
+MOPMC accepts a PRISM model format (for an MDP) and a PCTL/LTL-style property specification.
 One important feature of MOPMC is the utilisation of GPU hardware acceleration for valuation-iteration computing.
 The convex queries in MOPMC can scale to a large number of objectives.
 
@@ -107,7 +107,7 @@ $STORM_HOME/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop exam
 ## About Model and Property Specification
 MOPMC accepts the standard PRISM model format for MDPs. For property specification, 
 it accepts the PCTL/LTL-style for multi-objective achievability properties, 
-which are used by existing PMC tools such as Storm and PRISM. 
+which are adopted by existing PMC tools such as Storm and PRISM. 
 For convex queries, it interprets an achievability property as follows: 
 Suppose a property specification is 
 ```multi(R{"time"}<=14.0 [ F "tasks_complete" ], R{"energy"}<=1.25 [  F "tasks_complete" ])```
