@@ -25,13 +25,10 @@ This build is known to work on Ubuntu 20.04 LTS.
 Before starting, install Storm and its _dependencies_ from source code. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the installation procedure.
 This project is built with CMake (which is included in Storm's dependencies).
 
-<!-- This project uses cmake which should be bundled with Ninja. If Ninja is available you will be able
-to make use of the convenient configurations and build script.-->
-
-Installation of the CUDA Toolkit 12.0 (or above) is required.
+Installation of the CUDA Toolkit 12.0 (or above) is required (see the 
+[NVIDIA CUDA Installation Guide]((https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)) .
 This version is essential as it provides 64bit numeric types for the GPU and provides more modern
 sparse matrix multiplication algorithms from NVIDIA CuSparse.
-See the [CUDA installation documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/) for detailed information.
 Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that the [version compactibility](https://docs.nvidia.com/deploy/cuda-compatibility/#minor-version-compatibility) between the CUDA Toolkit and the NVIDIA Driver.
 <!--
 ```
@@ -40,9 +37,7 @@ Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver 
 +-----------------------------------------+----------------------+----------------------+
 ```
 -->
-
 After installation, append the toolkit to `PATH`, e.g., by adding the following line to either `.bashrc` or `.profile`:
-
 ```shell
 export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
 ```
@@ -63,6 +58,7 @@ To test the	 build is working, run the executable using the convenience script:
 ```shell
 ./test-run.sh
 ```
+
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) 
 Docker image, which is available in the Docker Hub.
@@ -72,8 +68,8 @@ Follow the
 [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 to install the toolkit and configure Docker.
 
-The following procedure assumes that the host system is a Linux system, but in principle the Docker image can be deployed in all OS with the NVIDIA Driver,
-NVIDIA Container Toolkit and Docker being installed.
+The following procedure assumes that the host system is a Linux system, but in principle the Docker image can be deployed in all OS 
+that is installed with NVIDIA Driver, NVIDIA Container Toolkit and Docker.
 
 Pull the image:
 ```shell
