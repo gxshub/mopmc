@@ -10,7 +10,6 @@
 #include <Eigen/Sparse>
 #include <storm/adapters/EigenAdapter.h>
 #include <storm/environment/Environment.h>
-#include <storm/modelchecker/multiobjective/pcaa/StandardMdpPcaaWeightVectorChecker.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessor.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessorResult.h>
 #include <storm/storage/SparseMatrix.h>
@@ -25,6 +24,5 @@ namespace mopmc {
                 mopmc::ModelBuilder<M> &prepModel);
     };
 }// namespace mopmc
-
 
 #endif//MOPMC_TRANSFORMATION_H

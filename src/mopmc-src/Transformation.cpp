@@ -3,20 +3,16 @@
 //
 
 #include "Transformation.h"
-#include "_legacy/model-checking/MOPMCModelChecking.h"
 #include <Eigen/Sparse>
-#include <iostream>
 #include <storm-parsers/api/storm-parsers.h>
 #include <storm/adapters/EigenAdapter.h>
 #include <storm/api/storm.h>
 #include <storm/environment/modelchecker/MultiObjectiveModelCheckerEnvironment.h>
-#include <storm/modelchecker/multiobjective/pcaa/StandardMdpPcaaWeightVectorChecker.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessor.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessorResult.h>
 #include <storm/models/sparse/Mdp.h>
 #include <storm/solver/OptimizationDirection.h>
 #include <storm/storage/prism/Program.h>
-#include <string>
 
 namespace mopmc {
 
