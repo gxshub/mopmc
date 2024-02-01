@@ -1,0 +1,25 @@
+# in host
+export hostdir=/home/guoxin/Downloads/mopmc-master
+export sharedir=/root/mopmc
+sudo docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it --runtime=nvidia --gpus all nvidia/cuda:12.0.0-devel-ubuntu20.04
+
+# in container
+apt-get update
+apt-get install build-essential git cmake libboost-all-dev libcln-dev libgmp-dev libginac-dev automake libglpk-dev libhwloc-dev libz3-dev libxerces-c-dev libeigen3-dev
+cd ~ ; pwd
+git config --global user.email "you@example.com" ; git config --global user.name "Your Name"
+git clone https://github.com/moves-rwth/carl-storm.git carl
+cd carl ; mkdir build ; cd build
+cmake .. ; make lib_carl -j8
+cd ~ ; pwd
+git clone -b stable https://github.com/moves-rwth/storm.git
+cd storm ; mkdir build ; cd build
+cmake .. ; make -j8
+cd ~ ; pwd
+apt-get install wget
+wget https://github.com/Kitware/CMake/releases/download/v3.28.2/cmake-3.28.2-linux-x86_64.tar.gz
+tar -xvzf ./cmake-3.28.2-linux-x86_64.tar.gz ; mv ./cmake-3.28.2-linux-x86_64 ./cmake
+rm ./cmake-3.28.2-linux-x86_64.tar.gz
+echo 'export PATH=/root/cmake/bin${PATH:+:${PATH}}' >>~/.bashrc
+echo 'export STORM_HOME=/root/storm' >>~/.bashrc
+source ~/.bashrc
