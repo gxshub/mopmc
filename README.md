@@ -81,7 +81,7 @@ docker pull gxsu/mopmc-env
 ```
 Clone this project and run the Docker container as follows:
 ```shell
-export hostdir=<the director of this project> ;
+export hostdir=<path to this project's directory> ;
 export sharedir=/root/mopmc ;
 docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it --runtime=nvidia --gpus all gxsu/mopmc-env
 ```
@@ -106,12 +106,12 @@ $STORM_HOME/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop exam
 
 ## About Model and Property Specification
 MOPMC accepts the standard PRISM model format for MDPs. For property specification, 
-it accepts the PCTL/LTL-style for multi-objective achievability properties, 
+it accepts the PCTL/LTL-style multi-objective achievability properties, 
 which are adopted by existing PMC tools such as Storm and PRISM. 
-For convex queries, it interprets an achievability property as follows: 
-Suppose a property specification is 
+For convex queries, it interprets an achievability property in the following way: 
+Suppose a property specification is given as
 ```multi(R{"time"}<=14.0 [ F "tasks_complete" ], R{"energy"}<=1.25 [  F "tasks_complete" ])```
-and the loss function is MSE.
-Let $x_t$ and $x_e$ denote the total rewards for `"time"` and `"energy"`, respectively, 
-which depends on the scheduler for the MDP.
-A convex query returns the minimum value of $((x_t-14.0)^2 + (x_e-1.25)^2)\cdot 0.5$. 
+for the MDP in `multiobj_scheduler05.nm`, and the loss function is MSE.
+Let $x_t$ and $x_e$ denote the total rewards for `"time"` and `"energy"`, respectively.
+The values $x_t$ and $x_e$ are subject to the computed scheduler for the MDP.
+A convex query returns $x_t$ and $x_e$ that minimise $((x_t-14.0)^2 + (x_e-1.25)^2)\cdot 0.5$. 
