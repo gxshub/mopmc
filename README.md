@@ -66,13 +66,27 @@ Clone this project, `cd` into the project root, and execute
 ```
 mkdir build ; ./configure.sh ; ./build.sh
 ```
-
 To test the	 build is working, run the executable using the convenience script:
 ```bash
 ./test-run.sh
 ```
 ### Use Docker Container
-TODO
+A pre-configured environment for runing MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) Docker image in the Docker Hub.
+To run a Docker container with GPU acceleration, the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) is required (c.f., the toolkit's [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)).
+Install docker and run
+```bash
+docker pull gxsu/mopmc-env
+```
+Close this project and run
+```bash
+export hostdir=<the folder of this project> ;
+export sharedir=/root/mopmc ;
+docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it --runtime=nvidia --gpus all gxsu/mopmc-env
+```
+Then, compile MOPMC:
+```bash
+cd ~ ; mkdir build ; ./configure.sh ; ./build.sh
+```
 
 ### Running MOPMC
 To run a convex query:
