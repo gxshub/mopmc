@@ -46,7 +46,7 @@ export PATH=/usr/local/cuda-12.2/bin${PATH:+:${PATH}}
 
 Additionally, if an IDE, such as CLion, is used, then also set the `LD_LIBRARY_PATH` to contain the toolkit's lib64 directory. This can be done by adding the following line into to  either `.bashrc` or `.profile`:
 ```bash
-export LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64 ${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 ```
 This avoids errors by the IDE debug compiler relating to setting `CMAKE_CUDA_ARCHITECTURES`.
 
