@@ -2,7 +2,7 @@
 // Created by guoxin on 24/11/23.
 //
 
-#include "FrankWolfeInnerPolytope.h"
+#include "FrankWolfeInnerOptimizer.h"
 #include "mopmc-src/auxiliary/Lincom.h"
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
@@ -12,7 +12,7 @@
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int FrankWolfeInnerPolytope<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
+    int FrankWolfeInnerOptimizer<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
         initialize(Vertices);
         const uint64_t maxIter = 1e3;
         uint64_t t = 0;
@@ -43,7 +43,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    bool FrankWolfeInnerPolytope<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
+    bool FrankWolfeInnerOptimizer<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
         const V cosTolerance = std::cos(90.0001 / 180.0 * M_PI);
         bool exit = false;
         V cosMin = 1.;
@@ -61,7 +61,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerPolytope<V>::initialize(const std::vector<Vector<V>> &Vertices) {
+    void FrankWolfeInnerOptimizer<V>::initialize(const std::vector<Vector<V>> &Vertices) {
         if (Vertices.empty())
             throw std::runtime_error("The set of vertices cannot be empty");
         const auto sizePrv = size;
@@ -83,7 +83,7 @@ namespace mopmc::optimization::optimizers {
 
 
     template<typename V>
-    void FrankWolfeInnerPolytope<V>::performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices) {
+    void FrankWolfeInnerOptimizer<V>::performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices) {
         Vector<V> dAlpha = Vector<V>::Zero(size);
         for (int64_t i = 0; i < size; ++i) {
             dAlpha(i) += dXCurrent.dot(Vertices[i]);
@@ -154,7 +154,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerPolytope<V>::performForwardOrAwayStepDescent(const std::vector<Vector<V>> &Vertices) {
+    void FrankWolfeInnerOptimizer<V>::performForwardOrAwayStepDescent(const std::vector<Vector<V>> &Vertices) {
         V gamma, gammaMax, epsFwd, epsAwy;
         uint64_t fwdInd{}, awyInd{};
         Vector<V> fwdVec, awyVec;
@@ -165,7 +165,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerPolytope<V>::forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
+    void FrankWolfeInnerOptimizer<V>::forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
                                                              uint64_t &awyInd, Vector<V> &awyVec,
                                                              V &gamma, V &gammaMax, bool &isFwd) {
         if (static_cast<V>(-1.) * dXCurrent.dot(fwdVec - awyVec) >= 0.) {
@@ -209,7 +209,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerPolytope<V>::checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps) {
+    void FrankWolfeInnerOptimizer<V>::checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps) {
         awyInd = 0;
         V inc = std::numeric_limits<V>::min();
         for (auto j: this->activeVertices) {
@@ -223,7 +223,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerPolytope<V>::checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps) {
+    void FrankWolfeInnerOptimizer<V>::checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps) {
         fwdInd = 0;
         V dec = std::numeric_limits<V>::max();
         for (uint_fast64_t i = 0; i < Vertices.size(); ++i) {
@@ -236,5 +236,5 @@ namespace mopmc::optimization::optimizers {
         fwdEps = static_cast<V>(-1.) * dXCurrent.dot(Vertices[fwdInd] - xCurrent);
     }
 
-    template class FrankWolfeInnerPolytope<double>;
+    template class FrankWolfeInnerOptimizer<double>;
 }// namespace mopmc::optimization::optimizers

@@ -7,9 +7,7 @@
 
 #include "BaseQuery.h"
 #include "mopmc-src/QueryData.h"
-#include "mopmc-src/optimizers/LinOpt.h"
 #include "mopmc-src/solvers/BaseValueIteration.h"
-#include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <memory>

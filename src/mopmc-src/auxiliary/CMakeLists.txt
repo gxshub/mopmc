@@ -6,6 +6,8 @@ list(
         "${dir}/Sorting.h"
         "${dir}/Lincom.cpp"
         "${dir}/Lincom.h"
+        "${dir}/LineSearch.cpp"
+        "${dir}/LineSearch.h"
         "${dir}/Trigonometry.cpp"
         "${dir}/Trigonometry.h"
 )

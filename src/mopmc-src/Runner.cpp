@@ -2,15 +2,15 @@
 // Created by guoxin on 2/11/23.
 //
 
-
 #include "Runner.h"
 #include "Transformation.h"
 #include "convex-functions/EuclideanDistance.h"
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
+#include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
-#include "optimizers/FrankWolfeInnerPolytope.h"
-#include "optimizers/FrankWolfeOuterPolytope.h"
+#include "optimizers/FrankWolfeInnerOptimizer.h"
+#include "optimizers/FrankWolfeOuterOptimizer.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
 #include <Eigen/Dense>
@@ -61,7 +61,7 @@ namespace mopmc {
                 break;
             }
             case QueryOptions::CONVEX: {
-                auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), data.thresholds.size());
+                auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), (int64_t) data.thresholds.size());
                 std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
                 switch (queryOptions.CONVEX_FUN) {
                     case QueryOptions::MSE: {
@@ -80,8 +80,8 @@ namespace mopmc {
                         break;
                     }
                 }
-                mopmc::optimization::optimizers::FrankWolfeInnerPolytope<ValueType> innerOptimizer(&*fn);
-                mopmc::optimization::optimizers::FrankWolfeOuterPolytope<ValueType> outerOptimizer(&*fn);
+                mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
+                mopmc::optimization::optimizers::FrankWolfeOuterOptimizer<ValueType> outerOptimizer(&*fn);
                 mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &cudaVIHandler);
                 q.query();
                 printResult(q);
@@ -103,7 +103,7 @@ namespace mopmc {
         std::cout << "Achievability Query terminates after " << q.getMainLoopIterationCount() << " iteration(s) \n";
         std::cout << "OUTPUT: " << std::boolalpha << q.getResult() << "\n";
         std::cout << "----------------------------------------------\n";
-    };
+    }
 
     void printResult(const mopmc::queries::ConvexQuery<ValueType, int>& q) {
         std::cout << "----------------------------------------------\n"

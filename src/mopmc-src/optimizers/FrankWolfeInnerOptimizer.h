@@ -2,12 +2,11 @@
 // Created by guoxin on 24/11/23.
 //
 
-#ifndef MOPMC_FRANKWOLFEINNERPOLYTOPE_H
-#define MOPMC_FRANKWOLFEINNERPOLYTOPE_H
+#ifndef MOPMC_FRANKWOLFEINNEROPTIMIZER_H
+#define MOPMC_FRANKWOLFEINNEROPTIMIZER_H
 
 #include "BaseOptimizer.h"
-#include "LinOpt.h"
-#include "LineSearch.h"
+#include "mopmc-src/auxiliary/LineSearch.h"
 #include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>
 #include <algorithm>
@@ -25,16 +24,15 @@ namespace mopmc::optimization::optimizers {
     enum FWOption { SIMPLEX_GD, AWAY_STEP };
 
     template<typename V>
-    class FrankWolfeInnerPolytope : public BaseOptimizer<V> {
+    class FrankWolfeInnerOptimizer : public BaseOptimizer<V> {
     public:
-        explicit FrankWolfeInnerPolytope() = default;
-        explicit FrankWolfeInnerPolytope(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
+        explicit FrankWolfeInnerOptimizer() = default;
+        explicit FrankWolfeInnerOptimizer(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                                          FWOption optMethod=FWOption::SIMPLEX_GD) : BaseOptimizer<V>(f), fwOption(optMethod) {
             this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(f);
         }
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
 
-        mopmc::optimization::optimizers::LinOpt<V> linOpt;
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
         FWOption fwOption{};
         Vector<V> alpha;
@@ -57,4 +55,4 @@ namespace mopmc::optimization::optimizers {
     };
 }// namespace mopmc::optimization::optimizers
 
-#endif//MOPMC_FRANKWOLFEINNERPOLYTOPE_H
+#endif//MOPMC_FRANKWOLFEINNEROPTIMIZER_H

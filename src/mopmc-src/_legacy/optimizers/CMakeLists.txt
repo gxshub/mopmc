@@ -4,6 +4,8 @@ list(
         APPEND Sources
         "${dir}/FrankWolfe.cpp"
         "${dir}/FrankWolfe.h"
+        "${dir}/LinOpt.cpp"
+        "${dir}/LinOpt.h"
         "${dir}/ProjectedGradientDescent.cpp"
         "${dir}/ProjectedGradientDescent.h"
 )

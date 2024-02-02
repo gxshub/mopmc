@@ -4,13 +4,14 @@
 
 
 #include "AchievabilityQuery.h"
+#include "mopmc-src/optimizers/SeparationHyperplaneOptimizer.h"
 
 namespace mopmc::queries {
 
     template<typename T, typename I>
     void AchievabilityQuery<T, I>::query() {
         assert(this->data_.rowGroupIndices.size() == this->data_.colCount + 1);
-        mopmc::optimization::optimizers::LinOpt<T> linOpt;
+        mopmc::optimization::optimizers::SeparationHyperplaneOptimizer<T> separationHyperplaneOptimizer;
         this->VIhandler->initialize();
         const uint64_t nObjs = this->data_.objectiveCount;
         Vector<T> thresholds = Eigen::Map<Vector<T>>(this->data_.thresholds.data(), this->data_.thresholds.size());
@@ -28,7 +29,11 @@ namespace mopmc::queries {
 
         while (iter < maxIter) {
             if (!VertexVectors.empty()) {
-                linOpt.findOptimalSeparatingDirection(VertexVectors, thresholds, sign, weightVector, delta);
+                separationHyperplaneOptimizer.findMaximumSeparatingDirection(VertexVectors,
+                                                                             thresholds,
+                                                                             sign,
+                                                                             weightVector,
+                                                                             delta);
                 if (delta <= 0)
                     break;
             }

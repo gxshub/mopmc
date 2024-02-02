@@ -5,10 +5,10 @@
 #ifndef MOPMC_FRANKWOLFE_H
 #define MOPMC_FRANKWOLFE_H
 
+#include "LinOpt.h"
+#include "mopmc-src/auxiliary/LineSearch.h"
 #include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include "mopmc-src/optimizers/BaseOptimizer.h"
-#include "mopmc-src/optimizers/LinOpt.h"
-#include "mopmc-src/optimizers/LineSearch.h"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cassert>
