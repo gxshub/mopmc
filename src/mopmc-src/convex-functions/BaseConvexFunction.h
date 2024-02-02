@@ -19,6 +19,7 @@ namespace mopmc::optimization::convex_functions {
     class BaseConvexFunction {
     public:
         explicit BaseConvexFunction() = default;
+        virtual ~BaseConvexFunction() = default;
         explicit BaseConvexFunction(const Vector<V> &params) : parameters(params), dimension(params.size()) {}
         explicit BaseConvexFunction(const uint64_t dim) : dimension(dim){}
 
