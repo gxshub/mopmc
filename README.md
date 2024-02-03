@@ -23,7 +23,12 @@ For benchmarking, MOPMC also implements the achievability queries, which are sup
 This build is known to work on Ubuntu 20.04 LTS.
 
 Before starting, install Storm and its _dependencies_ from source code. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the installation procedure.
-This project is built with CMake (which is included in Storm's dependencies).
+
+This project is built with CMake. 
+It may rely on the [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available only after version 3.17,  
+to identify the location of Cuda (as specified in the CMakeLists.txt).
+Note that an older version of CMake may have been installed when installing Storm's dependencies. Use `cmake --version` to check the version.
+A more recent version of [CMake](https://cmake.org/download/) (e.g., 3.28.x or above) is recommended.
 
 Installation of the CUDA Toolkit 12.0 (or above) is required (see the 
 [NVIDIA CUDA Installation Guide]((https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)) .
