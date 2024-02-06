@@ -28,7 +28,7 @@ namespace mopmc {
                 int valueIteration(const std::vector<double> &w) override;
                 int valueIterationPhaseOne(const std::vector<double> &w, bool toHost = false);
                 int valueIterationPhaseTwo();
-                __attribute__((unused)) int valueIterationPhaseTwo_deprecated();
+                //__attribute__((unused)) int valueIterationPhaseTwo_deprecated();
 
                 const std::vector<double> &getResults() const override {
                     return results;

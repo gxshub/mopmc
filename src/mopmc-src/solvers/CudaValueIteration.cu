@@ -319,6 +319,7 @@ namespace mopmc {
                 return EXIT_SUCCESS;
             }
 
+            /*
             template<typename ValueType>
             __attribute__((unused)) int CudaValueIterationHandler<ValueType>::valueIterationPhaseTwo_deprecated() {
                 std::cout << "____ VI PHASE TWO (deprecated) ____\n";
@@ -335,7 +336,7 @@ namespace mopmc {
                                 dMasking_nnz, dB_columns, mopmc::functions::cuda::is_not_zero<int>());
                 thrust::copy_if(thrust::device, dA_rows_backup, dA_rows_backup + A_nnz,
                                 dMasking_nnz, dB_rows_backup, mopmc::functions::cuda::is_not_zero<int>());
-                /* @param B_nnz: number of non-zero entries in the DTMC transition matrix */
+                // @param B_nnz: number of non-zero entries in the DTMC transition matrix
                 B_nnz = (int) thrust::count_if(thrust::device, dMasking_nnz, dMasking_nnz + A_nnz,
                                                mopmc::functions::cuda::is_not_zero<double>());
                 mopmc::functions::cuda::row2RowGroupLauncher(dRow2RowGroupMapping, dB_rows_backup, B_nnz);
@@ -345,14 +346,12 @@ namespace mopmc {
                                                  dB_csrOffsets, dB_columns, dB_values,
                                                  CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
                                                  CUSPARSE_INDEX_BASE_ZERO, CUDA_R_64F))
-
                 // value iteration for all objectives
                 // !! As gpu does the main work, we can use mult-threading to send as many
                 // individual objective data to gpu as possible.
                 for (int obj = 0; obj < nobjs; obj++) {
                     thrust::copy_if(thrust::device, dR + obj * A_nrows, dR + (obj + 1) * A_nrows,
                                     dMasking_nrows, dRi, mopmc::functions::cuda::is_not_zero<double>());
-
                     iteration = 0;
                     do {
                         // x = ri
@@ -392,6 +391,8 @@ namespace mopmc {
                 CHECK_CUSPARSE(cusparseDestroySpMat(matB))
                 return EXIT_SUCCESS;
             }
+             */
+
             template class CudaValueIterationHandler<double>;
         }
     }
