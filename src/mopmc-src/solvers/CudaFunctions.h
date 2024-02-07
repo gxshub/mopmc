@@ -5,27 +5,31 @@
 #ifndef MOPMC_CUDAFUNCTIONS_H
 #define MOPMC_CUDAFUNCTIONS_H
 
-namespace mopmc::functions::cuda {
+namespace mopmc {
+    namespace functions {
+        namespace cuda {
 
-    int aggregateLauncher(const double *w, const double *x, double *y, int numRows, int numObjs);
+            int aggregateLauncher(const double *w, const double *x, double *y, int numRows, int numObjs);
 
-    int maxValueLauncher1(double *y, double *x, int *enabledActions, int *pi, int arrCount, int numRows);
+            int maxValueLauncher1(double *y, double *x, int *enabledActions, int *pi, int arrCount, int numRows);
 
-    int maxValueLauncher2(double *y, double *x, int *enabledActions, int *pi, int *bpi, int arrCount);
+            __attribute__((unused)) int maxValueLauncher2(double *y, double *x, int *enabledActions, int *pi, int *bpi, int arrCount);
 
-    int binaryMaskingLauncher(const int *csrOffsets, const int *rowGroupIndices, const int *row2RowGroupIndices,
-                              const int *pi, int *masking4rows, int *masking4nnz, int arrCount);
-    int row2RowGroupLauncher(const int *row2RowGroupMapping, int *x, int arrCount);
+            int binaryMaskingLauncher(const int *csrOffsets, const int *rowGroupIndices, const int *row2RowGroupIndices,
+                                      const int *pi, int *masking4rows, int *masking4nnz, int arrCount);
+            int row2RowGroupLauncher(const int *row2RowGroupMapping, int *x, int arrCount);
 
-    template<typename T>
-    struct is_not_zero {
-        __host__ __device__ bool operator()(const T x) {
-            return (x != 0);
-        }
-    };
+            template<typename T>
+            struct is_not_zero {
+                __host__ __device__ bool operator()(const T x) {
+                    return (x != 0);
+                }
+            };
 
-    int absLauncher(const double *x, int k);
+            __attribute__((unused)) int absLauncher(const double *x, int k);
 
-};// namespace mopmc::functions::cuda
+        }// namespace cuda
+    }// namespace functions
+};   // namespace mopmc
 
 #endif//MOPMC_CUDAFUNCTIONS_H

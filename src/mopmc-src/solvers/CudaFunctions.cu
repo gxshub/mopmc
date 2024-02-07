@@ -146,7 +146,7 @@ namespace mopmc {
                 }
             }
 
-            int maxValueLauncher2(double *y, double *x, int *enabledActions, int *pi, int *bpi, int arrCount) {
+            __attribute__((unused)) int maxValueLauncher2(double *y, double *x, int *enabledActions, int *pi, int *bpi, int arrCount) {
                 int blockSize;
                 int minGridSize;
                 int gridSize;
@@ -168,7 +168,7 @@ namespace mopmc {
                 }
             }
 
-            int absLauncher(const double *x, int k) {
+            __attribute__((unused)) int absLauncher(const double *x, int k) {
                 int blockSize, minGridSize, gridSize;
                 cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, &abs, 0, k);
                 gridSize = (blockSize - 1) / blockSize;

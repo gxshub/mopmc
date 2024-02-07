@@ -5,10 +5,10 @@
 #ifndef MOPMC_CUDAWARMUP_H
 #define MOPMC_CUDAWARMUP_H
 
-namespace mopmc::kernels {
+namespace mopmc { namespace kernels {
 
-int launchWarmupKernel();
+    int launchWarmupKernel();
 
-}
+} }
 
 #endif//MOPMC_CUDAWARMUP_H

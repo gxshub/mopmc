@@ -28,14 +28,13 @@ namespace mopmc {
                 int valueIteration(const std::vector<double> &w) override;
                 int valueIterationPhaseOne(const std::vector<double> &w, bool toHost = false);
                 int valueIterationPhaseTwo();
-                //__attribute__((unused)) int valueIterationPhaseTwo_deprecated();
 
                 const std::vector<double> &getResults() const override {
                     return results;
                 }
 
             private:
-                mopmc::QueryData<ValueType, int> *data;
+                //mopmc::QueryData<ValueType, int> *data;
                 Eigen::SparseMatrix<ValueType, Eigen::RowMajor> transitionMatrix;
                 std::vector<ValueType> flattenRewardVector;
                 std::vector<int> scheduler;
@@ -51,7 +50,7 @@ namespace mopmc {
                 int *dRowGroupIndices{}, *dRow2RowGroupMapping{}, *dScheduler{};
                 int *dMasking_nnz{}, *dMasking_nrows{}, *dMasking_tiled{};
                 double *dA_values{}, *dB_values{};
-                double *dR{}, *dRi{}, *dRPart{};
+                double *dR{}, *dRPart{};
                 double *dW{}, *dRw{};
                 double *dX{}, *dX1{}, *dY{}, *dZ{}, *dZ1{};
                 double *dResult{};

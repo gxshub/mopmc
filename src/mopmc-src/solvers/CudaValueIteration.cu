@@ -51,7 +51,7 @@ namespace mopmc {
         namespace gpu {
             template<typename ValueType>
             CudaValueIterationHandler<ValueType>::CudaValueIterationHandler(QueryData<ValueType, int> *queryData) :
-                    data(queryData),
+                    //data(queryData),
                     transitionMatrix(queryData->transitionMatrix),
                     rowGroupIndices(queryData->rowGroupIndices),
                     row2RowGroupMapping(queryData->row2RowGroupMapping),
@@ -104,7 +104,6 @@ namespace mopmc {
                 CHECK_CUDA(cudaMalloc((void **) &dMasking_nrows, A_nrows * sizeof(int)))
                 CHECK_CUDA(cudaMalloc((void **) &dMasking_nnz, A_nnz * sizeof(int)))
                 CHECK_CUDA(cudaMalloc((void **) &dMasking_tiled, Z_ncols * A_nrows * sizeof(double)))
-                CHECK_CUDA(cudaMalloc((void **) &dRi, B_nrows * sizeof(double)))
                 CHECK_CUDA(cudaMalloc((void **) &dRPart, Z_ncols * Z_nrows * sizeof(double)))
                 CHECK_CUDA(cudaMalloc((void **) &dZ, Z_ncols * Z_nrows * sizeof(double)))
                 CHECK_CUDA(cudaMalloc((void **) &dZ1, Z_ncols * Z_nrows * sizeof(double)))
@@ -307,91 +306,15 @@ namespace mopmc {
                 CHECK_CUDA(cudaFree(dZ1))
                 CHECK_CUDA(cudaFree(dR))
                 CHECK_CUDA(cudaFree(dRw))
-                CHECK_CUDA(cudaFree(dRi))
                 CHECK_CUDA(cudaFree(dW))
                 CHECK_CUDA(cudaFree(dRowGroupIndices))
                 CHECK_CUDA(cudaFree(dRow2RowGroupMapping))
                 CHECK_CUDA(cudaFree(dMasking_nrows))
                 CHECK_CUDA(cudaFree(dMasking_nnz))
                 CHECK_CUDA(cudaFree(dResult))
-
                 std::cout << ("____ CUDA EXIT ____\n");
                 return EXIT_SUCCESS;
             }
-
-            /*
-            template<typename ValueType>
-            __attribute__((unused)) int CudaValueIterationHandler<ValueType>::valueIterationPhaseTwo_deprecated() {
-                std::cout << "____ VI PHASE TWO (deprecated) ____\n";
-                // generate a DTMC transition matrix as a csr matrix
-                CHECK_CUSPARSE(cusparseXcsr2coo(handle, dA_csrOffsets, A_nnz, A_nrows, dA_rows_backup,
-                                                CUSPARSE_INDEX_BASE_ZERO))
-
-                mopmc::functions::cuda::binaryMaskingLauncher(dA_csrOffsets,
-                                                              dRowGroupIndices, dRow2RowGroupMapping,
-                                                              dScheduler, dMasking_nrows, dMasking_nnz, A_nrows);
-                thrust::copy_if(thrust::device, dA_values, dA_values + A_nnz,
-                                dMasking_nnz, dB_values, mopmc::functions::cuda::is_not_zero<int>());
-                thrust::copy_if(thrust::device, dA_columns, dA_columns + A_nnz,
-                                dMasking_nnz, dB_columns, mopmc::functions::cuda::is_not_zero<int>());
-                thrust::copy_if(thrust::device, dA_rows_backup, dA_rows_backup + A_nnz,
-                                dMasking_nnz, dB_rows_backup, mopmc::functions::cuda::is_not_zero<int>());
-                // @param B_nnz: number of non-zero entries in the DTMC transition matrix
-                B_nnz = (int) thrust::count_if(thrust::device, dMasking_nnz, dMasking_nnz + A_nnz,
-                                               mopmc::functions::cuda::is_not_zero<double>());
-                mopmc::functions::cuda::row2RowGroupLauncher(dRow2RowGroupMapping, dB_rows_backup, B_nnz);
-                CHECK_CUSPARSE(cusparseXcoo2csr(handle, dB_rows_backup, B_nnz, B_nrows,
-                                                dB_csrOffsets, CUSPARSE_INDEX_BASE_ZERO))
-                CHECK_CUSPARSE(cusparseCreateCsr(&matB, B_nrows, B_ncols, B_nnz,
-                                                 dB_csrOffsets, dB_columns, dB_values,
-                                                 CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
-                                                 CUSPARSE_INDEX_BASE_ZERO, CUDA_R_64F))
-                // value iteration for all objectives
-                // !! As gpu does the main work, we can use mult-threading to send as many
-                // individual objective data to gpu as possible.
-                for (int obj = 0; obj < nobjs; obj++) {
-                    thrust::copy_if(thrust::device, dR + obj * A_nrows, dR + (obj + 1) * A_nrows,
-                                    dMasking_nrows, dRi, mopmc::functions::cuda::is_not_zero<double>());
-                    iteration = 0;
-                    do {
-                        // x = ri
-                        CHECK_CUBLAS(cublasDcopy_v2_64(cublasHandle, B_nrows, dRi, 1, dX, 1))
-                        // initialise x' as ri too
-                        if (iteration == 0) {
-                            CHECK_CUBLAS(cublasDcopy_v2_64(cublasHandle, B_nrows, dRi, 1, dX1, 1))
-                        }
-                        // x = B.x' + ri where x = ri
-                        CHECK_CUSPARSE(cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                                    &alpha, matB, vecX1, &beta, vecX, CUDA_R_64F,
-                                                    CUSPARSE_SPMV_ALG_DEFAULT, dBuffer))
-                        // x' = -1 * x + x'
-                        CHECK_CUBLAS(cublasDaxpy_v2_64(cublasHandle, B_ncols, &alpha2, dX, 1, dX1, 1))
-                        // max |x'|
-                        CHECK_CUBLAS(cublasIdamax(cublasHandle, A_ncols, dX1, 1, &maxInd))
-                        // to get maxEps, we must reduce also by one since this is FORTRAN based indexing.
-                        CHECK_CUDA(cudaMemcpy(&maxEps, dX1 + maxInd - 1, sizeof(double), cudaMemcpyDeviceToHost))
-                        maxEps = (maxEps >= 0) ? maxEps : -maxEps;
-                        // x' = x
-                        CHECK_CUBLAS(cublasDcopy_v2_64(cublasHandle, B_nrows, dX, 1, dX1, 1))
-
-                        //printf("___ VI PHASE TWO, OBJECTIVE %i, ITERATION %i, maxEps %f\n", obj, iteration, maxEps);
-                        ++iteration;
-
-                    } while (maxEps > tolerance && iteration < maxIter);
-                    if (iteration == maxIter) {
-                        std::cout << "[warning] loop exit after reaching maximum iteration number (" << iteration <<")\n";
-                    }
-                    //std::cout << "objective " << obj  << " terminated after " << iteration << " iterations\n";
-                    // copy results
-                    thrust::copy(thrust::device, dX + iniRow, dX + iniRow + 1, dResult + obj);
-                }
-                //-------------------------------------------------------------------------
-                CHECK_CUDA(cudaMemcpy(scheduler.data(), dScheduler, A_ncols * sizeof(int), cudaMemcpyDeviceToHost))
-                CHECK_CUDA(cudaMemcpy(results.data(), dResult, (nobjs + 1) * sizeof(double), cudaMemcpyDeviceToHost))
-                CHECK_CUSPARSE(cusparseDestroySpMat(matB))
-                return EXIT_SUCCESS;
-            }
-             */
 
             template class CudaValueIterationHandler<double>;
         }
