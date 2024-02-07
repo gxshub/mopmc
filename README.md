@@ -90,19 +90,19 @@ Then, compile MOPMC:
 cd ~ ; mkdir build ; ./configure.sh ; ./build.sh
 ```
 
-### Use Docker Image with Pre-Built MOPMC
+### Use Docker Image with Pre-built MOPMC
 A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
-with a ready-to-run MOPMC is available. Run the following command:
+with a ready-to-run MOPMC build is available in the Docker Hub:
 ```shell
-docker pull gxsu/mopmc:<version>
+docker pull gxsu/mopmc:<tagname>
 ```
-This pre-built version supports an environment with or _without_ GPU acceleration by runing
+This pre-built image supports an environment with or _without_ GPU acceleration by running
 ```shell
-docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<version>
+docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<tagname>
 ```
 (without mounting), or
 ```shell
-docker run --rm gxsu/mopmc:<version>
+docker run --rm -it gxsu/mopmc:<tagname>
 ```
 
 ### Running MOPMC
@@ -138,4 +138,6 @@ Suppose a property specification is given as
 for the MDP in `multiobj_scheduler05.nm`, and the loss function is MSE.
 Let $x_t$ and $x_e$ denote the total rewards for `"time"` and `"energy"`, respectively.
 The values $x_t$ and $x_e$ are subject to the computed scheduler for the MDP.
-A convex query returns $x_t$ and $x_e$ that minimise $((x_t-14.0)^2 + (x_e-1.25)^2)\cdot 0.5$. 
+A convex query returns $x_t$ and $x_e$ that minimise $((x_t-14.0)^2 + (x_e-1.25)^2)/2$. 
+If the loss function is the variance, then the query returns $x_t$ and $x_e$ 
+that minimise $((x_t - \overline{x})^2 + (x_e - \overline{x})^2)/2$ where $\overline{x}= (x_t+x_e)/2$.
