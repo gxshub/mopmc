@@ -25,7 +25,7 @@ This build is known to work on Ubuntu 20.04 LTS.
 Before starting, install Storm and its _dependencies_ from source code. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the installation procedure.
 
 This project is built with CMake. 
-It may rely on the [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available only after version 3.17, to identify the location of Cuda (as specified in the CMakeLists.txt).
+It may rely on the [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available version 3.17+, to identify the location of Cuda (as specified in the CMakeLists.txt).
 Note that an older version of CMake may have been installed when installing Storm's dependencies. Use `cmake --version` to check the version.
 A more recent version of [CMake](https://cmake.org/download/) (e.g., 3.28.x or above) is recommended.
 
@@ -65,15 +65,13 @@ To test the	 build is working, run the executable using the convenience script:
 
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) 
-Docker image, which is available in the Docker Hub.
+Docker image, which is in the Docker Hub. 
+<em>This Docker image is built for the AMD64 architecture but not the ARM64 architecture.</em>
 To run a Docker container with GPU acceleration, the 
 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) is required.
 Follow the 
 [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 to install the toolkit and configure Docker.
-
-The following procedure assumes that the host system is a Linux system, but in principle the Docker image can be deployed in all OS 
-that is installed with NVIDIA Driver, NVIDIA Container Toolkit and Docker.
 
 Pull the image:
 ```shell
@@ -92,11 +90,14 @@ cd ~ ; mkdir build ; ./configure.sh ; ./build.sh
 
 ### Use Docker Image with Pre-built MOPMC
 A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
-with a ready-to-run MOPMC build is available in the Docker Hub:
+with a ready-to-run MOPMC build is available in the Docker Hub.
+<em>This Docker image is built for the AMD64 architecture but not the ARM64 architecture.</em>
+
+Pull the image:
 ```shell
 docker pull gxsu/mopmc:<tagname>
 ```
-This pre-built image supports an environment with or _without_ GPU acceleration by running
+This pre-built version supports an environment by running
 ```shell
 docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<tagname>
 ```
@@ -104,6 +105,7 @@ docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<tagname>
 ```shell
 docker run --rm -it gxsu/mopmc:<tagname>
 ```
+The last command supports the running of MOMPC __without__ an NVIDIA GPU.
 
 ### Running MOPMC
 To run a convex query:
