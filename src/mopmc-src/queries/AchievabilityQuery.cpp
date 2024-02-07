@@ -59,6 +59,15 @@ namespace mopmc::queries {
         this->VIhandler->exit();
     }
 
+
+    template<typename T, typename I>
+    void AchievabilityQuery<T, I>::printResult() {
+        std::cout << "----------------------------------------------\n";
+        std::cout << "Achievability Query terminates after " << this->getMainLoopIterationCount() << " iteration(s) \n";
+        std::cout << "OUTPUT: " << std::boolalpha << this->getResult() << "\n";
+        std::cout << "----------------------------------------------\n";
+    }
+
     template
     class AchievabilityQuery<double, int>;
 }

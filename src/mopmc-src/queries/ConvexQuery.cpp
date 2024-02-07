@@ -69,5 +69,19 @@ namespace mopmc::queries {
         this->VIhandler->exit();
     }
 
+    template<typename V, typename I>
+    void ConvexQuery<V, I>::printResult() {
+        std::cout << "----------------------------------------------\n"
+                  << "CUDA CONVEX QUERY terminates after " << this->getMainLoopIterationCount() << " iteration(s)\n"
+                  << "Estimated nearest point to threshold : [";
+        for (int i = 0; i < this->getInnerOptimalPoint().size(); ++i) {
+            std::cout << this->getInnerOptimalPoint()(i) << " ";
+        }
+        std::cout << "]\n"
+                  << "Approximate distance (at inner point): " << this->getInnerOptimalValue()
+                  << "\nApproximate distance (at outer point): " << this->getOuterOptimalValue()
+                  << "\n----------------------------------------------\n";
+    }
+
     template class ConvexQuery<double, int>;
 }// namespace mopmc::queries

@@ -34,6 +34,7 @@ namespace mopmc::queries {
             : queryData(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt), VIhandler(valueIterSolver){};
 
         virtual void query() = 0 ;
+        virtual void printResult() {};
 
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn;
         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer;

@@ -31,7 +31,6 @@ namespace mopmc::queries {
 
         void query() override;
 
-
         [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
             return iter;
         }
@@ -47,6 +46,8 @@ namespace mopmc::queries {
         V getOuterOptimalValue() const {
             return this->fn->value(outerPoint);
         }
+
+        void printResult() override;
 
     private:
         uint_fast64_t iter{};

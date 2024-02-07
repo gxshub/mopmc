@@ -36,11 +36,14 @@ namespace mopmc::queries {
             return achievable;
         }
 
+        void printResult() override;
+
     private:
         std::vector<Vector<T>> VertexVectors, WeightVectors;
         uint_fast64_t iter{};
         bool achievable{};
     };
+
 }// namespace mopmc::queries
 
 #endif//MOPMC_ACHIEVABILITYQUERY_H

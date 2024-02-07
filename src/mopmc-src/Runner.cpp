@@ -33,9 +33,6 @@ namespace mopmc {
     template<typename V>
     using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
 
-    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int> &q);
-    void printResult(const mopmc::queries::ConvexQuery<ValueType, int> &q);
-
     bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions queryOptions) {
         assert(typeid(ValueType) == typeid(double));
         assert(typeid(IndexType) == typeid(uint64_t));
@@ -73,7 +70,7 @@ namespace mopmc {
             case QueryOptions::ACHIEVABILITY: {
                 mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &*vIHandler);
                 q.query();
-                printResult(q);
+                q.printResult();
                 break;
             }
             case QueryOptions::CONVEX: {
@@ -100,7 +97,7 @@ namespace mopmc {
                 mopmc::optimization::optimizers::FrankWolfeOuterOptimizer<ValueType> outerOptimizer(&*fn);
                 mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
-                printResult(q);
+                q.printResult();
                 break;
             }
         }
@@ -113,25 +110,5 @@ namespace mopmc {
         printf("Model checking: %.3f second(s).\n", double(time3 - time2) / CLOCKS_PER_SEC);
         printf("Total time: %.3f second(s).\n", double(time3 - time0) / CLOCKS_PER_SEC);
         return true;
-    }
-
-    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int> &q) {
-        std::cout << "----------------------------------------------\n";
-        std::cout << "Achievability Query terminates after " << q.getMainLoopIterationCount() << " iteration(s) \n";
-        std::cout << "OUTPUT: " << std::boolalpha << q.getResult() << "\n";
-        std::cout << "----------------------------------------------\n";
-    }
-
-    void printResult(const mopmc::queries::ConvexQuery<ValueType, int> &q) {
-        std::cout << "----------------------------------------------\n"
-                  << "CUDA CONVEX QUERY terminates after " << q.getMainLoopIterationCount() << " iteration(s)\n"
-                  << "Estimated nearest point to threshold : [";
-        for (int i = 0; i < q.getInnerOptimalPoint().size(); ++i) {
-            std::cout << q.getInnerOptimalPoint()(i) << " ";
-        }
-        std::cout << "]\n"
-                  << "Approximate distance (at inner point): " << q.getInnerOptimalValue()
-                  << "\nApproximate distance (at outer point): " << q.getOuterOptimalValue()
-                  << "\n----------------------------------------------\n";
     }
 }// namespace mopmc
