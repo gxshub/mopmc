@@ -18,21 +18,20 @@ namespace mopmc::queries {
     public:
 
         explicit BaseQuery() = default;
-        explicit BaseQuery(const mopmc::QueryData<V,I> &data): data_(data){};
+        explicit BaseQuery(const mopmc::QueryData<V,I> &data): queryData(data){};
         explicit BaseQuery(const mopmc::QueryData<V,I> &data,
                            mopmc::value_iteration::BaseVIHandler<V> *valueIterSolver)
-                           : data_(data), VIhandler(valueIterSolver){};
+                           : queryData(data), VIhandler(valueIterSolver){};
         explicit BaseQuery(const mopmc::QueryData<V,I> &data,
                            mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *priOpt,
-                           mopmc::optimization::optimizers::BaseOptimizer<V> *secOpt):
-                           data_(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt){};
+                           mopmc::optimization::optimizers::BaseOptimizer<V> *secOpt): queryData(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt){};
         explicit BaseQuery(const mopmc::QueryData<V,I> &data,
                            mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *priOpt,
                            mopmc::optimization::optimizers::BaseOptimizer<V> *secOpt,
-                           mopmc::value_iteration::BaseVIHandler<V> *valueIterSolver):
-                data_(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt), VIhandler(valueIterSolver){};
+                           mopmc::value_iteration::BaseVIHandler<V> *valueIterSolver)
+            : queryData(data), fn(f), innerOptimizer(priOpt), outerOptimizer(secOpt), VIhandler(valueIterSolver){};
 
         virtual void query() = 0 ;
 
@@ -40,7 +39,7 @@ namespace mopmc::queries {
         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer;
         mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer;
         mopmc::value_iteration::BaseVIHandler<V> *VIhandler;
-        mopmc::QueryData<V, I> data_;
+        mopmc::QueryData<V, I> queryData;
     };
 
 

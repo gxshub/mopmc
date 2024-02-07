@@ -9,6 +9,8 @@ list(
         "${dir}/CudaValueIteration.cuh"
         "${dir}/CudaWarmUp.cu"
         "${dir}/CudaWarmUp.h"
+        "${dir}/ValueIteration.cpp"
+        "${dir}/ValueIteration.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

@@ -10,14 +10,14 @@ namespace mopmc::queries {
 
     template<typename T, typename I>
     void AchievabilityQuery<T, I>::query() {
-        assert(this->data_.rowGroupIndices.size() == this->data_.colCount + 1);
+        assert(this->queryData.rowGroupIndices.size() == this->queryData.colCount + 1);
         mopmc::optimization::optimizers::SeparationHyperplaneOptimizer<T> separationHyperplaneOptimizer;
         this->VIhandler->initialize();
-        const uint64_t nObjs = this->data_.objectiveCount;
-        Vector<T> thresholds = Eigen::Map<Vector<T>>(this->data_.thresholds.data(), this->data_.thresholds.size());
+        const uint64_t nObjs = this->queryData.objectiveCount;
+        Vector<T> thresholds = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), this->queryData.thresholds.size());
         Vector<T> sign(nObjs);
         for (uint_fast64_t i=0; i< sign.size(); ++i) {
-            sign(i) = this->data_.isThresholdUpperBound[i] ? static_cast<T>(-1) : static_cast<T>(1);
+            sign(i) = this->queryData.isThresholdUpperBound[i] ? static_cast<T>(-1) : static_cast<T>(1);
         }
         Vector<T> vertex(nObjs), weightVector(nObjs);
         std::vector<double> vertex_(nObjs + 1), weightVector_(nObjs);

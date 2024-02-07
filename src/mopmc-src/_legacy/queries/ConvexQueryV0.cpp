@@ -13,9 +13,9 @@ namespace mopmc::queries {
     void ConvexQuery<T, I>::query() {
 
         this->VIhandler->initialize();
-        const uint64_t n_objs = this->data_.objectiveCount;
-        assert(this->data_.rowGroupIndices.size() == this->data_.colCount + 1);
-        Vector<T> threshold = Eigen::Map<Vector<T>>(this->data_.thresholds.data(), n_objs);
+        const uint64_t n_objs = this->queryData.objectiveCount;
+        assert(this->queryData.rowGroupIndices.size() == this->queryData.colCount + 1);
+        Vector<T> threshold = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), n_objs);
 
         std::vector<Vector<T>> Vertices, WeightVectors;
         Vector<T> innerPointCurrent(n_objs), innerPointNew(n_objs), outerPoint(n_objs);

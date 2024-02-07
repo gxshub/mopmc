@@ -19,8 +19,9 @@ namespace mopmc {
                CONVEX } QUERY_TYPE;
         enum { MSE,
                EUD,
-               VAR} CONVEX_FUN;
-        enum { CUDA_VI } VI;
+               VAR } CONVEX_FUN;
+        enum { CUDA_VI ,
+               STANDARD_VI } VI;
     };
 }// namespace mopmc
 

@@ -8,6 +8,7 @@
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
 #include "mopmc-src/solvers/CudaValueIteration.cuh"
+#include "mopmc-src/solvers/ValueIteration.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
 #include "optimizers/FrankWolfeInnerOptimizer.h"
 #include "optimizers/FrankWolfeOuterOptimizer.h"
@@ -32,8 +33,8 @@ namespace mopmc {
     template<typename V>
     using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
 
-    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int>& q);
-    void printResult(const mopmc::queries::ConvexQuery<ValueType, int>& q);
+    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int> &q);
+    void printResult(const mopmc::queries::ConvexQuery<ValueType, int> &q);
 
     bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions queryOptions) {
         assert(typeid(ValueType) == typeid(double));
@@ -52,10 +53,25 @@ namespace mopmc {
                                                                                              preparedModel);
         clock_t time2 = clock();
 
+        std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>> vIHandler;
+        switch (queryOptions.VI) {
+            case QueryOptions::CUDA_VI: {
+                vIHandler = std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>>(
+                        new mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType>(&data));
+                break;
+            }
+            case QueryOptions::STANDARD_VI: {
+                vIHandler = std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>>(
+                        new mopmc::value_iteration::ValueIterationHandler(&data));
+                break;
+            }
+        }
+
         mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType> cudaVIHandler(&data);
+        mopmc::value_iteration::ValueIterationHandler<ValueType> valueIterationHandler(&data);
         switch (queryOptions.QUERY_TYPE) {
             case QueryOptions::ACHIEVABILITY: {
-                mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &cudaVIHandler);
+                mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &*vIHandler);
                 q.query();
                 printResult(q);
                 break;
@@ -82,7 +98,7 @@ namespace mopmc {
                 }
                 mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::FrankWolfeOuterOptimizer<ValueType> outerOptimizer(&*fn);
-                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &cudaVIHandler);
+                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 printResult(q);
                 break;
@@ -91,21 +107,22 @@ namespace mopmc {
         clock_t time3 = clock();
 
         std::cout << "       TIME STATISTICS        \n";
-        printf("Model building stage 1: %.3f seconds.\n", double(time05 - time0) / CLOCKS_PER_SEC);
-        printf("Model building stage 2: %.3f seconds.\n", double(time1 - time05) / CLOCKS_PER_SEC);
-        printf("Input data transformation: %.3f seconds.\n", double(time2 - time1) / CLOCKS_PER_SEC);
-        printf("Model checking: %.3f seconds.\n", double(time3 - time2) / CLOCKS_PER_SEC);
+        printf("Model building stage 1: %.3f second(s).\n", double(time05 - time0) / CLOCKS_PER_SEC);
+        printf("Model building stage 2: %.3f second(s).\n", double(time1 - time05) / CLOCKS_PER_SEC);
+        printf("Input data transformation: %.3f second(s).\n", double(time2 - time1) / CLOCKS_PER_SEC);
+        printf("Model checking: %.3f second(s).\n", double(time3 - time2) / CLOCKS_PER_SEC);
+        printf("Total time: %.3f second(s).\n", double(time3 - time0) / CLOCKS_PER_SEC);
         return true;
     }
 
-    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int>& q) {
+    void printResult(const mopmc::queries::AchievabilityQuery<ValueType, int> &q) {
         std::cout << "----------------------------------------------\n";
         std::cout << "Achievability Query terminates after " << q.getMainLoopIterationCount() << " iteration(s) \n";
         std::cout << "OUTPUT: " << std::boolalpha << q.getResult() << "\n";
         std::cout << "----------------------------------------------\n";
     }
 
-    void printResult(const mopmc::queries::ConvexQuery<ValueType, int>& q) {
+    void printResult(const mopmc::queries::ConvexQuery<ValueType, int> &q) {
         std::cout << "----------------------------------------------\n"
                   << "CUDA CONVEX QUERY terminates after " << q.getMainLoopIterationCount() << " iteration(s)\n"
                   << "Estimated nearest point to threshold : [";

@@ -13,6 +13,7 @@ namespace mopmc::value_iteration {
     class BaseVIHandler {
     public:
         explicit BaseVIHandler() = default;
+        virtual ~BaseVIHandler() = default;
 
         virtual int initialize() {return  0;};
         virtual int exit() {return 0;}

@@ -11,8 +11,8 @@ namespace mopmc::queries {
     template<typename T, typename I>
     void ConvexQuery<T, I>::query() {
         this->VIhandler->initialize();
-        const uint64_t n_objs = this->data_.objectiveCount;
-        Vector<T> threshold = Eigen::Map<Vector<T>>(this->data_.thresholds.data(), n_objs);
+        const uint64_t n_objs = this->queryData.objectiveCount;
+        Vector<T> threshold = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), n_objs);
         Vector<T> vertex(n_objs), direction(n_objs);
         direction.setConstant(static_cast<T>(-1.0) / n_objs);// initial direction
         const T toleranceDistanceToMinimum{1.e-6}, toleranceSmallGradient{1.e-8}, toleranceValueImpr{1.e-6};
