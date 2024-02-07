@@ -81,13 +81,28 @@ docker pull gxsu/mopmc-env
 ```
 Clone this project and run the Docker container as follows:
 ```shell
-export hostdir=<path to this project's directory> ;
-export sharedir=/root/mopmc ;
+export hostdir=<path to this project's directory>
+export sharedir=/root/mopmc
 docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it --runtime=nvidia --gpus all gxsu/mopmc-env
 ```
 Then, compile MOPMC:
 ```shell
 cd ~ ; mkdir build ; ./configure.sh ; ./build.sh
+```
+
+### Use Docker Image with Pre-Built MOPMC
+A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
+with a ready-to-run MOPMC is available. Run the following command:
+```shell
+docker pull gxsu/mopmc:<version>
+```
+This pre-built version supports an environment with or _without_ GPU acceleration by runing
+```shell
+docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<version>
+```
+(without mounting), or
+```shell
+docker run --rm gxsu/mopmc:<version>
 ```
 
 ### Running MOPMC
@@ -99,6 +114,15 @@ To run an achievability query:
 ```shell
 ./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability
 ```
+To run a query without GPU acceleration for value iteration:
+```shell
+./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability -v standard
+```
+To see all the running options:
+```shell
+./build/mopmc -h
+```
+
 To run an achievability query in Storm:
 ```shell
 $STORM_HOME/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop examples/multiobj_scheduler05.pctl

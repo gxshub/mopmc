@@ -23,3 +23,12 @@ rm ./cmake-3.28.2-linux-x86_64.tar.gz
 echo 'export PATH=/root/cmake/bin${PATH:+:${PATH}}' >>~/.bashrc
 echo 'export STORM_HOME=/root/storm' >>~/.bashrc
 source ~/.bashrc
+
+# build mopmc
+cd ~
+git clone https://github.com/gxshub/mopmc.git
+cd ./mopmc
+mkdir build ; ./configure ; ./build.sh
+
+#to run mopmc without gpu:
+sudo docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<version>
