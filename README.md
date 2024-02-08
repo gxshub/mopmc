@@ -4,7 +4,7 @@ MOPMC is a multi-objective probabilistic model checking tool specialised for _co
 Markov Decision Processes (MDPs) with multiple objectives.
 A convex query returns an (approximately) optimal point (and value) for a given convex function (viewed as a loss function) 
 that is defined on the multi-dimensional objective space.
-Examples of convex functions are Euclidean distance, MSE, variance, etc.
+Examples of convex functions are MSE, variance, etc.
 Currently, only total reward objectives are supported.
 
 
@@ -66,7 +66,8 @@ To test the	 build is working, run the executable using the convenience script:
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) 
 Docker image, which is in the Docker Hub. 
-<em>This Docker image is built for the AMD64 architecture but not the ARM64 architecture.</em>
+<em>This Docker image is built for the AMD64 architecture only.
+As this project is being actively developed, the pre-built mopmc may not be the latest version.</em>
 To run a Docker container with GPU acceleration, the 
 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) is required.
 Follow the 

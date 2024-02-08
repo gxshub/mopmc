@@ -4,9 +4,9 @@
 
 #include "Runner.h"
 #include "Transformation.h"
-#include "convex-functions/EuclideanDistance.h"
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
+#include "mopmc-src/_legacy/convex-functions/EuclideanDistance.h"
 #include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include "mopmc-src/solvers/ValueIteration.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
@@ -80,11 +80,6 @@ namespace mopmc {
                     case QueryOptions::MSE: {
                         fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                 new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
-                        break;
-                    }
-                    case QueryOptions::EUD: {
-                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                                new mopmc::optimization::convex_functions::EuclideanDistance<ValueType>(h));
                         break;
                     }
                     case QueryOptions::VAR: {

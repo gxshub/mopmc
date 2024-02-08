@@ -11,7 +11,11 @@ int main(int ac, char *av[]) {
 
     try {
         po::options_description desc("Allowed options");
-        desc.add_options()("help,h", "produce help message")("model,m", po::value<string>(), "model")("prop,p", po::value<string>(), "multi-objective property")("loss,l", po::value<string>()->default_value("mse"), "convex function (mse, eud or var)")("query,q", po::value<string>(), "query type (convex or achievability)")("value-iteration,v", po::value<string>()->default_value("gpu"), "value iteration method (gpu or standard)");
+        desc.add_options()("help,h", "produce help message")("model,m", po::value<string>(), "model")
+                          ("prop,p", po::value<string>(), "multi-objective property")
+                          ("loss,l", po::value<string>()->default_value("mse"), "convex function (mse or var)")
+                          ("query,q", po::value<string>(), "query type (convex or achievability)")
+                          ("value-iteration,v", po::value<string>()->default_value("gpu"), "value iteration method (gpu or standard)");
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
         po::notify(vm);
@@ -46,8 +50,6 @@ int main(int ac, char *av[]) {
             const auto &s = vm["loss"].as<string>();
             if (s == "mse") {
                 queryOptions.CONVEX_FUN = mopmc::QueryOptions::MSE;
-            } else if (s == "eud") {
-                queryOptions.CONVEX_FUN = mopmc::QueryOptions::EUD;
             } else if (s == "var") {
                 queryOptions.CONVEX_FUN = mopmc::QueryOptions::VAR;
             } else {

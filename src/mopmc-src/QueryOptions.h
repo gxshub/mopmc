@@ -18,7 +18,6 @@ namespace mopmc {
         enum { ACHIEVABILITY,
                CONVEX } QUERY_TYPE;
         enum { MSE,
-               EUD,
                VAR } CONVEX_FUN;
         enum { CUDA_VI ,
                STANDARD_VI } VI;

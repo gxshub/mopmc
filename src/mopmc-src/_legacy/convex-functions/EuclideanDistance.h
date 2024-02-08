@@ -5,9 +5,9 @@
 #ifndef MOPMC_EUCLIDEANDISTANCE_H
 #define MOPMC_EUCLIDEANDISTANCE_H
 
-#include <vector>
+#include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>
-#include "BaseConvexFunction.h"
+#include <vector>
 
 namespace mopmc::optimization::convex_functions {
 

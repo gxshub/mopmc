@@ -4,8 +4,6 @@ list(
         APPEND Sources
         "${dir}/BaseConvexFunction.cpp"
         "${dir}/BaseConvexFunction.h"
-        "${dir}/EuclideanDistance.cpp"
-        "${dir}/EuclideanDistance.h"
         "${dir}/MSE.cpp"
         "${dir}/MSE.h"
         "${dir}/Variance.cpp"
