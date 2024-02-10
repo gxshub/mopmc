@@ -66,13 +66,15 @@ To test the	 build is working, run the executable using the convenience script:
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) 
 Docker image, which is in the Docker Hub. 
-<em>This Docker image is built for the AMD64 architecture only but not the ARM64 architecture.</em>
+<em>This Docker image is built to support the AMD64 and ARM64 architectures.</em>
+It can be compiled and executed __with or without__ GPUs.
+(In the latter case, the command of running MOPMC must include the option `-v standard` (see below)).
+
 To run a Docker container with GPU acceleration, the 
 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) is required.
 Follow the 
 [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 to install the toolkit and configure Docker.
-
 Pull the image:
 ```shell
 docker pull gxsu/mopmc-env
@@ -83,11 +85,16 @@ export hostdir=<path to this project's directory>
 export sharedir=/root/mopmc
 docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it --runtime=nvidia --gpus all gxsu/mopmc-env
 ```
+If GPU acceleration is not used, the last command should be: 
+```shell
+docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it gxsu/mopmc-env
+```
 Then, compile MOPMC:
 ```shell
 cd ~ ; mkdir build ; ./configure.sh ; ./build.sh
 ```
 
+<!--
 ### Use Docker Image with Pre-built MOPMC
 A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
 with a ready-to-run MOPMC build is available in the Docker Hub.
@@ -107,6 +114,7 @@ docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<tagname>
 docker run --rm -it gxsu/mopmc:<tagname>
 ```
 The last command supports the running of MOMPC __without__ an NVIDIA GPU.
+-->
 
 ### Running MOPMC
 To run a convex query:
