@@ -98,7 +98,7 @@ If the host OS is Windows, use the following command to convert some characters 
 sed -i -e 's/\r$//' ./configure.sh ./build.sh
 ```
 
-<!--
+
 ### Use Docker Image with Pre-built MOPMC
 A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
 with a ready-to-run MOPMC build is available in the Docker Hub.
@@ -106,7 +106,7 @@ __As this project is being actively developed, the pre-built version may not be 
 
 Pull the image:
 ```shell
-docker pull gxsu/mopmc:<tagname>
+docker pull gxsu/mopmc
 ```
 This pre-built version supports an environment by running
 ```shell
@@ -116,8 +116,8 @@ docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<tagname>
 ```shell
 docker run --rm -it gxsu/mopmc:<tagname>
 ```
-The last command supports the running of MOMPC __without__ an NVIDIA GPU.
--->
+The last command supports the running of MOMPC without an NVIDIA GPU.
+
 
 ### Running MOPMC
 To run a convex query:

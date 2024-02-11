@@ -32,3 +32,6 @@ mkdir build ; ./configure ; ./build.sh
 
 #to run mopmc without gpu:
 sudo docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<version>
+
+#to build multiplatform images
+sudo docker buildx build --platform linux/arm64,linux/amd64 --tag <imagename:tagname> --rm --build-arg=<noOfThreads> --push .
