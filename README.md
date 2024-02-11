@@ -30,7 +30,7 @@ Note that an older version of CMake may have been installed when installing Stor
 A more recent version of [CMake](https://cmake.org/download/) (e.g., 3.28.x or above) is recommended.
 
 Installation of the CUDA Toolkit 12.0 (or above) is required (see the 
-[NVIDIA CUDA Installation Guide]((https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)) .
+[NVIDIA CUDA Installation Guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)).
 This version is essential as it provides 64bit numeric types for the GPU and provides more modern
 sparse matrix multiplication algorithms from NVIDIA CuSparse.
 Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that the [version compactibility](https://docs.nvidia.com/deploy/cuda-compatibility/#minor-version-compatibility) between the CUDA Toolkit and the NVIDIA Driver.
@@ -66,8 +66,8 @@ To test the	 build is working, run the executable using the convenience script:
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) 
 Docker image, which is in the Docker Hub. 
-<em>This Docker image is built to support the AMD64 and ARM64 architectures.</em>
-It can be compiled and executed __with or without__ GPUs.
+<em>This Docker image contains a Ubuntu 20.04 OS and is built to support AMD64 (x86_64) and ARM64 (Apple silicon) architectures.</em>
+It has been tested in the host OSs Ubuntu 20.04 LTS, Windows 10 and MacOS __with or without__ NVIDIA GPU
 (In the latter case, the command of running MOPMC must include the option `-v standard` (see below)).
 
 To run a Docker container with GPU acceleration, the 
@@ -89,16 +89,19 @@ If GPU acceleration is not used, the last command should be:
 ```shell
 docker run --mount type=bind,source=$hostdir,target=$sharedir --rm -it gxsu/mopmc-env
 ```
-Then, compile MOPMC:
+Then, in the Docker container, build MOPMC as follows:
 ```shell
 cd ~ ; mkdir build ; ./configure.sh ; ./build.sh
+```
+If the host OS is Windows, use the following command to convert some characters before building MOPMC:
+```shell
+sed -i -e 's/\r$//' ./configure.sh ./build.sh
 ```
 
 <!--
 ### Use Docker Image with Pre-built MOPMC
 A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
 with a ready-to-run MOPMC build is available in the Docker Hub.
-<em>This Docker image is built for the AMD64 architecture but not the ARM64 architecture.</em>
 __As this project is being actively developed, the pre-built version may not be the latest.__
 
 Pull the image:
