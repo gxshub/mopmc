@@ -17,4 +17,4 @@ then
 else
   echo "unsupported arch" >> /root/arch-info
 fi
-echo 'export PATH=/root/cmake/bin${PATH:+:${PATH}}' >>~/.bashrc
+# echo 'export PATH=/root/cmake/bin${PATH:+:${PATH}}' >>~/.bashrc

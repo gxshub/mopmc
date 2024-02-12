@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM gxsu/mopmc-env
 MAINTAINER gxsu
-ENV PATH="/root/cmake/bin:${PATH}"
 WORKDIR /root/mopmc
 COPY . .
 RUN mkdir build
