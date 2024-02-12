@@ -75,6 +75,20 @@ To run a Docker container with GPU acceleration, the
 Follow the 
 [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 to install the toolkit and configure Docker.
+
+Clone this project, and build a Docker image:
+```shell
+docker build --tag mopmc .
+```
+Then, run the image:
+```shell
+docker run --rm -it --runtime=nvidia --gpus all mopmc
+```
+If NVIDIA GPU is not used, run it as follows:
+```shell
+docker run --rm -it mopmc
+```
+<!---
 Pull the image:
 ```shell
 docker pull gxsu/mopmc-env
@@ -97,7 +111,7 @@ If the host OS is Windows, use the following command to convert some characters 
 ```shell
 sed -i -e 's/\r$//' ./configure.sh ./build.sh
 ```
-
+-->
 
 ### Use Docker Image with Pre-built MOPMC
 A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
@@ -110,11 +124,11 @@ docker pull gxsu/mopmc
 ```
 This pre-built version supports an environment by running
 ```shell
-docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc:<tagname>
+docker run --rm -it --runtime=nvidia --gpus all gxsu/mopmc
 ```
 (without mounting), or
 ```shell
-docker run --rm -it gxsu/mopmc:<tagname>
+docker run --rm -it gxsu/mopmc
 ```
 The last command supports the running of MOMPC without an NVIDIA GPU.
 
