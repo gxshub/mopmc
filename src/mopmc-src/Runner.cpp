@@ -11,7 +11,7 @@
 #include "mopmc-src/solvers/ValueIteration.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
 #include "optimizers/FrankWolfeInnerOptimizer.h"
-#include "optimizers/FrankWolfeOuterOptimizer.h"
+#include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
 #include <Eigen/Dense>
@@ -89,7 +89,7 @@ namespace mopmc {
                     }
                 }
                 mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
-                mopmc::optimization::optimizers::FrankWolfeOuterOptimizer<ValueType> outerOptimizer(&*fn);
+                mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
                 mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 q.printResult();

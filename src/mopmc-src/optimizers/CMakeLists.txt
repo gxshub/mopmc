@@ -5,8 +5,10 @@ list(
         "${dir}/BaseOptimizer.h"
         "${dir}/FrankWolfeInnerOptimizer.cpp"
         "${dir}/FrankWolfeInnerOptimizer.h"
-        "${dir}/FrankWolfeOuterOptimizer.cpp"
-        "${dir}/FrankWolfeOuterOptimizer.h"
+        "${dir}/HalfspacesIntersectionCheck.cpp"
+        "${dir}/HalfspacesIntersectionCheck.h"
+        "${dir}/ProjectedGradient.cpp"
+        "${dir}/ProjectedGradient.h"
         "${dir}/SeparationHyperplaneOptimizer.cpp"
         "${dir}/SeparationHyperplaneOptimizer.h"
 )

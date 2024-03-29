@@ -2,14 +2,14 @@
 // Created by guoxin on 26/01/24.
 //
 
-#include "FrankWolfeOuterOptimizer.h"
+#include "ProjectedGradient.h"
 #include "lp_lib.h"
 #include <iostream>
 
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int FrankWolfeOuterOptimizer<V>::minimize(Vector<V> &point,
+    int ProjectedGradient<V>::minimize(Vector<V> &point,
                                               const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions) {
 
@@ -35,12 +35,14 @@ namespace mopmc::optimization::optimizers {
             std::cout << "exteriorHSIndices.size(): " << exteriorHSIndices.size() <<"\n";
             if (exteriorHSIndices.empty()) {
                 descentDirection = slope;
-            } else if (exteriorHSIndices.size() == 1) {
+            }
+            else if (exteriorHSIndices.size() == 1) {
                 auto elem = exteriorHSIndices.begin();
                 const Vector<V> &w = Directions[*elem];
                 // projection of slope onto the hyperplane <x,w> = b
                 descentDirection = slope - (slope.dot(w)) * w;
-            } else {
+            }
+            else {
                 descentDirection = findProjectedDescentDirection(xCurrent, slope, Vertices, Directions, exteriorHSIndices);
             }
             V lambda = static_cast<V>(1000);
@@ -66,7 +68,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    Vector<V> FrankWolfeOuterOptimizer<V>::dykstrasProjection(const Vector<V> &point,
+    Vector<V> ProjectedGradient<V>::dykstrasProjection(const Vector<V> &point,
                                                               const std::vector<Vector<V>> &Vertices,
                                                               const std::vector<Vector<V>> &Directions,
                                                               const std::set<uint64_t> &exteriorHSIndices) {
@@ -103,12 +105,12 @@ namespace mopmc::optimization::optimizers {
             }
             ++it;
         }
-        //std::cout << "Dykstras projection, stops at " << it << "\n";
+        std::cout << "Dykstras projection, stops at " << it << "\n";
         return U[d];
     }
 
     template<typename V>
-    Vector<V> FrankWolfeOuterOptimizer<V>::projectFromPointToHalfspace(const Vector<V> &point,
+    Vector<V> ProjectedGradient<V>::projectFromPointToHalfspace(const Vector<V> &point,
                                                                        const Vector<V> &vertex,
                                                                        const Vector<V> &direction) {
         assert(direction.size() == vertex.size());
@@ -122,7 +124,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    Vector<V> FrankWolfeOuterOptimizer<V>::findProjectedDescentDirection(const Vector<V> &point,
+    Vector<V> ProjectedGradient<V>::findProjectedDescentDirection(const Vector<V> &point,
                                                                          const Vector<V> &slope,
                                                                          const std::vector<Vector<V>> &Vertices,
                                                                          const std::vector<Vector<V>> &Directions,
@@ -146,5 +148,5 @@ namespace mopmc::optimization::optimizers {
         }
     }
 
-    template class FrankWolfeOuterOptimizer<double>;
+    template class ProjectedGradient<double>;
 }// namespace mopmc::optimization::optimizers
