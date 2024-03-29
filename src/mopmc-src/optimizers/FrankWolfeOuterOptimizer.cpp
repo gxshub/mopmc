@@ -10,8 +10,8 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int FrankWolfeOuterOptimizer<V>::minimize(Vector<V> &point,
-                                             const std::vector<Vector<V>> &Vertices,
-                                             const std::vector<Vector<V>> &Directions) {
+                                              const std::vector<Vector<V>> &Vertices,
+                                              const std::vector<Vector<V>> &Directions) {
 
         dimension = point.size();
         size = Vertices.size();
@@ -20,34 +20,29 @@ namespace mopmc::optimization::optimizers {
         Vector<V> descentDirection(dimension);
         const uint64_t maxIter = 20;
         const V tol = 1e-12;
-        bool exit = false;
+        //bool exit = false;
         uint64_t t = 0;
         while (t < maxIter) {
             xCurrent = xNew;
             Vector<V> slope = -1 * (this->fn->subgradient(xCurrent));
             for (uint64_t i = 0; i < size; ++i) {
-                if (Directions[i].dot(Vertices[i] - xCurrent) < 1e-30) {
+                if (slope.dot(Directions[i]) > 0 && Directions[i].dot(Vertices[i] - xCurrent) < 1e-30) {
                     exteriorHSIndices.insert(i);
                 } else {
                     interiorHSIndices.insert(i);
                 }
             }
+            std::cout << "exteriorHSIndices.size(): " << exteriorHSIndices.size() <<"\n";
             if (exteriorHSIndices.empty()) {
                 descentDirection = slope;
             } else if (exteriorHSIndices.size() == 1) {
                 auto elem = exteriorHSIndices.begin();
                 const Vector<V> &w = Directions[*elem];
+                // projection of slope onto the hyperplane <x,w> = b
                 descentDirection = slope - (slope.dot(w)) * w;
             } else {
-                findOptimalProjectedDescentDirection(Directions, exteriorHSIndices, slope,
-                                                                  descentDirection);
-                for (auto i: exteriorHSIndices) {
-                    if (Directions[i].dot(descentDirection) > 0) {
-                        exit = true;
-                    }
-                }
+                descentDirection = findProjectedDescentDirection(xCurrent, slope, Vertices, Directions, exteriorHSIndices);
             }
-            if (exit) { break; }
             V lambda = static_cast<V>(1000);
             for (auto i: interiorHSIndices) {
                 const Vector<V> &w = Directions[i];
@@ -71,88 +66,84 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    int FrankWolfeOuterOptimizer<V>::findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
-                                                        const std::set<uint64_t> &exteriorIndices,
-                                                        const Vector<V> &slope,
-                                                        Vector<V> &descentDirection){
-        lprec *lp;
-        int n_cols, *col_no = NULL, ret = 0;
-        V *row = NULL;
+    Vector<V> FrankWolfeOuterOptimizer<V>::dykstrasProjection(const Vector<V> &point,
+                                                              const std::vector<Vector<V>> &Vertices,
+                                                              const std::vector<Vector<V>> &Directions,
+                                                              const std::set<uint64_t> &exteriorHSIndices) {
 
-        assert(!exteriorIndices.empty());
-        n_cols = (int) slope.size(); // number of variables in the model
-        lp = make_lp(0, n_cols);
-        if (lp == NULL)
-            ret = 1; // couldn't construct a new model
-        if (ret == 0) {
-            // create space large enough for one row
-            col_no = (int *) malloc(n_cols * sizeof(*col_no));
-            row = (V *) malloc(n_cols * sizeof(*row));
-            if ((col_no == NULL) || (row == NULL))
-                ret = 2;
+        const uint64_t m = Vertices[0].size();
+        if (exteriorHSIndices.empty()) {
+            return point;
         }
-        Vector<V> sign(slope.size());
-        if (ret == 0) {
-            set_add_rowmode(lp, TRUE);
-            // constraints
-            for (auto i: exteriorIndices) {
-                for (int j = 0; j < n_cols; ++j) {
-                    col_no[j] = j + 1;
-                    row[j] = (Directions[i])(j);
-                }
-                if (!add_constraintex(lp, n_cols, row, col_no, LE, 0.)){
-                    ret = 3;
-                }
-            }
-            for (int j = 0; j < n_cols; ++j) {
-                col_no[j] = j + 1;
-                row[j] = sign[j];
-            }
-            if (!add_constraintex(lp, n_cols, row, col_no, EQ, 1.))
-                ret = 3;
+        if (exteriorHSIndices.size() == 1) {
+            auto idx = exteriorHSIndices.begin();
+            return projectFromPointToHalfspace(point, Vertices[*idx], Directions[*idx]);
         }
-        if (ret == 0) {
-            set_add_rowmode(lp, FALSE); // rowmode should be turned off again when done building the model
-            for (int j = 0; j < n_cols; ++j) {
-                col_no[j] = j + 1;
-                row[j] = slope[j];
-            }
-            if (!set_obj_fnex(lp, n_cols, row, col_no))
-                ret = 4;
+        const auto d = exteriorHSIndices.size();
+        std::vector<Vector<V>> U(d + 1), Z(d);
+        U[d] = point;
+        for (int64_t i = 0; i < d; ++i) {
+            U[i].resize(m);
+            Z[i] = Vector<V>::Zero(m);
         }
+        const uint64_t maxIter = 200;
+        const V tolerance = 1e-5;
+        uint_fast64_t it = 1;
+        V tol;
+        while (it < maxIter) {
+            if ((U[0] - U[d]).template lpNorm<1>() < tolerance) {
+                break;
+            }
+            U[0] = U[d];
+            int64_t i = 0;
+            for (auto idx: exteriorHSIndices) {
+                U[i + 1] = projectFromPointToHalfspace(U[i] + Z[i], Vertices[idx], Directions[idx]);
+                Z[i] = U[i] + Z[i] - U[i + 1];
+                i++;
+            }
+            ++it;
+        }
+        //std::cout << "Dykstras projection, stops at " << it << "\n";
+        return U[d];
+    }
 
-        if (ret == 0) {
-            // set the object weightVector to maximize
-            set_maxim(lp);
-            //write_LP(lp, stdout);
-            // write_lp(lp, "model.lp");
-            set_verbose(lp, IMPORTANT);
-            ret = solve(lp);
-            //std::cout<< "** Optimal solution? Ret: " << ret << "\n";
-            if (ret == OPTIMAL)
-                ret = 0;
-            else
-                ret = 5;
-        }
-
-        if (ret == 0) {
-            get_variables(lp, row);
+    template<typename V>
+    Vector<V> FrankWolfeOuterOptimizer<V>::projectFromPointToHalfspace(const Vector<V> &point,
+                                                                       const Vector<V> &vertex,
+                                                                       const Vector<V> &direction) {
+        assert(direction.size() == vertex.size());
+        assert(point.size() == vertex.size());
+        if (direction.dot(point - vertex) <= 0) {
+            return point;
         } else {
-            std::cout<< "error in optimization (Ret = " << ret << ")\n";
+            V distance = direction.dot(point - vertex) / std::pow(direction.template lpNorm<2>(), 2);
+            return point - distance * direction;
         }
+    }
 
-        descentDirection = VectorMap<V>(row, n_cols);
-        // free allocated memory
-        if (row != NULL)
-            free(row);
-        if (col_no != NULL)
-            free(col_no);
-        if (lp != NULL) {
-            // clean up such that all used memory by lpsolve is freed
-            delete_lp(lp);
+    template<typename V>
+    Vector<V> FrankWolfeOuterOptimizer<V>::findProjectedDescentDirection(const Vector<V> &point,
+                                                                         const Vector<V> &slope,
+                                                                         const std::vector<Vector<V>> &Vertices,
+                                                                         const std::vector<Vector<V>> &Directions,
+                                                                         const std::set<uint64_t> &exteriorHSIndices) {
+        const V gamma = 0.1;
+        const Vector<V> outPoint = point + gamma * slope;
+        Vector<V> projPoint = dykstrasProjection(outPoint, Vertices, Directions, exteriorHSIndices);
+        V lambda = static_cast<V>(1.);
+        for (auto idx: exteriorHSIndices) {
+            const Vector<V> &w = Vertices[idx];
+            const Vector<V> &r = Directions[idx];
+            if (w.dot(projPoint - r) > 0) {
+                lambda = std::max(lambda, w.dot(r - outPoint) / w.dot(projPoint - outPoint));
+            }
         }
-
-        return ret;
+        const Vector<V> &projSlope = outPoint + lambda * (projPoint - outPoint) - point;
+        if (projSlope.dot(slope) > 0) {
+            return projSlope;
+        } else {
+            return slope;
+        }
     }
 
     template class FrankWolfeOuterOptimizer<double>;

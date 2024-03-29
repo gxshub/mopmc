@@ -36,10 +36,21 @@ namespace mopmc::optimization::optimizers {
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
 
     private:
-        int findOptimalProjectedDescentDirection(const std::vector<Vector<V>> &Directions,
-                                                 const std::set<uint64_t> &exteriorIndices,
-                                                 const Vector<V> &slope,
-                                                 Vector<V> &descentDirection);
+        Vector<V> dykstrasProjection(const Vector<V> &point,
+                                     const std::vector<Vector<V>> &Vertices,
+                                     const std::vector<Vector<V>> &Directions,
+                                     const std::set<uint64_t> &exteriorHSIndices);
+
+        Vector<V> projectFromPointToHalfspace(const Vector<V> &point,
+                                              const Vector<V> &vertex,
+                                              const Vector<V> &direction);
+
+        Vector<V> findProjectedDescentDirection(const Vector<V> &point,
+                                                const Vector<V> &slope,
+                                                const std::vector<Vector<V>> &Vertices,
+                                                const std::vector<Vector<V>> &Directions,
+                                                const std::set<uint64_t> &exteriorHSIndices);
+
         int64_t dimension{}, size{};
         Vector<V> xCurrent, xNew, xNewTmp;
     };
