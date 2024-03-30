@@ -2,12 +2,30 @@
 // Created by guoxin on 30/03/24.
 //
 
-#ifndef MOPMC_HALFSPACEINTERSECTIONCHECK_H
-#define MOPMC_HALFSPACEINTERSECTIONCHECK_H
+#ifndef MOPMC_HALFSPACESINTERSECTIONCHECK_H
+#define MOPMC_HALFSPACESINTERSECTIONCHECK_H
 
+#include <Eigen/Dense>
+#include <algorithm>
+#include <cassert>
+#include <set>
+#include <vector>
 
-class HalfspacesIntersectionCheck {
-};
+namespace mopmc::optimization::optimizers {
 
+    template<typename V>
+    using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
+    template<typename V>
+    using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
-#endif//MOPMC_HALFSPACEINTERSECTIONCHECK_H
+    template<typename V>
+    class HalfspacesIntersectionCheck {
+    public:
+        int check(const std::vector<Vector<V>> &Vertices,
+                  const std::vector<Vector<V>> &Directions,
+                  Vector<V> &point);
+
+    };
+}
+
+#endif//MOPMC_HALFSPACESINTERSECTIONCHECK_H
