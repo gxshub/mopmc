@@ -12,6 +12,11 @@ namespace mopmc::optimization::convex_functions {
     }
 
     template<typename V>
+    MSE<V>::MSE(const uint64_t &n) : BaseConvexFunction<V>(n) {
+        this->smooth = true;
+    }
+
+    template<typename V>
     V MSE<V>::value(const Vector<V> &x) {
         V y = static_cast<V>(0.);
         for (uint_fast64_t i = 0; i < x.size(); ++i) {

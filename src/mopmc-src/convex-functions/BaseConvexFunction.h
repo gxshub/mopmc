@@ -21,7 +21,9 @@ namespace mopmc::optimization::convex_functions {
         explicit BaseConvexFunction() = default;
         virtual ~BaseConvexFunction() = default;
         explicit BaseConvexFunction(const Vector<V> &params) : parameters(params), dimension(params.size()) {}
-        explicit BaseConvexFunction(const uint64_t dim) : dimension(dim){}
+        explicit BaseConvexFunction(const uint64_t dim) : dimension(dim){
+            parameters = Vector<V>::Zero(dim);
+        }
 
         virtual V value(const Vector<V> &x) = 0;
         virtual Vector<V> subgradient(const Vector<V> &x) = 0;
@@ -32,7 +34,7 @@ namespace mopmc::optimization::convex_functions {
         std::vector<V> gradient1(const std::vector<V> &x);
 
         uint64_t dimension{};
-        Vector<V> parameters;
+        Vector<V> parameters{};
         bool smooth{};
     };
 }// namespace mopmc::optimization::convex_functions
