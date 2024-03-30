@@ -7,6 +7,8 @@ list(
         "${dir}/FrankWolfeInnerOptimizer.h"
         "${dir}/HalfspacesIntersectionCheck.cpp"
         "${dir}/HalfspacesIntersectionCheck.h"
+        "${dir}/MinimumNormPoint.cpp"
+        "${dir}/MinimumNormPoint.h"
         "${dir}/ProjectedGradient.cpp"
         "${dir}/ProjectedGradient.h"
         "${dir}/SeparationHyperplaneOptimizer.cpp"
