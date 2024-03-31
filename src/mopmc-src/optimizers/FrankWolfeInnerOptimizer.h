@@ -32,6 +32,7 @@ namespace mopmc::optimization::optimizers {
             this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(f);
         }
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
+        int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) override;
 
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
         FWOption fwOption{};

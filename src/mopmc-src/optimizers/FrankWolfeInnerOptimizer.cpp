@@ -6,6 +6,7 @@
 #include "mopmc-src/auxiliary/Lincom.h"
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
+#include "mopmc-src/convex-functions/MSE.h"
 #include <cmath>
 #include <iostream>
 
@@ -37,7 +38,7 @@ namespace mopmc::optimization::optimizers {
             }
             ++t;
         }
-        std::cout << "Inner optimization, FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+        std::cout << "[Inner optimization] FW stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
         point = xNew;
         return 0;
     }
@@ -54,7 +55,7 @@ namespace mopmc::optimization::optimizers {
             }
         }
         if (cosMin > cosTolerance) {
-            std::cout << "FW loop exits due to small cosine (" << cosMin << ")\n";
+            std::cout << "[Inner optimization] FW loop exits due to small cosine (" << cosMin << ")\n";
             exit = true;
         }
         return exit;
@@ -92,9 +93,6 @@ namespace mopmc::optimization::optimizers {
         Vector<V> dAlphaTmp(size);
         int64_t offsetIndex, numNullVertices = size - activeVertices.size();
         for (offsetIndex = 0; offsetIndex < size; ++offsetIndex) {
-            if (!activeVertices.count(sortedIndices[offsetIndex])) {
-                numNullVertices -= 1;
-            }
             for (uint64_t i = 0; i < size; ++i) {
                 if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
                     dAlphaTmp(sortedIndices[i]) = dAlpha(sortedIndices[i]) - dAlpha(sortedIndices[offsetIndex]);
@@ -105,11 +103,26 @@ namespace mopmc::optimization::optimizers {
             if (dAlphaTmp.sum() <= 0) {
                 break;
             }
+            if (!activeVertices.count(sortedIndices[offsetIndex])) {
+                numNullVertices -= 1;
+            }
         }
         if (offsetIndex == 0) {
             dAlpha.setZero();
             return;
         }
+        const V offset = dAlphaTmp.sum() / (size - numNullVertices);
+        for (int64_t i = 0; i < size; ++i) {
+            if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
+                dAlphaTmp(sortedIndices[i]) -= offset;
+            }
+        }
+        if (dAlphaTmp.isZero()) {
+            return;
+        } else {
+            dAlpha = dAlphaTmp / dAlphaTmp.template lpNorm<1>();
+        }
+        /*
         const V offset = dAlpha.sum() / (size - numNullVertices);
         for (int64_t i = 0; i < size; ++i) {
             if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
@@ -118,6 +131,7 @@ namespace mopmc::optimization::optimizers {
                 dAlpha(sortedIndices[i]) = 0.;
             }
         }
+         */
         V step = std::numeric_limits<V>::max();
         uint64_t resetIndex = size;
         for (uint64_t vertexIndex = 0; vertexIndex < size; ++vertexIndex) {
@@ -234,6 +248,40 @@ namespace mopmc::optimization::optimizers {
         }
         fwdVec = (Vertices[fwdInd] - xCurrent);
         fwdEps = static_cast<V>(-1.) * dXCurrent.dot(Vertices[fwdInd] - xCurrent);
+    }
+
+    template<typename V>
+    int FrankWolfeInnerOptimizer<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) {
+        assert(pivot.size() == point.size());
+        fwOption = AWAY_STEP;
+        this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
+        initialize(Vertices);
+        const uint64_t maxIter = 1e3;
+        uint64_t t = 0;
+        while (t < maxIter) {
+            xCurrent = xNew;
+            dXCurrent = this->fn->subgradient(xCurrent);
+            if (checkExit(Vertices)) {
+                break;
+            }
+            switch (this->fwOption) {
+                case SIMPLEX_GD: {
+                    performSimplexGradientDescent(Vertices);
+                    break;
+                }
+                case AWAY_STEP: {
+                    performForwardOrAwayStepDescent(Vertices);
+                    break;
+                }
+                default: {
+                    throw std::runtime_error("Selected FW option not implemented in this version");
+                }
+            }
+            ++t;
+        }
+        std::cout << "[Inner optimization] FW stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
+        point = xNew;
+        return 0;
     }
 
     template class FrankWolfeInnerOptimizer<double>;

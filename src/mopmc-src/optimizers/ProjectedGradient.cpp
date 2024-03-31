@@ -61,7 +61,7 @@ namespace mopmc::optimization::optimizers {
             ++t;
             if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
-        std::cout << "Outer optimization, projected gradient stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+        std::cout << "[Outer optimization] projected gradient stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
         //assert(this->fn->value(xNew) <= this->fn->value(point));
         point = xNew;
         return 0;
@@ -105,7 +105,7 @@ namespace mopmc::optimization::optimizers {
             }
             ++it;
         }
-        std::cout << "Dykstras projection, stops at " << it << "\n";
+        std::cout << "[Outer optimization] Dykstras projection, stops at " << it << "\n";
         return U[d];
     }
 

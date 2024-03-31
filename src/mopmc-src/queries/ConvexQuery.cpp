@@ -21,17 +21,21 @@ namespace mopmc::queries {
         T innerValueCurrent, innerValueNew, outerValueCurrent, outerValueNew;
         iter = 0;
         while (iter < maxIter) {
-            std::cout << "Main loop: Iteration " << iter << "\n";
+            std::cout << "[Main loop] Iteration: " << iter << "\n";
             if (!Vertices.empty()) {
-                this->innerOptimizer->minimize(innerPoint, Vertices);
+                //this->innerOptimizer->minimize(innerPoint, Vertices);
+                this->innerOptimizer->minimize(innerPoint, Vertices, outerPoint);
                 Vector<T> grad = this->fn->subgradient(innerPoint);
                 epsilonSmallGradient = grad.template lpNorm<1>();
                 if (epsilonSmallGradient < toleranceSmallGradient) {
-                    std::cout << "loop exit due to small gradient (" << epsilonSmallGradient << ")\n";
+                    std::cout << "[Main loop] exit due to small gradient (" << epsilonSmallGradient << ")\n";
                     ++iter;
                     break;
                 }
-                direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
+                //direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
+                direction = (outerPoint - innerPoint)/ (outerPoint - innerPoint).template lpNorm<1>();
+                assert(assertSeparation(outerPoint, direction));
+                //std::cout << "[Main loop] outerpoint: " << outerPoint << "\n";
             }
             // compute a new supporting hyperplane
             std::vector<T> direction1(direction.data(), direction.data() + direction.size());
@@ -47,7 +51,7 @@ namespace mopmc::queries {
             this->outerOptimizer->minimize(outerPoint, Vertices, Directions);
             epsilonDistanceToMinimum = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (epsilonDistanceToMinimum < toleranceDistanceToMinimum) {
-                std::cout << "loop exit due to small gap between inner and outer points ("
+                std::cout << "[Main loop] exit due to small gap between inner and outer points ("
                           << epsilonDistanceToMinimum << ")\n";
                 ++iter;
                 break;
@@ -57,7 +61,7 @@ namespace mopmc::queries {
             epsilonInnerValueImpr = (innerValueCurrent - innerValueNew) / std::max(std::abs(innerValueCurrent), 1.);
             epsilonOuterValueImpr = (outerValueNew - outerValueCurrent) / std::max(std::abs(innerValueCurrent), 1.);
             if (iter >= 10 && std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) < toleranceValueImpr) {
-                std::cout << "loop exit due to small relative improvement on (estimated) nearest points ("
+                std::cout << "[Main loop] exit due to small relative improvement on (estimated) nearest points ("
                           << std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) << ")\n";
                 ++iter;
                 break;
@@ -81,6 +85,21 @@ namespace mopmc::queries {
                   << "Approximate distance (at inner point): " << this->getInnerOptimalValue()
                   << "\nApproximate distance (at outer point): " << this->getOuterOptimalValue()
                   << "\n----------------------------------------------\n";
+    }
+
+    template<typename V, typename I>
+    bool ConvexQuery<V, I>::assertSeparation(const Vector<V> &point, const Vector<V> &direction) {
+        bool b = true;
+        for (uint64_t i = 0; i < Vertices.size(); ++i) {
+            if (point.dot(direction) < Vertices[i].dot(direction)) {
+                std::cout << "point.dot(direction): " << point.dot(direction)
+                          << ", Vertices[i].dot(direction): " << Vertices[i].dot(direction) << "\n"
+                        << "(point - Vertices[i]).template lpNorm<1>(): " << (point - Vertices[i]).template lpNorm<1>()<<"\n"  ;
+                b = false;
+                break;
+            }
+        }
+        return b;
     }
 
     template class ConvexQuery<double, int>;

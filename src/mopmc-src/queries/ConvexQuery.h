@@ -53,6 +53,7 @@ namespace mopmc::queries {
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
         std::vector<Vector<V>> Vertices, Directions;
+        bool assertSeparation(const Vector<V> &point, const Vector<V> &direction);
     };
 }
 

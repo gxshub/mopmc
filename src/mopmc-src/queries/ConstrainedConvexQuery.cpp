@@ -64,7 +64,8 @@ namespace mopmc::queries {
                 std::cout << "[Main loop] exit due to small gradient (" << epsilonSmallGradient << ")\n";
                 break;
             }
-            direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
+            direction = (innerPoint - outerPoint)/ (innerPoint - outerPoint).template lpNorm<1>();
+            std::cout << "[Main loop] direction: " << direction <<"\n";
         }
         this->VIhandler->exit();
     }

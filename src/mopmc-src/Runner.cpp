@@ -91,11 +91,11 @@ namespace mopmc {
                         break;
                     }
                 }
-                //mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
-                mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
+                mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
+                //mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
-                //mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
-                mopmc::queries::ConstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                //mopmc::queries::ConstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 q.printResult();
                 break;
