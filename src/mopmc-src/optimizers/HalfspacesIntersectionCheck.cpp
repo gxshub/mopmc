@@ -11,7 +11,8 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     int HalfspacesIntersectionCheck<V>::check(const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions,
-                                              Vector<V> &point) {
+                                              Vector<V> &point,
+                                              bool &feasible) {
 
         lprec *lp;
         int n_cols, *col_no = NULL, ret = 0;
@@ -64,12 +65,18 @@ namespace mopmc::optimization::optimizers {
             set_verbose(lp, IMPORTANT);
             ret = solve(lp);
             //std::cout<< "** Optimal solution? Ret: " << ret << "\n";
-            if (ret == OPTIMAL)
+            if (ret == OPTIMAL) {
                 ret = 0;
-            else if (ret == INFEASIBLE)
+                feasible = true;
+            }
+            else if (ret == INFEASIBLE) {
                 ret = 2;
-            else
+                feasible = false;
+            }
+            else {
                 ret = 5;
+                throw std::runtime_error("Numerical Failure");
+            }
         }
 
         if (ret == 0) {

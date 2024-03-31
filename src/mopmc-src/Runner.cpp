@@ -6,14 +6,15 @@
 #include "Transformation.h"
 #include "convex-functions/MSE.h"
 #include "convex-functions/Variance.h"
-#include "mopmc-src/_legacy/convex-functions/EuclideanDistance.h"
 #include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include "mopmc-src/solvers/ValueIteration.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
 #include "optimizers/FrankWolfeInnerOptimizer.h"
+#include "optimizers/MinimumNormPoint.h"
 #include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
+#include "queries/ConstrainedConvexQuery.h"
 #include <Eigen/Dense>
 #include <cstdio>
 #include <ctime>
@@ -80,6 +81,8 @@ namespace mopmc {
                     case QueryOptions::MSE: {
                         fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                 new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                        //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                        //        new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         break;
                     }
                     case QueryOptions::VAR: {
@@ -88,9 +91,11 @@ namespace mopmc {
                         break;
                     }
                 }
-                mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
+                //mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
+                mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
-                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                //mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                mopmc::queries::ConstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 q.printResult();
                 break;
