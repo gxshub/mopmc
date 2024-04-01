@@ -28,6 +28,8 @@ namespace mopmc::optimization::optimizers {
 
         virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices,
                              const Vector<V> &pivot) { return 1; }
+        virtual int minimize(Vector<V> &sepDirection, Vector<V> &point, const std::vector<Vector<V>> &Vertices,
+                             const Vector<V> &pivot) { return 1; }
 
         virtual int minimize () { return 1; }
 

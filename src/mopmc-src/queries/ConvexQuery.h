@@ -2,32 +2,32 @@
 // Created by guoxin on 16/01/24.
 //
 
-#ifndef MOPMC_CONVEXQUERYAUX_H
+#ifndef MOPMC_CONVEXQUERY_H
 #define MOPMC_CONVEXQUERY_H
-#include <storm/storage/SparseMatrix.h>
+#include "BaseQuery.h"
+#include "mopmc-src/QueryData.h"
 #include <Eigen/Sparse>
 #include <storm/api/storm.h>
-#include "BaseQuery.h"
-#include "../QueryData.h"
+#include <storm/storage/SparseMatrix.h>
 
 namespace mopmc::queries {
     template<typename V>
-    using Vector =  Eigen::Matrix<V, Eigen::Dynamic, 1>;
+    using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
     template<typename V>
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V, typename I>
     class ConvexQuery : public BaseQuery<V, I> {
     public:
-        ConvexQuery(const mopmc::QueryData<V,I> &data,
+        ConvexQuery(const mopmc::QueryData<V, I> &data,
                     mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                     mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
                     mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
                     mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
             : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) {
-                      innerPoint.resize(data.objectiveCount);
-                      outerPoint.resize(data.objectiveCount);
-              };
+            innerPoint.resize(data.objectiveCount);
+            outerPoint.resize(data.objectiveCount);
+        };
 
         void query() override;
 
@@ -55,7 +55,7 @@ namespace mopmc::queries {
         std::vector<Vector<V>> Vertices, Directions;
         bool assertSeparation(const Vector<V> &point, const Vector<V> &direction);
     };
-}
+}// namespace mopmc::queries
 
 
-#endif//MOPMC_CONVEXQUERYAUX_H
+#endif//MOPMC_CONVEXQUERY_H

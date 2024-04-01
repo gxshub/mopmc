@@ -3,14 +3,64 @@
 //
 
 #include "MinimumNormPoint.h"
+#include "SeparationHyperplaneOptimizer.h"
 #include "mopmc-src/auxiliary/Lincom.h"
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
 #include "mopmc-src/convex-functions/MSE.h"
+#include "lp_lib.h"
 #include <cmath>
 #include <iostream>
 
 namespace mopmc::optimization::optimizers {
+
+    template<typename V>
+    int MinimumNormPoint<V>::minimize(Vector<V> &sepDirection,
+                                      Vector<V> &optimum, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) {
+        assert(pivot.size() == optimum.size());
+        this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
+        this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
+        bool hasGotMaxMarginSepHP = false;
+        SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
+        initialize(Vertices);
+        //std::cout << "[Minimum norm point optimization] Vertices size: " << size << "\n";
+        const uint64_t maxIter = 100;// 1e3;
+        uint64_t t = 0;
+        if (Vertices.size() == 1) {
+            optimum = Vertices[0];
+            sepDirection = (pivot - Vertices[0])/(pivot - Vertices[0]).template lpNorm<1>();
+            return 0;
+        }
+        while (t < maxIter) {
+            xCurrent = xNew;
+            dXCurrent = this->fn->subgradient(xCurrent);
+            //std::cout << "[before checkSeparation] GOT HERE\n";
+            if (!hasGotMaxMarginSepHP && checkSeparation(Vertices, pivot - xNew, pivot)) {
+                hasGotMaxMarginSepHP = true;
+                Vector<V> sign(dimension);
+                for (uint64_t i; i < sign.size(); ++i) {
+                    if ((pivot - xNew)(i) >= 0) {
+                        sign(i) = static_cast<V>(1.);
+                    } else {
+                        sign(i) = static_cast<V>(-1.);
+                    }
+                }
+                V margin;
+                separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin);
+                std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane\n";
+            }
+            /*
+            if (checkExit(Vertices)) {
+                break;
+            }
+             */
+            performSimplexGradientDescent(Vertices);
+            optimum = xNew;
+            ++t;
+        }
+        std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+        return 0;
+    }
 
     template<typename V>
     int MinimumNormPoint<V>::minimize(Vector<V> &optimum,
@@ -21,9 +71,10 @@ namespace mopmc::optimization::optimizers {
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
         //this->fn = &f;
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
+        SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
         initialize(Vertices);
         //std::cout << "[Minimum norm point optimization] Vertices size: " << size << "\n";
-        const uint64_t maxIter = 5;// 1e3;
+        const uint64_t maxIter = 20;// 1e3;
         uint64_t t = 0;
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
@@ -32,15 +83,27 @@ namespace mopmc::optimization::optimizers {
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
-
-/*
-            std::cout << "[Minimum norm point optimization] f(xCurrent) = " <<this->fn->value(xCurrent) << "\n";
-            std::cout << "f(Vertices) = [" ;
-            for (uint64_t i = 0; i < size; ++i) {
-                std::cout << this->fn->value(Vertices[i]) <<" ";
+            //std::cout << "[before checkSeparation] GOT HERE\n";
+            if (checkSeparation(Vertices, pivot - xNew, pivot)) {
+                Vector<V> sign(dimension);
+                for (uint64_t i; i < sign.size(); ++i) {
+                    if ((pivot - xNew)(i) >= 0) {
+                        sign(i) = static_cast<V>(1.);
+                    } else {
+                        sign(i) = static_cast<V>(-1.);
+                    }
+                }
+                Vector<V> dir(dimension);
+                V margin, margin_crt, margin_prv;
+                separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, dir, margin);
+                //std::cout << "[before findNearestPointByDirection] GOT HERE\n";
+                //findNearestPointByDirection(Vertices, pivot - xNew, pivot, this->alpha);
+                //std::cout << "[after findNearestPointByDirection] GOT HERE\n";
+                xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices, alpha);
+                optimum = xNew;
+                //std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+                return 0;
             }
-            std::cout << "]\n";
-            */
             /*
             if (checkExit(Vertices)) {
                 break;
@@ -49,9 +112,8 @@ namespace mopmc::optimization::optimizers {
             performSimplexGradientDescent(Vertices);
             ++t;
         }
-        std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
-        optimum = xNew;
-        return 0;
+        std::cout << "[Minimum norm point optimization] no optimum found\n";
+        return 1;
     }
 
     template<typename V>
@@ -71,6 +133,30 @@ namespace mopmc::optimization::optimizers {
             exit = true;
         }
         return exit;
+    }
+
+    template<typename V>
+    bool MinimumNormPoint<V>::checkSeparation(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point) {
+        bool exit = true;
+        for (uint64_t i = 0; i < Vertices.size(); ++i) {
+            if (Vertices[i].dot(direction) >= point.dot(direction)) {
+                exit = false;
+                break;
+            }
+        }
+        return exit;
+    }
+
+    template<typename V>
+    V MinimumNormPoint<V>::getSeparationMargin(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point) {
+        V margin = std::numeric_limits<V>::min();
+        for (uint64_t i = 0; i < Vertices.size(); ++i) {
+            V tmp = (point - Vertices[i]).dot(direction);
+            if (margin < tmp) {
+                margin = tmp;
+            }
+        }
+        return margin;
     }
 
     template<typename V>
@@ -175,7 +261,7 @@ namespace mopmc::optimization::optimizers {
             xNew = xNewTmp;
             activeVertices.erase(resetIndex);
         } else {
-            //std::cout << "[In simple gradient desc, else cond] GOT HERE\n";
+            std::cout << "[In simple gradient desc, else cond] GOT HERE\n";
             gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, 1.0);
             //std::cout << "[In simple gradient desc, else cond] GOT HERE\n";
             xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
@@ -192,6 +278,85 @@ namespace mopmc::optimization::optimizers {
             alpha /= alpha.sum();
         }
         xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices,alpha);
+    }
+
+    template<typename V>
+    int MinimumNormPoint<V>::findNearestPointByDirection(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point,
+                                                         Vector<V> &weights) {
+        lprec *lp;
+        int n_cols, *col_no = NULL, ret = 0;
+        V *row = NULL;
+
+        assert(!Vertices.empty());
+        n_cols = Vertices.size() + 1;// number of variables in the model
+        lp = make_lp(0, n_cols);
+        if (lp == NULL)
+            ret = 1;// couldn't construct a new model
+        if (ret == 0) {
+            //[important!] set the unbounded variables.
+            // The default bounds are >=0 in lp solve.
+            //set_unbounded(lp, n_cols);
+            // create space large enough for one row
+            col_no = (int *) malloc(n_cols * sizeof(*col_no));
+            row = (V *) malloc(n_cols * sizeof(*row));
+            if ((col_no == NULL) || (row == NULL))
+                ret = 2;
+        }
+        if (ret == 0) {
+            set_add_rowmode(lp, TRUE);
+            // constraints
+            for (int j = 0; j < n_cols - 1; ++j) {
+                col_no[j] = j + 1;
+                row[j] = static_cast<V>(1.);
+            }
+            if (!add_constraintex(lp, n_cols - 1, row, col_no, EQ, static_cast<V>(1.)))
+                ret = 3;
+            //std::cout << "[in findNearestPointByDirection, add constraint] GOT HERE\n";
+            for (int i = 0; i < point.size(); ++i) {
+                for (int j = 0; j < n_cols - 1; ++j) {
+                    col_no[j] = j + 1;
+                    row[j] = Vertices[j](i);
+                    std::cout << "[in findNearestPointByDirection, add constraint] GOT HERE\n, j: " << j<<"\n";
+                }
+                col_no[n_cols] = n_cols + 1;
+                row[n_cols] = direction(i);
+                //assert(point.size() == direction.size());
+                //std::cout << "[in findNearestPointByDirection] size of point: " << point.size()<<"\n";
+                std::cout << "[in findNearestPointByDirection, add constraint (0)] GOT HERE\n, i: " << i<<"\n";
+                if (!add_constraintex(lp, n_cols, row, col_no, EQ, point(i)))
+                    ret = 3;
+                std::cout << "[in findNearestPointByDirection, add constraint (1)] GOT HERE\n, i: " << i<<"\n";
+            }
+        }
+        std::cout << "[in findNearestPointByDirection, after adding constraints] GOT HERE\n";
+        if (ret == 0) {
+            set_add_rowmode(lp, FALSE);// rowmode should be turned off again when done building the model
+            col_no[0] = n_cols;
+            row[0] = static_cast<V>(1.); /* set the objective in lpsolve */
+            if (!set_obj_fnex(lp, 1, row, col_no))
+                ret = 4;
+        }
+        if (ret == 0) {
+            // set the object weightVector to maximize
+            set_minim(lp);
+            //write_LP(lp, stdout);
+            // write_lp(lp, "model.lp");
+            set_verbose(lp, IMPORTANT);
+            ret = solve(lp);
+            //std::cout<< "** Optimal solution? Ret: " << ret << "\n";
+            if (ret == OPTIMAL)
+                ret = 0;
+            else
+                ret = 5;
+        }
+        if (ret == 0) {
+            get_variables(lp, row);
+            // we are done now
+        } else {
+            std::cout << "error in optimization (Ret = " << ret << ")\n";
+        }
+        weights = VectorMap<V>(row, n_cols - 1);
+        return 0;
     }
 
     template class MinimumNormPoint<double>;

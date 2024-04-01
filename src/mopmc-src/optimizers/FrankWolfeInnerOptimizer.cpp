@@ -253,7 +253,7 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     int FrankWolfeInnerOptimizer<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) {
         assert(pivot.size() == point.size());
-        fwOption = AWAY_STEP;
+        //fwOption = AWAY_STEP;
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
         initialize(Vertices);
         const uint64_t maxIter = 1e3;

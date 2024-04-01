@@ -23,8 +23,8 @@ namespace mopmc::queries {
         while (iter < maxIter) {
             std::cout << "[Main loop] Iteration: " << iter << "\n";
             if (!Vertices.empty()) {
-                //this->innerOptimizer->minimize(innerPoint, Vertices);
-                this->innerOptimizer->minimize(innerPoint, Vertices, outerPoint);
+                this->innerOptimizer->minimize(innerPoint, Vertices);
+                //this->innerOptimizer->minimize(innerPoint, Vertices, outerPoint);
                 Vector<T> grad = this->fn->subgradient(innerPoint);
                 epsilonSmallGradient = grad.template lpNorm<1>();
                 if (epsilonSmallGradient < toleranceSmallGradient) {
@@ -32,9 +32,9 @@ namespace mopmc::queries {
                     ++iter;
                     break;
                 }
-                //direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
-                direction = (outerPoint - innerPoint)/ (outerPoint - innerPoint).template lpNorm<1>();
-                assert(assertSeparation(outerPoint, direction));
+                direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
+                //direction = (outerPoint - innerPoint)/ (outerPoint - innerPoint).template lpNorm<1>();
+                //assert(assertSeparation(outerPoint, direction));
                 //std::cout << "[Main loop] outerpoint: " << outerPoint << "\n";
             }
             // compute a new supporting hyperplane
@@ -94,7 +94,7 @@ namespace mopmc::queries {
             if (point.dot(direction) < Vertices[i].dot(direction)) {
                 std::cout << "point.dot(direction): " << point.dot(direction)
                           << ", Vertices[i].dot(direction): " << Vertices[i].dot(direction) << "\n"
-                        << "(point - Vertices[i]).template lpNorm<1>(): " << (point - Vertices[i]).template lpNorm<1>()<<"\n"  ;
+                          << "(point - Vertices[i]).template lpNorm<1>(): " << (point - Vertices[i]).template lpNorm<1>() << "\n";
                 b = false;
                 break;
             }
