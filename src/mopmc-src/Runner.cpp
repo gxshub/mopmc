@@ -15,7 +15,6 @@
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
 #include "queries/ConvexQueryAlt.h"
-#include "queries/ConstrainedConvexQuery.h"
 #include <Eigen/Dense>
 #include <cstdio>
 #include <ctime>
@@ -80,10 +79,10 @@ namespace mopmc {
                 std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
                 switch (queryOptions.CONVEX_FUN) {
                     case QueryOptions::MSE: {
-                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                                new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
                         //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        //        new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
+                        //        new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                                new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         break;
                     }
                     case QueryOptions::VAR: {
@@ -97,7 +96,6 @@ namespace mopmc {
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
                 //mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 mopmc::queries::ConvexQueryAlt<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
-                //mopmc::queries::ConstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 q.printResult();
                 break;

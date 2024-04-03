@@ -66,7 +66,7 @@ namespace mopmc::optimization::optimizers {
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
         SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
         initialize(Vertices);
-        const uint64_t maxIter = 20;// 1e3;
+        const uint64_t maxIter = 200;// 1e3;
         uint64_t t = 0;
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
@@ -126,7 +126,7 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     bool MinimumNormPoint<V>::checkSeparation(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point) {
         bool exit = true;
-        const V delta = 1e-6;
+        const V delta = 1e-18;
         for (uint64_t i = 0; i < Vertices.size(); ++i) {
             if (Vertices[i].dot(direction) >= point.dot(direction) - delta) {
                 exit = false;
