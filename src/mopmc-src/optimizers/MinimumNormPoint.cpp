@@ -16,15 +16,17 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int MinimumNormPoint<V>::minimize(Vector<V> &sepDirection,
-                                      Vector<V> &optimum, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) {
+                                      Vector<V> &optimum,
+                                      V &margin,
+                                      const std::vector<Vector<V>> &Vertices,
+                                      const Vector<V> &pivot) {
         assert(pivot.size() == optimum.size());
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
         bool hasGotMaxMarginSepHP = false;
         SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
         initialize(Vertices);
-        //std::cout << "[Minimum norm point optimization] Vertices size: " << size << "\n";
-        const uint64_t maxIter = 100;// 1e3;
+        const uint64_t maxIter = 1000;// 1e3;
         uint64_t t = 0;
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
@@ -34,32 +36,25 @@ namespace mopmc::optimization::optimizers {
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
-            //std::cout << "[before checkSeparation] GOT HERE\n";
-            if (!hasGotMaxMarginSepHP && checkSeparation(Vertices, pivot - xNew, pivot)) {
-                hasGotMaxMarginSepHP = true;
+            if (checkSeparation(Vertices, pivot - xNew, pivot)) {
+                //hasGotMaxMarginSepHP = true;
                 Vector<V> sign(dimension);
                 for (uint64_t i; i < sign.size(); ++i) {
-                    if ((pivot - xNew)(i) >= 0) {
-                        sign(i) = static_cast<V>(1.);
-                    } else {
-                        sign(i) = static_cast<V>(-1.);
-                    }
+                    sign(i) = (pivot - xNew)(i) >= 0 ?  static_cast<V>(1.) :  static_cast<V>(-1.);
                 }
-                V margin;
                 separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin);
                 std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane\n";
+                //std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane (distance " << this->fn->value(xNew) << ")\n";
+                return EXIT_SUCCESS;
             }
-            /*
-            if (checkExit(Vertices)) {
-                break;
-            }
-             */
             performSimplexGradientDescent(Vertices);
             optimum = xNew;
             ++t;
         }
-        std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
-        return 0;
+        //std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+        //return 0;
+        std::cout << "[Minimum norm point optimization] no separation hyperplane found\n";
+        return EXIT_FAILURE;
     }
 
     template<typename V>
@@ -67,13 +62,10 @@ namespace mopmc::optimization::optimizers {
                                       const std::vector<Vector<V>> &Vertices,
                                       const Vector<V> &pivot) {
         assert(pivot.size() == optimum.size());
-        //mopmc::optimization::convex_functions::MSE<V> f(pivot, pivot.size());
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
-        //this->fn = &f;
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
         SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
         initialize(Vertices);
-        //std::cout << "[Minimum norm point optimization] Vertices size: " << size << "\n";
         const uint64_t maxIter = 20;// 1e3;
         uint64_t t = 0;
         if (Vertices.size() == 1) {
@@ -83,7 +75,6 @@ namespace mopmc::optimization::optimizers {
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
-            //std::cout << "[before checkSeparation] GOT HERE\n";
             if (checkSeparation(Vertices, pivot - xNew, pivot)) {
                 Vector<V> sign(dimension);
                 for (uint64_t i; i < sign.size(); ++i) {
@@ -96,9 +87,6 @@ namespace mopmc::optimization::optimizers {
                 Vector<V> dir(dimension);
                 V margin, margin_crt, margin_prv;
                 separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, dir, margin);
-                //std::cout << "[before findNearestPointByDirection] GOT HERE\n";
-                //findNearestPointByDirection(Vertices, pivot - xNew, pivot, this->alpha);
-                //std::cout << "[after findNearestPointByDirection] GOT HERE\n";
                 xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices, alpha);
                 optimum = xNew;
                 //std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
@@ -138,8 +126,9 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     bool MinimumNormPoint<V>::checkSeparation(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point) {
         bool exit = true;
+        const V delta = 1e-6;
         for (uint64_t i = 0; i < Vertices.size(); ++i) {
-            if (Vertices[i].dot(direction) >= point.dot(direction)) {
+            if (Vertices[i].dot(direction) >= point.dot(direction) - delta) {
                 exit = false;
                 break;
             }
@@ -168,11 +157,11 @@ namespace mopmc::optimization::optimizers {
         //update size
         size = Vertices.size();
         dimension = Vertices[0].size();
-        //if (xCurrent.size() != dimension) {
+        if (xCurrent.size() != dimension) {
             xCurrent.resize(dimension);
             xNew.resize(dimension);
             xNewTmp.resize(dimension);
-        //}
+        }
         alpha.conservativeResize(size);
         for (uint64_t i = prvSize; i < size; ++i) {
             alpha(i) = static_cast<V>(0.);
@@ -186,51 +175,43 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     void MinimumNormPoint<V>::performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices) {
-
-        Vector<V> dAlpha(size), dAlphaTmp(size);
+        Vector<V> dAlpha = Vector<V>::Zero(size);
         for (int64_t i = 0; i < size; ++i) {
-            //projected gradient on vertex i
-            dAlpha(i) = dXCurrent.dot(Vertices[i]);
+            dAlpha(i) += dXCurrent.dot(Vertices[i]);
         }
         auto sortedIndices = mopmc::optimization::auxiliary::Sorting<V>::ascendingArgsort(dAlpha);
+        Vector<V> dAlphaTmp(size);
         int64_t offsetIndex, numNullVertices = size - activeVertices.size();
         for (offsetIndex = 0; offsetIndex < size; ++offsetIndex) {
             for (uint64_t i = 0; i < size; ++i) {
-                if (i > offsetIndex && !activeVertices.count(sortedIndices[i])) {
-                    dAlphaTmp(sortedIndices[i]) = static_cast<V>(0.);
-                } else {
-                    dAlphaTmp(sortedIndices[i]) -= dAlpha(sortedIndices[offsetIndex]);
-                }
-                /*
                 if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
                     dAlphaTmp(sortedIndices[i]) = dAlpha(sortedIndices[i]) - dAlpha(sortedIndices[offsetIndex]);
                 } else {
                     dAlphaTmp(sortedIndices[i]) = static_cast<V>(0.);
-                }*/
+                }
             }
             if (dAlphaTmp.sum() <= 0) {
                 break;
-            } else if (!activeVertices.count(sortedIndices[offsetIndex])) {
+            }
+            if (!activeVertices.count(sortedIndices[offsetIndex])) {
                 numNullVertices -= 1;
             }
         }
-        assert(size > numNullVertices);
-        const V offset1 = dAlphaTmp.sum() / (size - numNullVertices);
-        //std::cout << "offset1: " << offset1 <<"\n";
-        for (int64_t i = 0; i < size; ++i) {
-            if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
-                dAlphaTmp(sortedIndices[i]) -= offset1;
-            }
-        }
-        //std::cout << "dAlphaTmp: " << dAlphaTmp <<"\n";
         if (offsetIndex == 0) {
             dAlpha.setZero();
             return;
         }
+        const V offset = dAlphaTmp.sum() / (size - numNullVertices);
+        for (int64_t i = 0; i < size; ++i) {
+            if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
+                dAlphaTmp(sortedIndices[i]) -= offset;
+            }
+        }
         if (dAlphaTmp.isZero()) {
             return;
+        } else {
+            dAlpha = dAlphaTmp / dAlphaTmp.template lpNorm<1>();
         }
-        dAlpha = dAlphaTmp;
         /*
         const V offset = dAlpha.sum() / (size - numNullVertices);
         for (int64_t i = 0; i < size; ++i) {
@@ -239,7 +220,8 @@ namespace mopmc::optimization::optimizers {
             } else {
                 dAlpha(sortedIndices[i]) = 0.;
             }
-        }*/
+        }
+         */
         V step = std::numeric_limits<V>::max();
         uint64_t resetIndex = size;
         for (uint64_t vertexIndex = 0; vertexIndex < size; ++vertexIndex) {
@@ -250,7 +232,6 @@ namespace mopmc::optimization::optimizers {
                 }
             }
         }
-        //std::cout << "dAlpha: " << dAlpha <<"\n";
         assert(resetIndex != size);
         xNewTmp = xCurrent;
         for (uint64_t i = 0; i < size; ++i) {
@@ -261,12 +242,9 @@ namespace mopmc::optimization::optimizers {
             xNew = xNewTmp;
             activeVertices.erase(resetIndex);
         } else {
-            std::cout << "[In simple gradient desc, else cond] GOT HERE\n";
             gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp, 1.0);
-            //std::cout << "[In simple gradient desc, else cond] GOT HERE\n";
             xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xNewTmp;
         }
-        //std::cout << "[In simple gradient desc] GOT HERE\n";
         alpha -= (gamma * step) * dAlpha;
         for (uint64_t i = 0; i < size; ++i) {
             if (dAlpha(i) < 0. && !activeVertices.count(i)) {
@@ -277,7 +255,6 @@ namespace mopmc::optimization::optimizers {
         if (alpha.sum() < 1.0) {
             alpha /= alpha.sum();
         }
-        xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices,alpha);
     }
 
     template<typename V>

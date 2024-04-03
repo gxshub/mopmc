@@ -25,14 +25,14 @@ namespace mopmc::optimization::optimizers {
     public:
         explicit MinimumNormPoint() = default;
         explicit MinimumNormPoint(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f) : BaseOptimizer<V>(f) {}
-        int minimize(
-                Vector<V> &optimum,
+        int minimize(Vector<V> &optimum,
                      const std::vector<Vector<V>> &Vertices,
                      const Vector<V> &pivot) override;
         int minimize(Vector<V> &sepDirection,
-                Vector<V> &optimum,
-                const std::vector<Vector<V>> &Vertices,
-                const Vector<V> &pivot) override;
+                     Vector<V> &optimum,
+                     V &margin,
+                    const std::vector<Vector<V>> &Vertices,
+                    const Vector<V> &pivot) override;
         Vector<V> alpha;
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
         std::set<uint64_t> activeVertices;

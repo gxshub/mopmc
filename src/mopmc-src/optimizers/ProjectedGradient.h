@@ -33,23 +33,27 @@ namespace mopmc::optimization::optimizers {
                      const std::vector<Vector<V>> &Vertices,
                      const std::vector<Vector<V>> &Directions) override;
 
+        bool checkNonExteriorPoint(Vector<V> &point,
+                                   const std::vector<Vector<V>> &Vertices,
+                                   const std::vector<Vector<V>> &Directions);
+
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
 
     private:
         Vector<V> dykstrasProjection(const Vector<V> &point,
                                      const std::vector<Vector<V>> &Vertices,
                                      const std::vector<Vector<V>> &Directions,
-                                     const std::set<uint64_t> &exteriorHSIndices);
+                                     const std::set<uint64_t> &indices);
 
-        Vector<V> projectFromPointToHalfspace(const Vector<V> &point,
-                                              const Vector<V> &vertex,
+        Vector<V> projectToHalfspace(const Vector<V> &point,
+                                              const Vector<V> &boundaryPoint,
                                               const Vector<V> &direction);
 
         Vector<V> findProjectedDescentDirection(const Vector<V> &point,
                                                 const Vector<V> &slope,
-                                                const std::vector<Vector<V>> &Vertices,
+                                                const std::vector<Vector<V>> &Points,
                                                 const std::vector<Vector<V>> &Directions,
-                                                const std::set<uint64_t> &exteriorHSIndices);
+                                                const std::set<uint64_t> &indices);
 
         int64_t dimension{}, size{};
         Vector<V> xCurrent, xNew, xNewTmp;

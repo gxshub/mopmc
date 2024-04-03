@@ -14,7 +14,7 @@ namespace mopmc::queries {
         mopmc::optimization::optimizers::SeparationHyperplaneOptimizer<T> separationHyperplaneOptimizer;
         this->VIhandler->initialize();
         const uint64_t nObjs = this->queryData.objectiveCount;
-        Vector<T> thresholds = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), this->queryData.thresholds.size());
+        Vector<T> threshold = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), this->queryData.thresholds.size());
         Vector<T> sign(nObjs);
         for (uint_fast64_t i=0; i< sign.size(); ++i) {
             sign(i) = this->queryData.isThresholdUpperBound[i] ? static_cast<T>(-1) : static_cast<T>(1);
@@ -30,7 +30,7 @@ namespace mopmc::queries {
         while (iter < maxIter) {
             if (!VertexVectors.empty()) {
                 separationHyperplaneOptimizer.findMaximumSeparatingDirection(VertexVectors,
-                                                                             thresholds,
+                                                                             threshold,
                                                                              sign,
                                                                              weightVector,
                                                                              delta);
@@ -49,7 +49,7 @@ namespace mopmc::queries {
             WeightVectors.push_back(weightVector);
 
             Vector<T> wTemp = (sign.array() * weightVector.array()).matrix();
-            if (wTemp.dot(thresholds - vertex) > 0) {
+            if (wTemp.dot(threshold - vertex) > 0) {
                 achievable = false;
                 ++iter;
                 break;

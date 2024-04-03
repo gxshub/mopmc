@@ -14,6 +14,7 @@
 #include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
+#include "queries/ConvexQueryAlt.h"
 #include "queries/ConstrainedConvexQuery.h"
 #include <Eigen/Dense>
 #include <cstdio>
@@ -91,10 +92,11 @@ namespace mopmc {
                         break;
                     }
                 }
-                mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
-                //mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
+                //mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
+                mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
-                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                //mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                mopmc::queries::ConvexQueryAlt<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 //mopmc::queries::ConstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 q.printResult();

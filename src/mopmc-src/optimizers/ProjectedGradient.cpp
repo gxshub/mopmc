@@ -13,40 +13,46 @@ namespace mopmc::optimization::optimizers {
                                               const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions) {
 
+        /*
+        if (!checkNonExteriorPoint(point, Vertices, Directions)) {
+            throw std::runtime_error("Project gradient requires a non-exterior initial point");
+        }
+         */
         dimension = point.size();
         size = Vertices.size();
         xNew = point;
-        std::set<uint64_t> exteriorHSIndices, interiorHSIndices;
+        std::set<uint64_t> boundaryIndices, nonboundaryIndices;
         Vector<V> descentDirection(dimension);
         const uint64_t maxIter = 20;
         const V tol = 1e-12;
-        //bool exit = false;
         uint64_t t = 0;
         while (t < maxIter) {
             xCurrent = xNew;
             Vector<V> slope = -1 * (this->fn->subgradient(xCurrent));
             for (uint64_t i = 0; i < size; ++i) {
                 if (slope.dot(Directions[i]) > 0 && Directions[i].dot(Vertices[i] - xCurrent) < 1e-30) {
-                    exteriorHSIndices.insert(i);
+                    boundaryIndices.insert(i);
                 } else {
-                    interiorHSIndices.insert(i);
+                    nonboundaryIndices.insert(i);
                 }
             }
-            //std::cout << "exteriorHSIndices.size(): " << exteriorHSIndices.size() <<"\n";
-            if (exteriorHSIndices.empty()) {
+            if (boundaryIndices.empty()) {
                 descentDirection = slope;
             }
-            else if (exteriorHSIndices.size() == 1) {
-                auto elem = exteriorHSIndices.begin();
+            else if (boundaryIndices.size() == 1) {
+                auto elem = boundaryIndices.begin();
                 const Vector<V> &w = Directions[*elem];
+                const Vector<V> &r = Vertices[*elem];\
                 // projection of slope onto the hyperplane <x,w> = b
-                descentDirection = slope - (slope.dot(w)) * w;
+                //descentDirection = slope - (slope.dot(w)) * w;
+                descentDirection = projectToHalfspace(slope, r, w);
             }
             else {
-                descentDirection = findProjectedDescentDirection(xCurrent, slope, Vertices, Directions, exteriorHSIndices);
+                descentDirection = findProjectedDescentDirection(xCurrent, slope, Vertices, Directions, boundaryIndices);
             }
+            // make a large enough range
             V lambda = static_cast<V>(1000);
-            for (auto i: interiorHSIndices) {
+            for (auto i: nonboundaryIndices) {
                 const Vector<V> &w = Directions[i];
                 if (w.dot(descentDirection) > 0) {
                     V lambda_x = w.dot(Vertices[i] - xCurrent) / (w.dot(descentDirection));
@@ -64,24 +70,24 @@ namespace mopmc::optimization::optimizers {
         std::cout << "[Outer optimization] projected gradient stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
         //assert(this->fn->value(xNew) <= this->fn->value(point));
         point = xNew;
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     template<typename V>
     Vector<V> ProjectedGradient<V>::dykstrasProjection(const Vector<V> &point,
                                                               const std::vector<Vector<V>> &Vertices,
                                                               const std::vector<Vector<V>> &Directions,
-                                                              const std::set<uint64_t> &exteriorHSIndices) {
+                                                              const std::set<uint64_t> &indices) {
 
         const uint64_t m = Vertices[0].size();
-        if (exteriorHSIndices.empty()) {
+        if (indices.empty()) {
             return point;
         }
-        if (exteriorHSIndices.size() == 1) {
-            auto idx = exteriorHSIndices.begin();
-            return projectFromPointToHalfspace(point, Vertices[*idx], Directions[*idx]);
+        if (indices.size() == 1) {
+            auto idx = indices.begin();
+            return projectToHalfspace(point, Vertices[*idx], Directions[*idx]);
         }
-        const auto d = exteriorHSIndices.size();
+        const auto d = indices.size();
         std::vector<Vector<V>> U(d + 1), Z(d);
         U[d] = point;
         for (int64_t i = 0; i < d; ++i) {
@@ -98,8 +104,8 @@ namespace mopmc::optimization::optimizers {
             }
             U[0] = U[d];
             int64_t i = 0;
-            for (auto idx: exteriorHSIndices) {
-                U[i + 1] = projectFromPointToHalfspace(U[i] + Z[i], Vertices[idx], Directions[idx]);
+            for (auto idx: indices) {
+                U[i + 1] = projectToHalfspace(U[i] + Z[i], Vertices[idx], Directions[idx]);
                 Z[i] = U[i] + Z[i] - U[i + 1];
                 i++;
             }
@@ -110,15 +116,15 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    Vector<V> ProjectedGradient<V>::projectFromPointToHalfspace(const Vector<V> &point,
-                                                                       const Vector<V> &vertex,
+    Vector<V> ProjectedGradient<V>::projectToHalfspace(const Vector<V> &point,
+                                                                       const Vector<V> &boundaryPoint,
                                                                        const Vector<V> &direction) {
-        assert(direction.size() == vertex.size());
-        assert(point.size() == vertex.size());
-        if (direction.dot(point - vertex) <= 0) {
+        assert(direction.size() == boundaryPoint.size());
+        assert(point.size() == boundaryPoint.size());
+        if (direction.dot(point - boundaryPoint) <= 0) {
             return point;
         } else {
-            V distance = direction.dot(point - vertex) / std::pow(direction.template lpNorm<2>(), 2);
+            V distance = direction.dot(point - boundaryPoint);// note. std::pow(direction.template lpNorm<2>(),2) = 1
             return point - distance * direction;
         }
     }
@@ -146,6 +152,20 @@ namespace mopmc::optimization::optimizers {
         } else {
             return slope;
         }
+    }
+
+    template<typename V>
+    bool ProjectedGradient<V>::checkNonExteriorPoint(Vector<V> &point,
+                                                     const std::vector<Vector<V>> &Vertices,
+                                                     const std::vector<Vector<V>> &Directions) {
+        bool nonExterior = true;
+        for (uint64_t i = 0; i < Directions.size(); ++i) {
+            if (Directions[i].dot(point) > Directions[i].dot(Vertices[i])) {
+                nonExterior = false;
+                break;
+            }
+        }
+        return nonExterior;
     }
 
     template class ProjectedGradient<double>;

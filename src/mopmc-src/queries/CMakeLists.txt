@@ -9,6 +9,8 @@ list(
         "${dir}/ConstrainedConvexQuery.h"
         "${dir}/ConvexQuery.cpp"
         "${dir}/ConvexQuery.h"
+        "${dir}/ConvexQueryAlt.cpp"
+        "${dir}/ConvexQueryAlt.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

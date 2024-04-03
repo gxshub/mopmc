@@ -27,7 +27,7 @@ namespace mopmc::optimization::optimizers {
         ~SeparationHyperplaneOptimizer() = default;
 
         int findMaximumSeparatingDirection(const std::vector<Vector<V>> &Vertices,
-                                           const Vector<V> &gradient,
+                                           const Vector<V> &threshold,
                                            const Vector<V> &sign,
                                            Vector<V> &direction,
                                            V &distance);
