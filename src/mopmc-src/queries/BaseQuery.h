@@ -18,6 +18,7 @@ namespace mopmc::queries {
     public:
 
         explicit BaseQuery() = default;
+        virtual ~BaseQuery() = default;
         explicit BaseQuery(const mopmc::QueryData<V,I> &data): queryData(data){};
         explicit BaseQuery(const mopmc::QueryData<V,I> &data,
                            mopmc::value_iteration::BaseVIHandler<V> *valueIterSolver)

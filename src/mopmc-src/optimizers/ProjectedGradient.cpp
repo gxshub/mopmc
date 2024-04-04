@@ -42,10 +42,9 @@ namespace mopmc::optimization::optimizers {
             else if (boundaryIndices.size() == 1) {
                 auto elem = boundaryIndices.begin();
                 const Vector<V> &w = Directions[*elem];
-                const Vector<V> &r = Vertices[*elem];\
+                const Vector<V> &r = Vertices[*elem];
                 // projection of slope onto the hyperplane <x,w> = b
-                //descentDirection = slope - (slope.dot(w)) * w;
-                descentDirection = projectToHalfspace(slope, r, w);
+                descentDirection = halfspaceProjection(slope, r, w);
             }
             else {
                 descentDirection = findProjectedDescentDirection(xCurrent, slope, Vertices, Directions, boundaryIndices);
@@ -85,7 +84,7 @@ namespace mopmc::optimization::optimizers {
         }
         if (indices.size() == 1) {
             auto idx = indices.begin();
-            return projectToHalfspace(point, Vertices[*idx], Directions[*idx]);
+            return halfspaceProjection(point, Vertices[*idx], Directions[*idx]);
         }
         const auto d = indices.size();
         std::vector<Vector<V>> U(d + 1), Z(d);
@@ -105,7 +104,7 @@ namespace mopmc::optimization::optimizers {
             U[0] = U[d];
             int64_t i = 0;
             for (auto idx: indices) {
-                U[i + 1] = projectToHalfspace(U[i] + Z[i], Vertices[idx], Directions[idx]);
+                U[i + 1] = halfspaceProjection(U[i] + Z[i], Vertices[idx], Directions[idx]);
                 Z[i] = U[i] + Z[i] - U[i + 1];
                 i++;
             }
@@ -116,11 +115,11 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    Vector<V> ProjectedGradient<V>::projectToHalfspace(const Vector<V> &point,
+    Vector<V> ProjectedGradient<V>::halfspaceProjection(const Vector<V> &point,
                                                                        const Vector<V> &boundaryPoint,
                                                                        const Vector<V> &direction) {
-        assert(direction.size() == boundaryPoint.size());
-        assert(point.size() == boundaryPoint.size());
+        //assert(direction.size() == boundaryPoint.size());
+        //assert(point.size() == boundaryPoint.size());
         if (direction.dot(point - boundaryPoint) <= 0) {
             return point;
         } else {

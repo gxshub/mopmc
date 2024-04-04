@@ -45,7 +45,7 @@ namespace mopmc::optimization::optimizers {
                                      const std::vector<Vector<V>> &Directions,
                                      const std::set<uint64_t> &indices);
 
-        Vector<V> projectToHalfspace(const Vector<V> &point,
+        Vector<V> halfspaceProjection(const Vector<V> &point,
                                               const Vector<V> &boundaryPoint,
                                               const Vector<V> &direction);
 

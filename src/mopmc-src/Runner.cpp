@@ -34,7 +34,7 @@ namespace mopmc {
     template<typename V>
     using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
 
-    bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions queryOptions) {
+    bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions options) {
         assert(typeid(ValueType) == typeid(double));
         assert(typeid(IndexType) == typeid(uint64_t));
 
@@ -52,7 +52,8 @@ namespace mopmc {
         clock_t time2 = clock();
 
         std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>> vIHandler;
-        switch (queryOptions.VI) {
+        std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>> q1;
+        switch (options.VI) {
             case QueryOptions::CUDA_VI: {
                 vIHandler = std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>>(
                         new mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType>(&data));
@@ -64,25 +65,27 @@ namespace mopmc {
                 break;
             }
         }
-
-        mopmc::value_iteration::gpu::CudaValueIterationHandler<ValueType> cudaVIHandler(&data);
-        mopmc::value_iteration::ValueIterationHandler<ValueType> valueIterationHandler(&data);
-        switch (queryOptions.QUERY_TYPE) {
+        switch (options.QUERY_TYPE) {
             case QueryOptions::ACHIEVABILITY: {
-                mopmc::queries::AchievabilityQuery<ValueType, int> q(data, &*vIHandler);
-                q.query();
-                q.printResult();
+                q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>> (
+                        new  mopmc::queries::AchievabilityQuery<ValueType, int>(data, &*vIHandler)
+                        );
+                q1->query();
+                q1->printResult();
                 break;
             }
             case QueryOptions::CONVEX: {
                 auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), (int64_t) data.thresholds.size());
                 std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
-                switch (queryOptions.CONVEX_FUN) {
+                switch (options.CONVEX_FUN) {
                     case QueryOptions::MSE: {
-                        //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        //    new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
-                        fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                                new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
+                        if (options.CONSTRAINED_OPT == QueryOptions::CONSTRAINED) {
+                            fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                                    new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
+                        } else {
+                            fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                              new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                        }
                         break;
                     }
                     case QueryOptions::VAR: {
@@ -91,16 +94,22 @@ namespace mopmc {
                         break;
                     }
                 }
-                //mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
-                mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
-                //mopmc::queries::UnconstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
-                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
-                q.query();
-                q.printResult();
+                if (options.CONSTRAINED_OPT == QueryOptions::CONSTRAINED) {
+                    mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
+                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
+                            new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
+                } else {
+                    mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
+                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
+                            new mopmc::queries::UnconstrainedConvexQuery<ValueType, int> (data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
+                }
+                q1->query();
+                q1->printResult();
                 break;
             }
         }
+
         clock_t time3 = clock();
 
         std::cout << "       TIME STATISTICS        \n";

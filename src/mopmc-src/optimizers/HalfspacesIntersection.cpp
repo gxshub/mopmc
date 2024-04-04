@@ -9,10 +9,11 @@
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int HalfspacesIntersection<V>::findIntersectionPoint(const std::vector<Vector<V>> &Vertices,
+    bool HalfspacesIntersection<V>::findIntersectionPoint(const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions,
-                                              Vector<V> &point,
-                                              bool &feasible) {
+                                              Vector<V> &point) {
+
+        bool feasible(false);
 
         lprec *lp;
         int n_cols, *col_no = NULL, ret = 0;
@@ -83,7 +84,7 @@ namespace mopmc::optimization::optimizers {
             get_variables(lp, row);
             point = VectorMap<V>(row, n_cols);
         }
-        return ret;
+        return feasible;
     }
 
     template class HalfspacesIntersection<double>;

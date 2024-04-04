@@ -20,13 +20,16 @@ namespace mopmc::queries {
     class ConvexQuery : public BaseQuery<V, I> {
     public:
         ConvexQuery(const mopmc::QueryData<V, I> &data,
-                         mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
-                         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
-                         mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
-                         mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
-            : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) {
+                    mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
+                    mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
+                    mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
+                    mopmc::value_iteration::BaseVIHandler<V> *valueIteration,
+                    const bool withConstraint = true)
+            : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) , hasConstraint(withConstraint){
             innerPoint.resize(data.objectiveCount);
             outerPoint.resize(data.objectiveCount);
+            if (hasConstraint)
+                constraintsToHalfspaces();
         };
         void query() override;
 
@@ -50,11 +53,11 @@ namespace mopmc::queries {
 
     private:
         void constraintsToHalfspaces();
-        bool checkConstraint(const Vector<V> &point);
+        bool checkConstraintSatisfaction(const Vector<V> &point);
+        bool hasConstraint{};
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
         std::vector<Vector<V>> Vertices, Points, Directions;
-        bool assertSeparation(const Vector<V> &point, const Vector<V> &direction);
     };
 
 }// namespace mopmc::queries

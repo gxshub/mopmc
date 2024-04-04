@@ -21,6 +21,8 @@ namespace mopmc {
                VAR } CONVEX_FUN;
         enum { CUDA_VI ,
                STANDARD_VI } VI;
+        enum { CONSTRAINED,
+               UNCONSTRAINED } CONSTRAINED_OPT;
     };
 }// namespace mopmc
 
