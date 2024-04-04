@@ -2,8 +2,8 @@
 // Created by guoxin on 30/03/24.
 //
 
-#ifndef MOPMC_HALFSPACESINTERSECTIONCHECK_H
-#define MOPMC_HALFSPACESINTERSECTIONCHECK_H
+#ifndef MOPMC_HALFSPACESINTERSECTION_H
+#define MOPMC_HALFSPACESINTERSECTION_H
 
 #include <Eigen/Dense>
 #include <algorithm>
@@ -19,7 +19,7 @@ namespace mopmc::optimization::optimizers {
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V>
-    class HalfspacesIntersectionCheck {
+    class HalfspacesIntersection {
     public:
         static int check(const std::vector<Vector<V>> &Points,
                          const std::vector<Vector<V>> &Directions,
@@ -28,4 +28,4 @@ namespace mopmc::optimization::optimizers {
     };
 }// namespace mopmc::optimization::optimizers
 
-#endif//MOPMC_HALFSPACESINTERSECTIONCHECK_H
+#endif//MOPMC_HALFSPACESINTERSECTION_H

@@ -24,7 +24,6 @@ namespace mopmc::queries {
             std::cout << "[Main loop] Iteration: " << iter << "\n";
             if (!Vertices.empty()) {
                 this->innerOptimizer->minimize(innerPoint, Vertices);
-                //this->innerOptimizer->minimize(innerPoint, Vertices, outerPoint);
                 Vector<T> grad = this->fn->subgradient(innerPoint);
                 epsilonSmallGradient = grad.template lpNorm<1>();
                 if (epsilonSmallGradient < toleranceSmallGradient) {
@@ -33,9 +32,6 @@ namespace mopmc::queries {
                     break;
                 }
                 direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
-                //direction = (outerPoint - innerPoint)/ (outerPoint - innerPoint).template lpNorm<1>();
-                //assert(assertSeparation(outerPoint, direction));
-                //std::cout << "[Main loop] outerpoint: " << outerPoint << "\n";
             }
             // compute a new supporting hyperplane
             std::vector<T> direction1(direction.data(), direction.data() + direction.size());

@@ -3,7 +3,7 @@
 //
 
 #include "ConvexQueryAlt.h"
-#include "mopmc-src/optimizers/HalfspacesIntersectionCheck.h"
+#include "mopmc-src/optimizers/HalfspacesIntersection.h"
 
 namespace mopmc::queries {
     template<typename V, typename I>
@@ -30,7 +30,7 @@ namespace mopmc::queries {
             Vertices.push_back(vertex);
             Points.push_back(vertex);
             Directions.push_back(direction);
-            mopmc::optimization::optimizers::HalfspacesIntersectionCheck<V>::check(Points, Directions, outerPoint, feasible);
+            mopmc::optimization::optimizers::HalfspacesIntersection<V>::check(Points, Directions, outerPoint, feasible);
             if (!feasible) {
                 ++iter;
                 std::cout << "[Main loop] exits as the problem is infeasible\n";
@@ -39,7 +39,7 @@ namespace mopmc::queries {
             this->outerOptimizer->minimize(outerPoint, Points, Directions);
             if (Vertices.size() == 1)
                 innerPoint = vertex;
-            if (this->innerOptimizer->minimize(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS)
+            if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS)
                 break;
             epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (iter > 1 && epsilonInnerOuterDiff < toleranceDistanceToMinimum) {

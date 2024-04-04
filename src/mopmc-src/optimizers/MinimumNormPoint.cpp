@@ -3,19 +3,19 @@
 //
 
 #include "MinimumNormPoint.h"
-#include "SeparationHyperplaneOptimizer.h"
+#include "MaximumMarginSeparationHyperplane.h"
+#include "lp_lib.h"
 #include "mopmc-src/auxiliary/Lincom.h"
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
 #include "mopmc-src/convex-functions/MSE.h"
-#include "lp_lib.h"
 #include <cmath>
 #include <iostream>
 
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int MinimumNormPoint<V>::minimize(Vector<V> &sepDirection,
+    int MinimumNormPoint<V>::optimizeSeparationDirection(Vector<V> &sepDirection,
                                       Vector<V> &optimum,
                                       V &margin,
                                       const std::vector<Vector<V>> &Vertices,
@@ -23,10 +23,9 @@ namespace mopmc::optimization::optimizers {
         assert(pivot.size() == optimum.size());
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
-        bool hasGotMaxMarginSepHP = false;
-        SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
+        MaximumMarginSeparationHyperplane<V> separationHyperplaneOptimizer;
         initialize(Vertices);
-        const uint64_t maxIter = 1000;// 1e3;
+        const uint64_t maxIter = 1e3;
         uint64_t t = 0;
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
@@ -51,76 +50,8 @@ namespace mopmc::optimization::optimizers {
             optimum = xNew;
             ++t;
         }
-        //std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
-        //return 0;
         std::cout << "[Minimum norm point optimization] no separation hyperplane found\n";
         return EXIT_FAILURE;
-    }
-
-    template<typename V>
-    int MinimumNormPoint<V>::minimize(Vector<V> &optimum,
-                                      const std::vector<Vector<V>> &Vertices,
-                                      const Vector<V> &pivot) {
-        assert(pivot.size() == optimum.size());
-        this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
-        this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
-        SeparationHyperplaneOptimizer<V> separationHyperplaneOptimizer;
-        initialize(Vertices);
-        const uint64_t maxIter = 200;// 1e3;
-        uint64_t t = 0;
-        if (Vertices.size() == 1) {
-            optimum = Vertices[0];
-            return 0;
-        }
-        while (t < maxIter) {
-            xCurrent = xNew;
-            dXCurrent = this->fn->subgradient(xCurrent);
-            if (checkSeparation(Vertices, pivot - xNew, pivot)) {
-                Vector<V> sign(dimension);
-                for (uint64_t i; i < sign.size(); ++i) {
-                    if ((pivot - xNew)(i) >= 0) {
-                        sign(i) = static_cast<V>(1.);
-                    } else {
-                        sign(i) = static_cast<V>(-1.);
-                    }
-                }
-                Vector<V> dir(dimension);
-                V margin, margin_crt, margin_prv;
-                separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, dir, margin);
-                xNew = mopmc::optimization::auxiliary::LinearCombination<V>::combine(Vertices, alpha);
-                optimum = xNew;
-                //std::cout << "[Minimum norm point optimization] FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
-                return 0;
-            }
-            /*
-            if (checkExit(Vertices)) {
-                break;
-            }
-             */
-            performSimplexGradientDescent(Vertices);
-            ++t;
-        }
-        std::cout << "[Minimum norm point optimization] no optimum found\n";
-        return 1;
-    }
-
-    template<typename V>
-    bool MinimumNormPoint<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
-        const V cosTolerance = std::cos(90.0001 / 180.0 * M_PI);
-        bool exit = false;
-        V cosMin = 1.;
-        for (int i = 0; i < size; ++i) {
-            const V cos = mopmc::optimization::auxiliary::Trigonometry<V>::cosine(Vertices[i] - xCurrent, dXCurrent, 0.);
-            if (cosMin > cos) {
-                cosMin = cos;
-            }
-        }
-        std::cout << "[Minimum norm point optimization] cosMin: " << cosMin <<"\n";
-        if (cosMin > cosTolerance) {
-            std::cout << "[Minimum norm point optimization] exits due to small angle (cosine: " << cosMin <<  ")\n";
-            exit = true;
-        }
-        return exit;
     }
 
     template<typename V>

@@ -2,14 +2,14 @@
 // Created by guoxin on 30/03/24.
 //
 
-#include "HalfspacesIntersectionCheck.h"
+#include "HalfspacesIntersection.h"
 #include "lp_lib.h"
 #include <iostream>
 
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int HalfspacesIntersectionCheck<V>::check(const std::vector<Vector<V>> &Vertices,
+    int HalfspacesIntersection<V>::check(const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions,
                                               Vector<V> &point,
                                               bool &feasible) {
@@ -86,6 +86,6 @@ namespace mopmc::optimization::optimizers {
         return ret;
     }
 
-    template class HalfspacesIntersectionCheck<double>;
+    template class HalfspacesIntersection<double>;
 
 }

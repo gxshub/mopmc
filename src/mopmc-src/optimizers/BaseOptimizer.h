@@ -32,7 +32,7 @@ namespace mopmc::optimization::optimizers {
         virtual int minimize(Vector<V> &sepDirection, Vector<V> &point, const std::vector<Vector<V>> &Vertices,
                              const Vector<V> &pivot) { return EXIT_FAILURE; }
 
-        virtual int minimize(Vector<V> &sepDirection, Vector<V> &point, V &margin,
+        virtual int optimizeSeparationDirection(Vector<V> &sepDirection, Vector<V> &point, V &margin,
                              const std::vector<Vector<V>> &Vertices,
                              const Vector<V> &pivot) { return EXIT_FAILURE; }
 

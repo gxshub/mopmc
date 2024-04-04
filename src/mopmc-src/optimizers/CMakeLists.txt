@@ -5,14 +5,14 @@ list(
         "${dir}/BaseOptimizer.h"
         "${dir}/FrankWolfeInnerOptimizer.cpp"
         "${dir}/FrankWolfeInnerOptimizer.h"
-        "${dir}/HalfspacesIntersectionCheck.cpp"
-        "${dir}/HalfspacesIntersectionCheck.h"
+        "${dir}/HalfspacesIntersection.cpp"
+        "${dir}/HalfspacesIntersection.h"
         "${dir}/MinimumNormPoint.cpp"
         "${dir}/MinimumNormPoint.h"
+        "${dir}/MaximumMarginSeparationHyperplane.cpp"
+        "${dir}/MaximumMarginSeparationHyperplane.h"
         "${dir}/ProjectedGradient.cpp"
         "${dir}/ProjectedGradient.h"
-        "${dir}/SeparationHyperplaneOptimizer.cpp"
-        "${dir}/SeparationHyperplaneOptimizer.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

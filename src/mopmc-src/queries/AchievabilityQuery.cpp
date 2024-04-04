@@ -4,14 +4,14 @@
 
 
 #include "AchievabilityQuery.h"
-#include "mopmc-src/optimizers/SeparationHyperplaneOptimizer.h"
+#include "mopmc-src/optimizers/MaximumMarginSeparationHyperplane.h"
 
 namespace mopmc::queries {
 
     template<typename T, typename I>
     void AchievabilityQuery<T, I>::query() {
         assert(this->queryData.rowGroupIndices.size() == this->queryData.colCount + 1);
-        mopmc::optimization::optimizers::SeparationHyperplaneOptimizer<T> separationHyperplaneOptimizer;
+        mopmc::optimization::optimizers::MaximumMarginSeparationHyperplane<T> separationHyperplaneOptimizer;
         this->VIhandler->initialize();
         const uint64_t nObjs = this->queryData.objectiveCount;
         Vector<T> threshold = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), this->queryData.thresholds.size());

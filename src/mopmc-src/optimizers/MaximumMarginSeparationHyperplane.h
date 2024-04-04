@@ -21,10 +21,10 @@ namespace mopmc::optimization::optimizers {
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V>
-    class SeparationHyperplaneOptimizer {
+    class MaximumMarginSeparationHyperplane {
     public:
-        explicit SeparationHyperplaneOptimizer() = default;
-        ~SeparationHyperplaneOptimizer() = default;
+        explicit MaximumMarginSeparationHyperplane() = default;
+        ~MaximumMarginSeparationHyperplane() = default;
 
         int findMaximumSeparatingDirection(const std::vector<Vector<V>> &Vertices,
                                            const Vector<V> &threshold,
