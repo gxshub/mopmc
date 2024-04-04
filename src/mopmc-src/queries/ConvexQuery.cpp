@@ -1,101 +1,108 @@
 //
-// Created by guoxin on 16/01/24.
+// Created by guoxin on 3/04/24.
 //
 
 #include "ConvexQuery.h"
-#include <Eigen/Dense>
-#include <iostream>
+#include "mopmc-src/optimizers/HalfspacesIntersection.h"
 
 namespace mopmc::queries {
-
-    template<typename T, typename I>
-    void ConvexQuery<T, I>::query() {
+    template<typename V, typename I>
+    void ConvexQuery<V, I>::query() {
         this->VIhandler->initialize();
         const uint64_t n_objs = this->queryData.objectiveCount;
-        Vector<T> threshold = Eigen::Map<Vector<T>>(this->queryData.thresholds.data(), n_objs);
-        Vector<T> vertex(n_objs), direction(n_objs);
-        direction.setConstant(static_cast<T>(-1.0) / n_objs);// initial direction
-        const T toleranceDistanceToMinimum{1.e-6}, toleranceSmallGradient{1.e-8}, toleranceValueImpr{1.e-6};
-        const uint_fast64_t maxIter{100};
-        T epsilonDistanceToMinimum, epsilonSmallGradient, epsilonInnerValueImpr, epsilonOuterValueImpr;
-        T innerValueCurrent, innerValueNew, outerValueCurrent, outerValueNew;
+        Vector<V> threshold = Eigen::Map<Vector<V>>(this->queryData.thresholds.data(), n_objs);
+        Vector<V> vertex(n_objs), direction(n_objs);
+        direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
+        const V toleranceDistanceToMinimum{1.e-6};
+        const uint_fast64_t maxIter{130};
+        V epsilonInnerOuterDiff;
+        V margin;
+        bool feasible;
+        constraintsToHalfspaces();
         iter = 0;
         while (iter < maxIter) {
             std::cout << "[Main loop] Iteration: " << iter << "\n";
-            if (!Vertices.empty()) {
-                this->innerOptimizer->minimize(innerPoint, Vertices);
-                Vector<T> grad = this->fn->subgradient(innerPoint);
-                epsilonSmallGradient = grad.template lpNorm<1>();
-                if (epsilonSmallGradient < toleranceSmallGradient) {
-                    std::cout << "[Main loop] exit due to small gradient (" << epsilonSmallGradient << ")\n";
-                    ++iter;
-                    break;
-                }
-                direction = static_cast<T>(-1.) * grad / grad.template lpNorm<1>();
-            }
             // compute a new supporting hyperplane
-            std::vector<T> direction1(direction.data(), direction.data() + direction.size());
-            this->VIhandler->valueIteration(direction1);
-            std::vector<T> vertex1 = this->VIhandler->getResults();
-            vertex = VectorMap<T>(vertex1.data(), n_objs);
+            std::vector<V> direction_tmp(direction.data(), direction.data() + direction.size());
+            this->VIhandler->valueIteration(direction_tmp);
+            std::vector<V> vertex_tmp = this->VIhandler->getResults();
+            vertex = VectorMap<V>(vertex_tmp.data(), n_objs);
             Vertices.push_back(vertex);
+            Points.push_back(vertex);
             Directions.push_back(direction);
-            if (Vertices.size() == 1) {
+            mopmc::optimization::optimizers::HalfspacesIntersection<V>::findIntersectionPoint(Points, Directions, outerPoint, feasible);
+            if (!feasible) {
+                ++iter;
+                std::cout << "[Main loop] exits as the problem is infeasible\n";
+                break;
+            }
+            this->outerOptimizer->minimize(outerPoint, Points, Directions);
+            if (Vertices.size() == 1)
                 innerPoint = vertex;
-            }
-            outerPoint = innerPoint;
-            this->outerOptimizer->minimize(outerPoint, Vertices, Directions);
-            epsilonDistanceToMinimum = this->fn->value(innerPoint) - this->fn->value(outerPoint);
-            if (epsilonDistanceToMinimum < toleranceDistanceToMinimum) {
+            if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS)
+                break;
+            epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
+            if (iter > 1 && epsilonInnerOuterDiff < toleranceDistanceToMinimum) {
                 std::cout << "[Main loop] exit due to small gap between inner and outer points ("
-                          << epsilonDistanceToMinimum << ")\n";
+                          << epsilonInnerOuterDiff << ")\n";
                 ++iter;
                 break;
             }
-            innerValueNew = this->fn->value(innerPoint);
-            outerValueNew = this->fn->value(outerPoint);
-            epsilonInnerValueImpr = (innerValueCurrent - innerValueNew) / std::max(std::abs(innerValueCurrent), 1.);
-            epsilonOuterValueImpr = (outerValueNew - outerValueCurrent) / std::max(std::abs(innerValueCurrent), 1.);
-            if (iter >= 10 && std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) < toleranceValueImpr) {
-                std::cout << "[Main loop] exit due to small relative improvement on (estimated) nearest points ("
-                          << std::max(epsilonInnerValueImpr, epsilonOuterValueImpr) << ")\n";
-                ++iter;
-                break;
-            }
-            innerValueCurrent = innerValueNew;
-            outerValueCurrent = outerValueNew;
             ++iter;
         }
         this->VIhandler->exit();
     }
 
     template<typename V, typename I>
+    void ConvexQuery<V, I>::constraintsToHalfspaces() {
+        const uint64_t m = this->queryData.objectiveCount;
+        Vector<V> h = VectorMap<V>(this->queryData.thresholds.data(), m);
+        for (uint_fast64_t i = 0; i < m; ++i) {
+            Vector<V> r = Vector<V>::Zero(m);
+            r(i) = h(i);
+            Points.push_back(r);
+            Vector<V> w = Vector<V>::Zero(m);
+            w(i) = this->queryData.isThresholdUpperBound[i] ? static_cast<V>(1.) : static_cast<V>(-1.);
+            Directions.push_back(w);
+        }
+    }
+
+    template<typename V, typename I>
+    bool ConvexQuery<V, I>::checkConstraint(const Vector<V> &point) {
+        bool res = true;
+        const V roundingErr = 1e-18;
+        const uint64_t m = this->queryData.objectiveCount;
+        Vector<V> h = VectorMap<V>(this->queryData.thresholds.data(), m);
+        for (uint_fast64_t i = 0; i < m; ++i) {
+            if (this->queryData.isThresholdUpperBound[i]) {
+                if (point(i) > h(i) + roundingErr) {
+                    res = false;
+                    break;
+                }
+            } else {
+                if (point(i) < h(i) - roundingErr) {
+                    res = false;
+                    break;
+                }
+            }
+        }
+        return res;
+    }
+
+    template<typename V, typename I>
     void ConvexQuery<V, I>::printResult() {
+        bool b = checkConstraint(outerPoint);
         std::cout << "----------------------------------------------\n"
                   << "CUDA CONVEX QUERY terminates after " << this->getMainLoopIterationCount() << " iteration(s)\n"
                   << "Estimated nearest point to threshold : [";
-        for (int i = 0; i < this->getInnerOptimalPoint().size(); ++i) {
-            std::cout << this->getInnerOptimalPoint()(i) << " ";
+        for (int i = 0; i < this->queryData.objectiveCount; ++i) {
+            std::cout << this->getOuterOptimalPoint()(i) << " ";
         }
         std::cout << "]\n"
                   << "Approximate distance (at inner point): " << this->getInnerOptimalValue()
                   << "\nApproximate distance (at outer point): " << this->getOuterOptimalValue()
+                  << "\nOptimal point satisfying constraints? " << std::boolalpha << b
                   << "\n----------------------------------------------\n";
-    }
-
-    template<typename V, typename I>
-    bool ConvexQuery<V, I>::assertSeparation(const Vector<V> &point, const Vector<V> &direction) {
-        bool b = true;
-        for (uint64_t i = 0; i < Vertices.size(); ++i) {
-            if (point.dot(direction) < Vertices[i].dot(direction)) {
-                std::cout << "point.dot(direction): " << point.dot(direction)
-                          << ", Vertices[i].dot(direction): " << Vertices[i].dot(direction) << "\n"
-                          << "(point - Vertices[i]).template lpNorm<1>(): " << (point - Vertices[i]).template lpNorm<1>() << "\n";
-                b = false;
-                break;
-            }
-        }
-        return b;
     }
 
     template class ConvexQuery<double, int>;

@@ -1,5 +1,5 @@
 //
-// Created by guoxin on 16/01/24.
+// Created by guoxin on 3/04/24.
 //
 
 #ifndef MOPMC_CONVEXQUERY_H
@@ -20,15 +20,14 @@ namespace mopmc::queries {
     class ConvexQuery : public BaseQuery<V, I> {
     public:
         ConvexQuery(const mopmc::QueryData<V, I> &data,
-                    mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
-                    mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
-                    mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
-                    mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
+                         mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
+                         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
+                         mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
+                         mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
             : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) {
             innerPoint.resize(data.objectiveCount);
             outerPoint.resize(data.objectiveCount);
         };
-
         void query() override;
 
         [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
@@ -50,11 +49,14 @@ namespace mopmc::queries {
         void printResult() override;
 
     private:
+        void constraintsToHalfspaces();
+        bool checkConstraint(const Vector<V> &point);
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
-        std::vector<Vector<V>> Vertices, Directions;
+        std::vector<Vector<V>> Vertices, Points, Directions;
         bool assertSeparation(const Vector<V> &point, const Vector<V> &direction);
     };
+
 }// namespace mopmc::queries
 
 

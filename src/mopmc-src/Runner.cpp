@@ -14,7 +14,7 @@
 #include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
-#include "queries/ConvexQueryAlt.h"
+#include "queries/UnconstrainedConvexQuery.h"
 #include <Eigen/Dense>
 #include <cstdio>
 #include <ctime>
@@ -80,7 +80,7 @@ namespace mopmc {
                 switch (queryOptions.CONVEX_FUN) {
                     case QueryOptions::MSE: {
                         //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                        //        new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                        //    new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
                         fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                 new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         break;
@@ -91,11 +91,11 @@ namespace mopmc {
                         break;
                     }
                 }
-                //mopmc::optimization::optimizers::FrankWolfeInnerOptimizer<ValueType> innerOptimizer(&*fn);
+                //mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
-                //mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
-                mopmc::queries::ConvexQueryAlt<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                //mopmc::queries::UnconstrainedConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
+                mopmc::queries::ConvexQuery<ValueType, int> q(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler);
                 q.query();
                 q.printResult();
                 break;

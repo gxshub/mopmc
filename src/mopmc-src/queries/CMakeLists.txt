@@ -5,10 +5,10 @@ list(
         "${dir}/AchievabilityQuery.cpp"
         "${dir}/AchievabilityQuery.h"
         "${dir}/BaseQuery.h"
+        "${dir}/UnconstrainedConvexQuery.cpp"
+        "${dir}/UnconstrainedConvexQuery.h"
         "${dir}/ConvexQuery.cpp"
         "${dir}/ConvexQuery.h"
-        "${dir}/ConvexQueryAlt.cpp"
-        "${dir}/ConvexQueryAlt.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

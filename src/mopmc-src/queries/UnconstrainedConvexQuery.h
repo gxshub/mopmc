@@ -1,9 +1,9 @@
 //
-// Created by guoxin on 3/04/24.
+// Created by guoxin on 16/01/24.
 //
 
-#ifndef MOPMC_CONVEXQUERYALT_H
-#define MOPMC_CONVEXQUERYALT_H
+#ifndef MOPMC_UNCONSTRAINEDCONVEXQUERY_H
+#define MOPMC_UNCONSTRAINEDCONVEXQUERY_H
 #include "BaseQuery.h"
 #include "mopmc-src/QueryData.h"
 #include <Eigen/Sparse>
@@ -17,17 +17,18 @@ namespace mopmc::queries {
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V, typename I>
-    class ConvexQueryAlt : public BaseQuery<V, I> {
+    class UnconstrainedConvexQuery : public BaseQuery<V, I> {
     public:
-        ConvexQueryAlt(const mopmc::QueryData<V, I> &data,
-                         mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
-                         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
-                         mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
-                         mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
+        UnconstrainedConvexQuery(const mopmc::QueryData<V, I> &data,
+                    mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
+                    mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
+                    mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
+                    mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
             : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) {
             innerPoint.resize(data.objectiveCount);
             outerPoint.resize(data.objectiveCount);
         };
+
         void query() override;
 
         [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
@@ -49,15 +50,12 @@ namespace mopmc::queries {
         void printResult() override;
 
     private:
-        void constraintsToHalfspaces();
-        bool checkConstraint(const Vector<V> &point);
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
-        std::vector<Vector<V>> Vertices, Points, Directions;
+        std::vector<Vector<V>> Vertices, Directions;
         bool assertSeparation(const Vector<V> &point, const Vector<V> &direction);
     };
-
 }// namespace mopmc::queries
 
 
-#endif//MOPMC_CONVEXQUERYALT_H
+#endif//MOPMC_UNCONSTRAINEDCONVEXQUERY_H
