@@ -30,7 +30,7 @@ namespace mopmc::queries {
             Vertices.push_back(vertex);
             Points.push_back(vertex);
             Directions.push_back(direction);
-            mopmc::optimization::optimizers::HalfspacesIntersection<V>::check(Points, Directions, outerPoint, feasible);
+            mopmc::optimization::optimizers::HalfspacesIntersection<V>::findIntersectionPoint(Points, Directions, outerPoint, feasible);
             if (!feasible) {
                 ++iter;
                 std::cout << "[Main loop] exits as the problem is infeasible\n";

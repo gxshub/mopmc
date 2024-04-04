@@ -9,7 +9,7 @@
 #include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include "mopmc-src/solvers/ValueIteration.h"
 #include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
-#include "optimizers/FrankWolfeInnerOptimizer.h"
+#include "optimizers/FrankWolfeMethod.h"
 #include "optimizers/MinimumNormPoint.h"
 #include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"

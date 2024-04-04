@@ -21,10 +21,10 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     class HalfspacesIntersection {
     public:
-        static int check(const std::vector<Vector<V>> &Points,
+        static int findIntersectionPoint(const std::vector<Vector<V>> &Points,
                          const std::vector<Vector<V>> &Directions,
                          Vector<V> &point,
-                         bool &feasible);
+                         bool &intersection);
     };
 }// namespace mopmc::optimization::optimizers
 

@@ -9,7 +9,7 @@
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int HalfspacesIntersection<V>::check(const std::vector<Vector<V>> &Vertices,
+    int HalfspacesIntersection<V>::findIntersectionPoint(const std::vector<Vector<V>> &Vertices,
                                               const std::vector<Vector<V>> &Directions,
                                               Vector<V> &point,
                                               bool &feasible) {
