@@ -23,6 +23,7 @@ namespace mopmc::optimization::optimizers {
         assert(pivot.size() == optimum.size());
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
+        bool hasGotMaxMarginSepHP = false;
         MaximumMarginSeparationHyperplane<V> separationHyperplaneOptimizer;
         initialize(Vertices);
         const uint64_t maxIter = 1e3;
@@ -30,28 +31,39 @@ namespace mopmc::optimization::optimizers {
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
             sepDirection = (pivot - Vertices[0])/(pivot - Vertices[0]).template lpNorm<1>();
-            return 0;
+            std::cout << "[Minimum norm point optimization] exits for one vertex\n";
+            return EXIT_SUCCESS;
         }
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
-            if (checkSeparation(Vertices, pivot - xNew, pivot)) {
-                //hasGotMaxMarginSepHP = true;
+            if (!hasGotMaxMarginSepHP && checkSeparation(Vertices, pivot - xNew, pivot)) {
+                hasGotMaxMarginSepHP = true;
                 Vector<V> sign(dimension);
                 for (uint64_t i; i < sign.size(); ++i) {
                     sign(i) = (pivot - xNew)(i) >= 0 ?  static_cast<V>(1.) :  static_cast<V>(-1.);
                 }
                 separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin);
-                std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane\n";
-                //std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane (distance " << this->fn->value(xNew) << ")\n";
-                return EXIT_SUCCESS;
+                //++t;
+                //break;
+                //std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane\n";
+                //return EXIT_SUCCESS;
             }
             performSimplexGradientDescent(Vertices);
-            optimum = xNew;
+            if (hasGotMaxMarginSepHP && this->fn->value(xCurrent) <= this->fn->value(xNew)) {
+                ++t;
+                break;
+            }
             ++t;
         }
-        std::cout << "[Minimum norm point optimization] no separation hyperplane found\n";
-        return EXIT_FAILURE;
+        optimum = xNew;
+        if (hasGotMaxMarginSepHP) {
+            std::cout << "[Minimum norm point optimization] computes max margin separation hyperplane at iteration: " << t <<  " (distance: " << this->fn->value(xNew) << ")\n";
+            return EXIT_SUCCESS;
+        } else {
+            std::cout << "[Minimum norm point optimization] no separation hyperplane found\n";
+            return EXIT_FAILURE;
+        }
     }
 
     template<typename V>

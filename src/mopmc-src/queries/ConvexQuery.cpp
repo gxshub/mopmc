@@ -13,7 +13,7 @@ namespace mopmc::queries {
         Vector<V> threshold = Eigen::Map<Vector<V>>(this->queryData.thresholds.data(), n_objs);
         Vector<V> vertex(n_objs), direction(n_objs);
         direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
-        const V toleranceDistanceToMinimum{1.e-6};
+        const V toleranceDistanceToMinimum{1.e-12};
         const uint_fast64_t maxIter{200};
         V epsilonInnerOuterDiff;
         V margin;
@@ -47,6 +47,7 @@ namespace mopmc::queries {
             }
             ++iter;
         }
+
         this->VIhandler->exit();
     }
 

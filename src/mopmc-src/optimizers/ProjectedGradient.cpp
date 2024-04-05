@@ -10,8 +10,8 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int ProjectedGradient<V>::minimize(Vector<V> &point,
-                                              const std::vector<Vector<V>> &Vertices,
-                                              const std::vector<Vector<V>> &Directions) {
+                                       const std::vector<Vector<V>> &Vertices,
+                                       const std::vector<Vector<V>> &Directions) {
 
         /*
         if (!checkNonExteriorPoint(point, Vertices, Directions)) {
@@ -66,7 +66,7 @@ namespace mopmc::optimization::optimizers {
             ++t;
             if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
-        std::cout << "[Outer optimization] projected gradient stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
+        std::cout << "[Projected gradient optimization] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
         //assert(this->fn->value(xNew) <= this->fn->value(point));
         point = xNew;
         return EXIT_SUCCESS;
@@ -74,9 +74,9 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     Vector<V> ProjectedGradient<V>::dykstrasProjection(const Vector<V> &point,
-                                                              const std::vector<Vector<V>> &Vertices,
-                                                              const std::vector<Vector<V>> &Directions,
-                                                              const std::set<uint64_t> &indices) {
+                                                       const std::vector<Vector<V>> &Vertices,
+                                                       const std::vector<Vector<V>> &Directions,
+                                                       const std::set<uint64_t> &indices) {
 
         const uint64_t m = Vertices[0].size();
         if (indices.empty()) {
@@ -94,7 +94,7 @@ namespace mopmc::optimization::optimizers {
             Z[i] = Vector<V>::Zero(m);
         }
         const uint64_t maxIter = 200;
-        const V tolerance = 1e-5;
+        const V tolerance = 1e-6;
         uint_fast64_t it = 1;
         V tol;
         while (it < maxIter) {
@@ -110,14 +110,14 @@ namespace mopmc::optimization::optimizers {
             }
             ++it;
         }
-        std::cout << "[Outer optimization] Dykstras projection, stops at " << it << "\n";
+        std::cout << " - Dykstras projection, stops at " << it << "\n";
         return U[d];
     }
 
     template<typename V>
     Vector<V> ProjectedGradient<V>::halfspaceProjection(const Vector<V> &point,
-                                                                       const Vector<V> &boundaryPoint,
-                                                                       const Vector<V> &direction) {
+                                                        const Vector<V> &boundaryPoint,
+                                                        const Vector<V> &direction) {
         //assert(direction.size() == boundaryPoint.size());
         //assert(point.size() == boundaryPoint.size());
         if (direction.dot(point - boundaryPoint) <= 0) {
@@ -130,10 +130,10 @@ namespace mopmc::optimization::optimizers {
 
     template<typename V>
     Vector<V> ProjectedGradient<V>::findProjectedDescentDirection(const Vector<V> &point,
-                                                                         const Vector<V> &slope,
-                                                                         const std::vector<Vector<V>> &Vertices,
-                                                                         const std::vector<Vector<V>> &Directions,
-                                                                         const std::set<uint64_t> &exteriorHSIndices) {
+                                                                  const Vector<V> &slope,
+                                                                  const std::vector<Vector<V>> &Vertices,
+                                                                  const std::vector<Vector<V>> &Directions,
+                                                                  const std::set<uint64_t> &exteriorHSIndices) {
         const V gamma = 0.1;
         const Vector<V> outPoint = point + gamma * slope;
         Vector<V> projPoint = dykstrasProjection(outPoint, Vertices, Directions, exteriorHSIndices);
