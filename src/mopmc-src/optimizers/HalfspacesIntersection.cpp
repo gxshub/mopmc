@@ -9,9 +9,9 @@
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    bool HalfspacesIntersection<V>::findIntersectionPoint(const std::vector<Vector<V>> &Vertices,
-                                              const std::vector<Vector<V>> &Directions,
-                                              Vector<V> &point) {
+    bool HalfspacesIntersection<V>::findNonExteriorPoint(Vector<V> &point,
+                                                         const std::vector<Vector<V>> &BoundaryPoints,
+                                                         const std::vector<Vector<V>> &Directions) {
 
         bool feasible(false);
 
@@ -19,8 +19,8 @@ namespace mopmc::optimization::optimizers {
         int n_cols, *col_no = NULL, ret = 0;
         V *row = NULL;
 
-        assert(!Vertices.empty());
-        n_cols = Vertices[0].size() ;// number of variables in the model
+        assert(!BoundaryPoints.empty());
+        n_cols = BoundaryPoints[0].size() ;// number of variables in the model
         lp = make_lp(0, n_cols);
         if (lp == NULL)
             ret = 1;// couldn't construct a new model
@@ -38,12 +38,12 @@ namespace mopmc::optimization::optimizers {
         if (ret == 0) {
             set_add_rowmode(lp, TRUE);
             // constraints
-            for (int i = 0; i < Vertices.size(); ++i) {
+            for (int i = 0; i < BoundaryPoints.size(); ++i) {
                 for (int j = 0; j < n_cols; ++j) {
                     col_no[j] = j + 1;
                     row[j] = Directions[i](j);
                 }
-                const V v = Directions[i].dot(Vertices[i]);
+                const V v = Directions[i].dot(BoundaryPoints[i]);
                 if (!add_constraintex(lp, n_cols, row, col_no, LE, v))
                     ret = 3;
             }

@@ -1,12 +1,13 @@
 //
-// Created by guoxin on 26/01/24.
+//Created by guoxin on 26/01/24.
 //
 
 #include "ProjectedGradient.h"
+#include "HalfspacesIntersection.h"
 #include "lp_lib.h"
 #include <iostream>
 
-namespace mopmc::optimization::optimizers {
+        namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int ProjectedGradient<V>::minimize(Vector<V> &point,
@@ -54,6 +55,7 @@ namespace mopmc::optimization::optimizers {
             for (auto i: nonboundaryIndices) {
                 const Vector<V> &w = Directions[i];
                 if (w.dot(descentDirection) > 0) {
+                    //if (w.dot(descentDirection) > 0) {
                     V lambda_x = w.dot(Vertices[i] - xCurrent) / (w.dot(descentDirection));
                     if (lambda > lambda_x) {
                         lambda = lambda_x;
@@ -69,6 +71,11 @@ namespace mopmc::optimization::optimizers {
         std::cout << "[Projected gradient optimization] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
         //assert(this->fn->value(xNew) <= this->fn->value(point));
         point = xNew;
+        /*
+        if (!HalfspacesIntersection<V>::checkNonExteriorPoint(point, Vertices, Directions)) {
+            throw std::runtime_error("Project gradient should return an non-exterior point");
+        }
+         */
         return EXIT_SUCCESS;
     }
 
@@ -94,7 +101,7 @@ namespace mopmc::optimization::optimizers {
             Z[i] = Vector<V>::Zero(m);
         }
         const uint64_t maxIter = 200;
-        const V tolerance = 1e-6;
+        const V tolerance = 1e-24;
         uint_fast64_t it = 1;
         V tol;
         while (it < maxIter) {
@@ -110,7 +117,7 @@ namespace mopmc::optimization::optimizers {
             }
             ++it;
         }
-        std::cout << " - Dykstras projection, stops at " << it << "\n";
+        //std::cout << " - Dykstras projection, stops at " << it << "\n";
         return U[d];
     }
 
@@ -134,7 +141,7 @@ namespace mopmc::optimization::optimizers {
                                                                   const std::vector<Vector<V>> &Vertices,
                                                                   const std::vector<Vector<V>> &Directions,
                                                                   const std::set<uint64_t> &exteriorHSIndices) {
-        const V gamma = 0.1;
+        const V gamma = 0.001;
         const Vector<V> outPoint = point + gamma * slope;
         Vector<V> projPoint = dykstrasProjection(outPoint, Vertices, Directions, exteriorHSIndices);
         V lambda = static_cast<V>(1.);
@@ -145,7 +152,7 @@ namespace mopmc::optimization::optimizers {
                 lambda = std::max(lambda, w.dot(r - outPoint) / w.dot(projPoint - outPoint));
             }
         }
-        const Vector<V> &projSlope = outPoint + lambda * (projPoint - outPoint) - point;
+        Vector<V> projSlope = outPoint + lambda * (projPoint - outPoint) - point;
         if (projSlope.dot(slope) > 0) {
             return projSlope;
         } else {

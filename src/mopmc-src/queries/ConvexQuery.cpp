@@ -13,8 +13,8 @@ namespace mopmc::queries {
         Vector<V> threshold = Eigen::Map<Vector<V>>(this->queryData.thresholds.data(), n_objs);
         Vector<V> vertex(n_objs), direction(n_objs);
         direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
-        const V toleranceDistanceToMinimum{1.e-12};
-        const uint_fast64_t maxIter{200};
+        const V toleranceInnerOuterDiff{1.e-12};
+        const uint_fast64_t maxIter{100};
         V epsilonInnerOuterDiff;
         V margin;
         iter = 0;
@@ -28,7 +28,7 @@ namespace mopmc::queries {
             Vertices.push_back(vertex);
             Points.push_back(vertex);
             Directions.push_back(direction);
-            if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findIntersectionPoint(Points, Directions, outerPoint)) {
+            if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, Points, Directions)) {
                 ++iter;
                 std::cout << "[Main loop] exits as the constraint is not satisfiable\n";
                 break;
@@ -38,8 +38,10 @@ namespace mopmc::queries {
                 innerPoint = vertex;
             if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS)
                 break;
+            std::cout << "[Main loop] margin: " << margin <<"\n";
             epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
-            if (iter > 1 && epsilonInnerOuterDiff < toleranceDistanceToMinimum) {
+            
+            if (10 * iter > maxIter && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 std::cout << "[Main loop] exits (difference between function values on inner and outer points: "
                           << epsilonInnerOuterDiff << ")\n";
                 ++iter;
