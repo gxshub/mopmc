@@ -44,10 +44,7 @@ namespace mopmc::optimization::optimizers {
                     sign(i) = (pivot - xNew)(i) >= 0 ?  static_cast<V>(1.) :  static_cast<V>(-1.);
                 }
                 separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin);
-                //++t;
-                //break;
-                //std::cout << "[Minimum norm point optimization] computed maximum margin separation hyperplane\n";
-                //return EXIT_SUCCESS;
+                sepDirection /= sepDirection.template lpNorm<1>();
             }
             performSimplexGradientDescent(Vertices);
             if (hasGotMaxMarginSepHP && this->fn->value(xCurrent) <= this->fn->value(xNew)) {

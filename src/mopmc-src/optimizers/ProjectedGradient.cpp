@@ -55,7 +55,6 @@
             for (auto i: nonboundaryIndices) {
                 const Vector<V> &w = Directions[i];
                 if (w.dot(descentDirection) > 0) {
-                    //if (w.dot(descentDirection) > 0) {
                     V lambda_x = w.dot(Vertices[i] - xCurrent) / (w.dot(descentDirection));
                     if (lambda > lambda_x) {
                         lambda = lambda_x;
@@ -141,7 +140,7 @@
                                                                   const std::vector<Vector<V>> &Vertices,
                                                                   const std::vector<Vector<V>> &Directions,
                                                                   const std::set<uint64_t> &exteriorHSIndices) {
-        const V gamma = 0.001;
+        const V gamma = 0.01;
         const Vector<V> outPoint = point + gamma * slope;
         Vector<V> projPoint = dykstrasProjection(outPoint, Vertices, Directions, exteriorHSIndices);
         V lambda = static_cast<V>(1.);
@@ -172,6 +171,14 @@
             }
         }
         return nonExterior;
+    }
+
+    template<typename V>
+    void ProjectedGradient<V>::exteriorProjectionPhase(){
+        const V step = 0.0001;
+        xCurrent = xNew;
+        Vector<V> gradient = this->fn->subgradient(xCurrent);
+        xNew = xCurrent - step * gradient;
     }
 
     template class ProjectedGradient<double>;

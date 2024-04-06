@@ -2,8 +2,8 @@
 // Created by guoxin on 26/01/24.
 //
 
-#ifndef MOPMC_FRANKWOLFEOUTEROPTIMIZATION_H
-#define MOPMC_FRANKWOLFEOUTEROPTIMIZATION_H
+#ifndef MOPMC_PROJECTEDGRADIENT_H
+#define MOPMC_PROJECTEDGRADIENT_H
 
 #include "BaseOptimizer.h"
 #include "mopmc-src/auxiliary/LineSearch.h"
@@ -30,18 +30,20 @@ namespace mopmc::optimization::optimizers {
         };
 
         int minimize(Vector<V> &point,
-                     const std::vector<Vector<V>> &Vertices,
+                     const std::vector<Vector<V>> &BoundaryPoints,
                      const std::vector<Vector<V>> &Directions) override;
 
         bool checkNonExteriorPoint(Vector<V> &point,
-                                   const std::vector<Vector<V>> &Vertices,
+                                   const std::vector<Vector<V>> &BoundaryPoints,
                                    const std::vector<Vector<V>> &Directions);
 
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
 
     private:
+        void exteriorProjectionPhase();
+
         Vector<V> dykstrasProjection(const Vector<V> &point,
-                                     const std::vector<Vector<V>> &Vertices,
+                                     const std::vector<Vector<V>> &BoundaryPoints,
                                      const std::vector<Vector<V>> &Directions,
                                      const std::set<uint64_t> &indices);
 
@@ -51,7 +53,7 @@ namespace mopmc::optimization::optimizers {
 
         Vector<V> findProjectedDescentDirection(const Vector<V> &point,
                                                 const Vector<V> &slope,
-                                                const std::vector<Vector<V>> &Points,
+                                                const std::vector<Vector<V>> &BoundaryPoints,
                                                 const std::vector<Vector<V>> &Directions,
                                                 const std::set<uint64_t> &indices);
 
@@ -61,4 +63,4 @@ namespace mopmc::optimization::optimizers {
 }// namespace mopmc::optimization::optimizers
 
 
-#endif//MOPMC_FRANKWOLFEOUTEROPTIMIZATION_H
+#endif//MOPMC_PROJECTEDGRADIENT_H

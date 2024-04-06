@@ -23,7 +23,7 @@ namespace mopmc::optimization::optimizers {
 
         virtual int minimize (Vector<V> &point, const std::vector<Vector<V>> &Vertices) { return EXIT_FAILURE; }
 
-        virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices,
+        virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &BoundaryPoints,
                      const std::vector<Vector<V>> &Directions) { return EXIT_FAILURE; }
 
         virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices,

@@ -57,7 +57,7 @@ namespace mopmc::queries {
         bool hasConstraint{};
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
-        std::vector<Vector<V>> Vertices, Points, Directions;
+        std::vector<Vector<V>> Vertices, BoundaryPoints, Directions;
     };
 
 }// namespace mopmc::queries

@@ -26,25 +26,26 @@ namespace mopmc::queries {
             std::vector<V> vertex_tmp = this->VIhandler->getResults();
             vertex = VectorMap<V>(vertex_tmp.data(), n_objs);
             Vertices.push_back(vertex);
-            Points.push_back(vertex);
+            BoundaryPoints.push_back(vertex);
             Directions.push_back(direction);
-            if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, Points, Directions)) {
+            if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, BoundaryPoints, Directions)) {
                 ++iter;
                 std::cout << "[Main loop] exits as the constraint is not satisfiable\n";
                 break;
             }
-            this->outerOptimizer->minimize(outerPoint, Points, Directions);
+            this->outerOptimizer->minimize(outerPoint, BoundaryPoints, Directions);
             if (Vertices.size() == 1)
                 innerPoint = vertex;
-            if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS)
-                break;
-            std::cout << "[Main loop] margin: " << margin <<"\n";
-            epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
-            
-            if (10 * iter > maxIter && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
-                std::cout << "[Main loop] exits (difference between function values on inner and outer points: "
-                          << epsilonInnerOuterDiff << ")\n";
+            if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS) {
                 ++iter;
+                std::cout << "[Main loop] exits as no separation hyperplane can be found\n";
+                break;
+            }
+            std::cout << "[Main loop] margin: " << margin << "\n";
+            epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
+            if (10 * iter > maxIter && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
+                ++iter;
+                std::cout << "[Main loop] exits (value difference between inner & outer points: " << epsilonInnerOuterDiff << ")\n";
                 break;
             }
             ++iter;
@@ -60,7 +61,7 @@ namespace mopmc::queries {
         for (uint_fast64_t i = 0; i < m; ++i) {
             Vector<V> r = Vector<V>::Zero(m);
             r(i) = h(i);
-            Points.push_back(r);
+            BoundaryPoints.push_back(r);
             Vector<V> w = Vector<V>::Zero(m);
             w(i) = this->queryData.isThresholdUpperBound[i] ? static_cast<V>(1.) : static_cast<V>(-1.);
             Directions.push_back(w);
@@ -70,7 +71,7 @@ namespace mopmc::queries {
     template<typename V, typename I>
     bool ConvexQuery<V, I>::checkConstraintSatisfaction(const Vector<V> &point) {
         bool res = true;
-        const V roundingErr = 1e-18;
+        const V roundingErr = 1e-15;
         const uint64_t m = this->queryData.objectiveCount;
         Vector<V> h = VectorMap<V>(this->queryData.thresholds.data(), m);
         for (uint_fast64_t i = 0; i < m; ++i) {
@@ -92,7 +93,7 @@ namespace mopmc::queries {
     template<typename V, typename I>
     void ConvexQuery<V, I>::printResult() {
         std::cout << "----------------------------------------------\n"
-                  << "CUDA CONVEX QUERY terminates after " << this->getMainLoopIterationCount() << " iteration(s)\n"
+                  << "CONVEX QUERY terminates after " << this->getMainLoopIterationCount() << " iteration(s)\n"
                   << "Estimated nearest point to threshold : [";
         for (int i = 0; i < this->queryData.objectiveCount; ++i) {
             std::cout << this->getOuterOptimalPoint()(i) << " ";
