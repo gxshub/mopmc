@@ -7,13 +7,35 @@
 #include "lp_lib.h"
 #include <iostream>
 
-        namespace mopmc::optimization::optimizers {
+namespace mopmc::optimization::optimizers {
 
     template<typename V>
     int ProjectedGradient<V>::minimize(Vector<V> &point,
                                        const std::vector<Vector<V>> &BoundaryPoints,
                                        const std::vector<Vector<V>> &Directions) {
 
+        interiorProjectionPhase(point, BoundaryPoints, Directions);
+        //assert(this->fn->value(xNew) <= this->fn->value(point));
+        exteriorProjectionPhase(point, BoundaryPoints, Directions);
+        if (!checkNonExteriorPoint(point, BoundaryPoints, Directions))
+            throw std::runtime_error("Project gradient should return an non-exterior point");
+        return EXIT_SUCCESS;
+    }
+
+
+    template<typename V>
+    void ProjectedGradient<V>::interiorProjectionPhase(Vector<V> &point,
+                                                       const std::vector<Vector<V>> &BoundaryPoints,
+                                                       const std::vector<Vector<V>> &Directions) {
+        /*
+        {
+            std::cout << "[interiorProjectionPhase] point as input: [";
+            for (uint64_t i = 0; i < point.size(); ++i) {
+                std::cout << point(i) << " ";
+            }
+            std::cout << "]\n";
+        }
+         */
         dimension = point.size();
         size = BoundaryPoints.size();
         xNew = point;
@@ -26,8 +48,8 @@
             xCurrent = xNew;
             Vector<V> slope = (-1.) * (this->fn->subgradient(xCurrent));
             for (uint64_t i = 0; i < size; ++i) {
-                if (Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
-                //if (slope.dot(Directions[i]) > 0 && Directions[i].dot(Vertices[i] - pointTmp) < 1e-30) {
+                //if (Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
+                if (slope.dot(Directions[i]) > 0 && Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
                     boundaryIndices.insert(i);
                 } else {
                     nonboundaryIndices.insert(i);
@@ -35,15 +57,13 @@
             }
             if (boundaryIndices.empty()) {
                 descentDirection = slope;
-            }
-            else if (boundaryIndices.size() == 1) {
+            } else if (boundaryIndices.size() == 1) {
                 auto elem = boundaryIndices.begin();
                 const Vector<V> &w = Directions[*elem];
                 const Vector<V> &r = BoundaryPoints[*elem];
                 // projection of slope onto the hyperplane <x,w> = b
                 descentDirection = halfspaceProjection(slope, r, w);
-            }
-            else {
+            } else {
                 descentDirection = findProjectedDescentDirection(xCurrent, slope, BoundaryPoints, Directions, boundaryIndices);
             }
             // make a large enough range
@@ -64,14 +84,60 @@
             ++t;
             if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
-        std::cout << "[Projected gradient optimization] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
-        //assert(this->fn->value(xNew) <= this->fn->value(point));
-        if (!checkNonExteriorPoint(xNew, BoundaryPoints, Directions)) {
-            throw std::runtime_error("Project gradient should return an non-exterior point");
-        }
-        exteriorProjectionPhase(xNew, BoundaryPoints, Directions);
         point = xNew;
-        return EXIT_SUCCESS;
+        /*
+        {
+            std::cout << "[interiorProjectionPhase] point as output: [";
+            for (uint64_t i = 0; i < point.size(); ++i) {
+                std::cout << point(i) << " ";
+            }
+            std::cout << "]\n";
+        }
+         */
+        std::cout << "[Projected gradient optimization] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
+    }
+
+    template<typename V>
+    void ProjectedGradient<V>::exteriorProjectionPhase(Vector<V> &point,
+                                                       const std::vector<Vector<V>> &BoundaryPoints,
+                                                       const std::vector<Vector<V>> &Directions) {
+        /*
+        {
+            std::cout << "[exteriorProjectionPhase] point as input: [";
+            for (uint64_t i = 0; i < point.size(); ++i) {
+                std::cout << point(i) << " ";
+            }
+            std::cout << "]\n";
+        }
+         */
+        const V step = 10.;
+        const uint64_t maxIter = 100;
+        const V tolerance = 1e-6;
+        uint64_t iter = 0;
+        Vector<V> tmpPoint0 = point, tmpPoint1, tmpPoint2;
+        while (iter < maxIter) {
+            Vector<V> slope = this->fn->subgradient(tmpPoint0) * (-1.);
+            tmpPoint1 = tmpPoint0 + step * slope;
+            const V lambda = this->lineSearcher.findOptimalRelativeDistance(tmpPoint0, tmpPoint1);
+            tmpPoint1 = (1. - lambda) * tmpPoint0 + lambda * tmpPoint1;
+            tmpPoint2 = dykstrasProjection(tmpPoint1, BoundaryPoints, Directions);
+            if ((tmpPoint0 - tmpPoint2).template lpNorm<Eigen::Infinity>() < tolerance) {
+                ++iter;
+                break;
+            }
+            tmpPoint0 = tmpPoint2;
+            ++iter;
+        }
+        point = tmpPoint2;
+        /*
+        {
+            std::cout << "[exteriorProjectionPhase] point as output: [";
+            for (uint64_t i = 0; i < point.size(); ++i) {
+                std::cout << point(i) << " ";
+            }
+            std::cout << "]\n";
+        }
+         */
     }
 
     template<typename V>
@@ -112,7 +178,7 @@
             }
             ++it;
         }
-        std::cout << " - Dykstras projection, stops at " << it << "\n";
+        //std::cout << " - Dykstras projection, stops at " << it << "\n";
         Vector<V> point1 = U[d];
         V lambda = static_cast<V>(0.);
         for (auto idx: indices) {
@@ -122,8 +188,9 @@
                 lambda = std::max(lambda, w.dot(r - point) / w.dot(point1 - point));
             }
         }
-        std::cout << "[Projected gradient optimization - Dykstras Projection] iteration: " << it<<"\n";
-        return point + lambda * (point1 - point);
+        //std::cout << "[Projected gradient optimization - Dykstras Projection] iteration: " << it << "\n";
+        point1 = point + lambda * (point1 - point);
+        return point1;
     }
 
     template<typename V>
@@ -146,7 +213,7 @@
         if (direction.dot(point - boundaryPoint) <= 0) {
             return point;
         } else {
-            V distance = direction.dot(point - boundaryPoint);// note. std::pow(direction.template lpNorm<2>(),2) = 1
+            V distance = direction.dot(point - boundaryPoint) /std::pow(direction.template lpNorm<2>(),2);
             return point - distance * direction;
         }
     }
@@ -183,87 +250,12 @@
             }
             ++i;
         }
+        if (!nonExterior) {
+            std::cout << "Directions.size(): " << Directions.size()<<"\n";
+            std::cout << "[Project gradient] exterior point - Directions[i].dot(point) - Directions[i].dot(BoundaryPoints[i]): "
+                      << Directions[i].dot(point) - Directions[i].dot(BoundaryPoints[i]) <<"\n";
+        }
         return nonExterior;
-    }
-
-    template<typename V>
-    void ProjectedGradient<V>::interierProjectionPhase(Vector<V> &point,
-                                                       const std::vector<Vector<V>> &BoundaryPoints,
-                                                       const std::vector<Vector<V>> &Directions) {
-        xNew = point;
-        std::set<uint64_t> boundaryIndices, nonboundaryIndices;
-        Vector<V> descentDirection(dimension);
-        const uint64_t maxIter = 100;
-        const V tol = 1e-30;
-        uint64_t t = 0;
-        while (t < maxIter) {
-            xCurrent = xNew;
-            Vector<V> slope = (-1.) * (this->fn->subgradient(xCurrent));
-            for (uint64_t i = 0; i < size; ++i) {
-                if (Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
-                    //if (slope.dot(Directions[i]) > 0 && Directions[i].dot(Vertices[i] - pointTmp) < 1e-30) {
-                    boundaryIndices.insert(i);
-                } else {
-                    nonboundaryIndices.insert(i);
-                }
-            }
-            if (boundaryIndices.empty()) {
-                descentDirection = slope;
-            }
-            else if (boundaryIndices.size() == 1) {
-                auto elem = boundaryIndices.begin();
-                const Vector<V> &w = Directions[*elem];
-                const Vector<V> &r = BoundaryPoints[*elem];
-                // projection of slope onto the hyperplane <x,w> = b
-                descentDirection = halfspaceProjection(slope, r, w);
-            }
-            else {
-                descentDirection = findProjectedDescentDirection(xCurrent, slope, BoundaryPoints, Directions, boundaryIndices);
-            }
-            // make a large enough range
-            V lambda = static_cast<V>(1000);
-
-            for (uint64_t i = 0; i < size; ++i) {
-                const Vector<V> &w = Directions[i];
-                if (w.dot(descentDirection) > 0) {
-                    V lambda_x = w.dot(BoundaryPoints[i] - xCurrent) / (w.dot(descentDirection));
-                    if (lambda > lambda_x) {
-                        lambda = lambda_x;
-                    }
-                }
-            }
-            xNewTmp = xCurrent + lambda * descentDirection;
-            lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
-            xNew = (1. - lambda) * xCurrent + lambda * xNewTmp;
-            ++t;
-            if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
-        }
-        std::cout << "[Projected gradient optimization] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
-    }
-
-    template<typename V>
-    void ProjectedGradient<V>::exteriorProjectionPhase(Vector<V> &point,
-                                                       const std::vector<Vector<V>> &BoundaryPoints,
-                                                       const std::vector<Vector<V>> &Directions){
-        const V step = 10.;
-        const uint64_t maxIter = 100;
-        const V tolerance = 1e-6;
-        uint64_t iter = 0;
-        Vector<V> tmpPoint0 = point, tmpPoint1, tmpPoint2;
-        while (iter < maxIter) {
-            Vector<V> slope =  this->fn->subgradient(tmpPoint0) * (-1.);
-            tmpPoint1 = tmpPoint0 + step * slope;
-            const V lambda = this->lineSearcher.findOptimalRelativeDistance(tmpPoint0, tmpPoint1);
-            tmpPoint1 = (1. - lambda) * tmpPoint0 + lambda * tmpPoint1;
-            tmpPoint2 = dykstrasProjection(tmpPoint1, BoundaryPoints, Directions);
-            if ((tmpPoint0 - tmpPoint2).template lpNorm<Eigen::Infinity>() < tolerance) {
-                ++iter;
-                break;
-            }
-            tmpPoint0 = tmpPoint2;
-            ++iter;
-        }
-        point = tmpPoint2;
     }
 
     template class ProjectedGradient<double>;

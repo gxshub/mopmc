@@ -40,7 +40,7 @@ namespace mopmc::optimization::optimizers {
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
 
     private:
-        void interierProjectionPhase(Vector<V> &point,
+        void interiorProjectionPhase(Vector<V> &point,
                                      const std::vector<Vector<V>> &BoundaryPoints,
                                      const std::vector<Vector<V>> &Directions);
 
@@ -58,8 +58,8 @@ namespace mopmc::optimization::optimizers {
                                      const std::vector<Vector<V>> &Directions);
 
         Vector<V> halfspaceProjection(const Vector<V> &point,
-                                              const Vector<V> &boundaryPoint,
-                                              const Vector<V> &direction);
+                                      const Vector<V> &boundaryPoint,
+                                      const Vector<V> &direction);
 
         Vector<V> findProjectedDescentDirection(const Vector<V> &currentPoint,
                                                 const Vector<V> &slope,

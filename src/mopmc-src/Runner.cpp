@@ -103,10 +103,10 @@ namespace mopmc {
                             new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
                 } else {
                     mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
-                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
-                            new mopmc::queries::UnconstrainedConvexQuery<ValueType, int> (data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
                     //q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
-                    //        new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler, false));
+                    //        new mopmc::queries::UnconstrainedConvexQuery<ValueType, int> (data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
+                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
+                            new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler, false));
                 }
                 q1->query();
                 q1->printResult();

@@ -11,15 +11,20 @@ namespace mopmc::queries {
         this->VIhandler->initialize();
         const uint64_t n_objs = this->queryData.objectiveCount;
         Vector<V> threshold = Eigen::Map<Vector<V>>(this->queryData.thresholds.data(), n_objs);
-        Vector<V> vertex(n_objs), direction(n_objs);
+        Vector<V> vertex(n_objs), direction(n_objs), innerPoint1(n_objs), outerPoint1(n_objs);
         direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
-        const V toleranceInnerOuterDiff{1.e-12};
+        const V toleranceInnerOuterDiff{1.e-12}, toleranceUpdateDiff{1.e-18};
         const uint_fast64_t maxIter{100};
         V epsilonInnerOuterDiff;
         V margin;
         iter = 0;
         while (iter < maxIter) {
             std::cout << "[Main loop] Iteration: " << iter << "\n";
+            std::cout << "direction: [";
+            for (int i = 0; i < this->queryData.objectiveCount; ++i) {
+                std::cout << direction(i) << " ";
+            }
+            std::cout << "]\n";
             // compute a new supporting hyperplane
             std::vector<V> direction_tmp(direction.data(), direction.data() + direction.size());
             this->VIhandler->valueIteration(direction_tmp);
@@ -28,38 +33,52 @@ namespace mopmc::queries {
             Vertices.push_back(vertex);
             BoundaryPoints.push_back(vertex);
             Directions.push_back(direction);
-            if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, BoundaryPoints, Directions)) {
+            if (Vertices.size() == 1) {
+                innerPoint = vertex;
+            }
+            std::cout << "vertex: [";
+            for (int i = 0; i < this->queryData.objectiveCount; ++i) {
+                std::cout << vertex(i) << " ";
+            }
+            std::cout << "]\n";
+            if (hasConstraint) {
+                std::cout << "GOT HERE, hasConstraint: " << hasConstraint<<"\n";
+                if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, BoundaryPoints, Directions)) {
+                    ++iter;
+                    std::cout << "[Main loop] exits as the constraint is not satisfiable\n";
+                    break;
+                }
+            } else {
+                outerPoint = innerPoint;
+            }
+            this->outerOptimizer->minimize(outerPoint, BoundaryPoints, Directions);
+            std::cout << "outerPoint: [";
+            for (int i = 0; i < this->queryData.objectiveCount; ++i) {
+                std::cout << outerPoint(i) << " ";
+            }
+            std::cout << "]\n";
+            if (iter > 1 && (this->getOuterOptimalPoint() - outerPoint1).template lpNorm<1>()
+                    + (this->getInnerOptimalPoint() - innerPoint1).template lpNorm<1>() < toleranceUpdateDiff) {
                 ++iter;
-                std::cout << "[Main loop] exits as the constraint is not satisfiable\n";
+                std::cout << "[Main loop] exits due to outer point update (l1 norm <= " << toleranceUpdateDiff << ")\n";
                 break;
             }
-            /*
-            {
-                std::cout << "[Main loop] prints running outer opt val: [";
-                for (int i = 0; i < this->queryData.objectiveCount; ++i) {
-                    std::cout << outerPoint(i) << " ";
-                }
-                std::cout << "]\n";
-            }
-             */
-            this->outerOptimizer->minimize(outerPoint, BoundaryPoints, Directions);
-            if (Vertices.size() == 1)
-                innerPoint = vertex;
+            outerPoint1 = outerPoint;
+            innerPoint1 = innerPoint;
             if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS) {
                 ++iter;
-                std::cout << "[Main loop] exits as no separation hyperplane can be found\n";
+                std::cout << "[Main loop] exits as no separation hyperplane is found\n";
                 break;
             }
-            std::cout << "[Main loop] margin: " << margin << "\n";
+            //std::cout << "[Main loop] margin: " << margin << "\n";
             epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (iter > 1 && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 ++iter;
-                std::cout << "[Main loop] exits (value difference between inner & outer points: " << epsilonInnerOuterDiff << ")\n";
+                std::cout << "[Main loop] exits due to small inner & outer value difference (<=" << toleranceInnerOuterDiff << ")\n";
                 break;
             }
             ++iter;
         }
-
         this->VIhandler->exit();
     }
 
@@ -102,8 +121,13 @@ namespace mopmc::queries {
     template<typename V, typename I>
     void ConvexQuery<V, I>::printResult() {
         std::cout << "----------------------------------------------\n"
-                  << "CONVEX QUERY terminates after " << this->getMainLoopIterationCount() << " iteration(s)\n"
-                  << "Estimated nearest point to threshold : [";
+                  << "CONVEX QUERY"
+                  << "\nwith constraint? " << std::boolalpha << hasConstraint << "\nterminates after " << this->getMainLoopIterationCount() << " iteration(s)\n"
+                  << "Estimated optimal inner point: [";
+        for (int i = 0; i < this->queryData.objectiveCount; ++i) {
+            std::cout << this->getInnerOptimalPoint()(i) << " ";
+        }
+        std::cout << "]\n"<< "Estimated optimal outer point: [";
         for (int i = 0; i < this->queryData.objectiveCount; ++i) {
             std::cout << this->getOuterOptimalPoint()(i) << " ";
         }
@@ -116,8 +140,8 @@ namespace mopmc::queries {
             std::cout << "\nInner point satisfying constraints? " << std::boolalpha << b1
                       << "\nOuter point satisfying constraints? " << std::boolalpha << b2;
         }
-        std::cout <<"\nthis->getOuterOptimalPoint().sum(): " << this->getOuterOptimalPoint().sum()
-                <<", this->getOuterOptimalPoint().size(): " << this->getOuterOptimalPoint().size();
+        //std::cout <<"\nthis->getOuterOptimalPoint().sum(): " << this->getOuterOptimalPoint().sum()
+        //        <<", this->getOuterOptimalPoint().size(): " << this->getOuterOptimalPoint().size();
         std::cout << "\n----------------------------------------------\n";
     }
 
