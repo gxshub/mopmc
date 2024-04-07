@@ -5,6 +5,7 @@ import random
 num_args = len(sys.argv)
 
 fname = sys.argv[1]                # The first argument is the filename
+rwd = sys.argv[2]
 x_max = 199 #int(sys.argv[2])
 x_target = 99 #int(sys.argv[3])
 y_max = 99 #int(sys.argv[4])
@@ -41,7 +42,7 @@ with open(fname + '.nm', 'w') as file:
 
     for i in range(y_max+1):
         file.write(f"rewards \"target_{i}\"\n")
-        file.write(f'\t (x=x_max)&(y={i})&(z=0): 1 ;\n')
+        file.write(f'\t (x=x_max)&(y={i})&(z=0): {rwd} ;\n')
         file.write("endrewards\n")
 
 

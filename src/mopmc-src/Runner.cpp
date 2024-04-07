@@ -83,8 +83,10 @@ namespace mopmc {
                             fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                     new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         } else {
+                            //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                            //  new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
                             fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                              new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                                    new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         }
                         break;
                     }
@@ -103,6 +105,8 @@ namespace mopmc {
                     mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
                     q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
                             new mopmc::queries::UnconstrainedConvexQuery<ValueType, int> (data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
+                    //q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
+                    //        new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler, false));
                 }
                 q1->query();
                 q1->printResult();

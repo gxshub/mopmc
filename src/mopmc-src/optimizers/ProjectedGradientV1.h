@@ -2,8 +2,8 @@
 // Created by guoxin on 26/01/24.
 //
 
-#ifndef MOPMC_PROJECTEDGRADIENT_H
-#define MOPMC_PROJECTEDGRADIENT_H
+#ifndef MOPMC_PROJECTEDGRADIENTV1_H
+#define MOPMC_PROJECTEDGRADIENTV1_H
 
 #include "BaseOptimizer.h"
 #include "mopmc-src/auxiliary/LineSearch.h"
@@ -22,10 +22,10 @@ namespace mopmc::optimization::optimizers {
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V>
-    class ProjectedGradient : public BaseOptimizer<V> {
+    class ProjectedGradientV1 : public BaseOptimizer<V> {
     public:
-        explicit ProjectedGradient() = default;
-        explicit ProjectedGradient(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f) : BaseOptimizer<V>(f) {
+        explicit ProjectedGradientV1() = default;
+        explicit ProjectedGradientV1(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f) : BaseOptimizer<V>(f) {
             this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(f);
         };
 
@@ -40,28 +40,18 @@ namespace mopmc::optimization::optimizers {
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
 
     private:
-        void interierProjectionPhase(Vector<V> &point,
-                                     const std::vector<Vector<V>> &BoundaryPoints,
-                                     const std::vector<Vector<V>> &Directions);
-
-        void exteriorProjectionPhase(Vector<V> &point,
-                                     const std::vector<Vector<V>> &BoundaryPoints,
-                                     const std::vector<Vector<V>> &Directions);
+        void exteriorProjectionPhase();
 
         Vector<V> dykstrasProjection(const Vector<V> &point,
                                      const std::vector<Vector<V>> &BoundaryPoints,
                                      const std::vector<Vector<V>> &Directions,
                                      const std::set<uint64_t> &indices);
 
-        Vector<V> dykstrasProjection(const Vector<V> &point,
-                                     const std::vector<Vector<V>> &BoundaryPoints,
-                                     const std::vector<Vector<V>> &Directions);
-
         Vector<V> halfspaceProjection(const Vector<V> &point,
-                                              const Vector<V> &boundaryPoint,
-                                              const Vector<V> &direction);
+                                      const Vector<V> &boundaryPoint,
+                                      const Vector<V> &direction);
 
-        Vector<V> findProjectedDescentDirection(const Vector<V> &currentPoint,
+        Vector<V> findProjectedDescentDirection(const Vector<V> &point,
                                                 const Vector<V> &slope,
                                                 const std::vector<Vector<V>> &BoundaryPoints,
                                                 const std::vector<Vector<V>> &Directions,
@@ -73,4 +63,4 @@ namespace mopmc::optimization::optimizers {
 }// namespace mopmc::optimization::optimizers
 
 
-#endif//MOPMC_PROJECTEDGRADIENT_H
+#endif//MOPMC_PROJECTEDGRADIENTV1_H

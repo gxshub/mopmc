@@ -33,6 +33,15 @@ namespace mopmc::queries {
                 std::cout << "[Main loop] exits as the constraint is not satisfiable\n";
                 break;
             }
+            /*
+            {
+                std::cout << "[Main loop] prints running outer opt val: [";
+                for (int i = 0; i < this->queryData.objectiveCount; ++i) {
+                    std::cout << outerPoint(i) << " ";
+                }
+                std::cout << "]\n";
+            }
+             */
             this->outerOptimizer->minimize(outerPoint, BoundaryPoints, Directions);
             if (Vertices.size() == 1)
                 innerPoint = vertex;
@@ -43,7 +52,7 @@ namespace mopmc::queries {
             }
             std::cout << "[Main loop] margin: " << margin << "\n";
             epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
-            if (10 * iter > maxIter && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
+            if (iter > 1 && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 ++iter;
                 std::cout << "[Main loop] exits (value difference between inner & outer points: " << epsilonInnerOuterDiff << ")\n";
                 break;
@@ -107,6 +116,8 @@ namespace mopmc::queries {
             std::cout << "\nInner point satisfying constraints? " << std::boolalpha << b1
                       << "\nOuter point satisfying constraints? " << std::boolalpha << b2;
         }
+        std::cout <<"\nthis->getOuterOptimalPoint().sum(): " << this->getOuterOptimalPoint().sum()
+                <<", this->getOuterOptimalPoint().size(): " << this->getOuterOptimalPoint().size();
         std::cout << "\n----------------------------------------------\n";
     }
 
