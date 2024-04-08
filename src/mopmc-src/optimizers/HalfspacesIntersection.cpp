@@ -87,6 +87,29 @@ namespace mopmc::optimization::optimizers {
         return feasible;
     }
 
+    template<typename V>
+    bool HalfspacesIntersection<V>::checkNonExteriorPoint(Vector<V> &point,
+                                                     const std::vector<Vector<V>> &BoundaryPoints,
+                                                     const std::vector<Vector<V>> &Directions) {
+        const V roundingError = 1e-12;
+        bool nonExterior = true;
+        const uint64_t maxIter = Directions.size();
+        uint64_t i = 0;
+        while (i < maxIter) {
+            if (Directions[i].dot(point) > Directions[i].dot(BoundaryPoints[i]) + roundingError) {
+                nonExterior = false;
+                break;
+            }
+            ++i;
+        }
+        if (!nonExterior) {
+            std::cout << "[Check Non Exterior Point] Directions.size(): " << Directions.size()<<"\n";
+            std::cout << "[Check Non Exterior Point] exterior point - Directions[i].dot(point) - Directions[i].dot(BoundaryPoints[i]): "
+                      << Directions[i].dot(point) - Directions[i].dot(BoundaryPoints[i]) <<"\n";
+        }
+        return nonExterior;
+    }
+
     template class HalfspacesIntersection<double>;
 
 }
