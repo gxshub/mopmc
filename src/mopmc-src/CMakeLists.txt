@@ -11,6 +11,7 @@ add_subdirectory(_future)
 
 list(
         APPEND Sources
+        "${dir}/Printer.h"
         "${dir}/QueryData.h"
         "${dir}/QueryOptions.h"
         "${dir}/Runner.cpp"

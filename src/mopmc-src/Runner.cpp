@@ -83,10 +83,10 @@ namespace mopmc {
                             fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                                     new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         } else {
-                            //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                            //  new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
                             fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                                    new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
+                              new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                            //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
+                            //        new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         }
                         break;
                     }
@@ -102,7 +102,8 @@ namespace mopmc {
                     q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
                             new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
                 } else {
-                    mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
+                   // mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
+                    mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                     //q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
                     //        new mopmc::queries::UnconstrainedConvexQuery<ValueType, int> (data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
                     q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(

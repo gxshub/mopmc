@@ -25,10 +25,11 @@ namespace mopmc::queries {
                     mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
                     mopmc::value_iteration::BaseVIHandler<V> *valueIteration,
                     const bool withConstraint = true)
-            : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) , hasConstraint(withConstraint){
+            : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) {
             innerPoint.resize(data.objectiveCount);
             outerPoint.resize(data.objectiveCount);
-            if (hasConstraint)
+            hasConstraint = withConstraint;
+            if (withConstraint)
                 constraintsToHalfspaces();
         };
         void query() override;
@@ -54,7 +55,7 @@ namespace mopmc::queries {
     private:
         void constraintsToHalfspaces();
         bool checkConstraintSatisfaction(const Vector<V> &point);
-        bool hasConstraint{};
+        bool hasConstraint{true};
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
         std::vector<Vector<V>> Vertices, BoundaryPoints, Directions;

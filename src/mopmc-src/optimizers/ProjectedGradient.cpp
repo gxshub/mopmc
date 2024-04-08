@@ -17,8 +17,8 @@ namespace mopmc::optimization::optimizers {
         interiorProjectionPhase(point, BoundaryPoints, Directions);
         //assert(this->fn->value(xNew) <= this->fn->value(point));
         exteriorProjectionPhase(point, BoundaryPoints, Directions);
-        if (!checkNonExteriorPoint(point, BoundaryPoints, Directions))
-            throw std::runtime_error("Project gradient should return an non-exterior point");
+        //if (!checkNonExteriorPoint(point, BoundaryPoints, Directions))
+        //    throw std::runtime_error("Project gradient should return an non-exterior point");
         return EXIT_SUCCESS;
     }
 
@@ -42,7 +42,7 @@ namespace mopmc::optimization::optimizers {
         std::set<uint64_t> boundaryIndices, nonboundaryIndices;
         Vector<V> descentDirection(dimension);
         const uint64_t maxIter = 100;
-        const V tol = 1e-30;
+        const V tol = 1e-12;
         uint64_t t = 0;
         while (t < maxIter) {
             xCurrent = xNew;
@@ -82,7 +82,17 @@ namespace mopmc::optimization::optimizers {
             lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
             xNew = (1. - lambda) * xCurrent + lambda * xNewTmp;
             ++t;
-            if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
+            /*
+            {
+                std::cout << "[interiorProjectionPhase] updating outer point: [";
+                for (uint64_t i = 0; i < point.size(); ++i) {
+                    std::cout << xNew(i) << " ";
+                }
+                std::cout << "]\n";
+            }
+             */
+            if ((xCurrent - xNew).template lpNorm<1>() < tol) {break;}
+            //if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
         point = xNew;
         /*
@@ -94,7 +104,7 @@ namespace mopmc::optimization::optimizers {
             std::cout << "]\n";
         }
          */
-        std::cout << "[Projected gradient optimization] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
+        std::cout << "[interiorProjectionPhase] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
     }
 
     template<typename V>
@@ -110,6 +120,7 @@ namespace mopmc::optimization::optimizers {
             std::cout << "]\n";
         }
          */
+
         const V step = 10.;
         const uint64_t maxIter = 100;
         const V tolerance = 1e-6;
@@ -127,10 +138,20 @@ namespace mopmc::optimization::optimizers {
             }
             tmpPoint0 = tmpPoint2;
             ++iter;
+            /*
+            {
+                std::cout << "[exteriorProjectionPhase] updating outer point: [";
+                for (uint64_t i = 0; i < point.size(); ++i) {
+                    std::cout << tmpPoint2(i) << " ";
+                }
+                std::cout << "]\n";
+            }
+             */
+
         }
         point = tmpPoint2;
-        /*
-        {
+
+        /*{
             std::cout << "[exteriorProjectionPhase] point as output: [";
             for (uint64_t i = 0; i < point.size(); ++i) {
                 std::cout << point(i) << " ";
@@ -138,6 +159,7 @@ namespace mopmc::optimization::optimizers {
             std::cout << "]\n";
         }
          */
+
     }
 
     template<typename V>

@@ -46,11 +46,11 @@ namespace mopmc::optimization::optimizers {
                 separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin);
                 // The returned sep direction is actually convex weight vector (non-negative vector).
                 // We convert it into a directional vector with uniformization.
-                const V c = sepDirection.template lpNorm<1>();
+                //const V c = sepDirection.template lpNorm<1>();
                 for (uint64_t i = 0; i < dimension; ++i) {
-                    sepDirection(i) = (sepDirection(i) * sign(i)) / c;
+                    sepDirection(i) *= sign(i);
                 }
-                //sepDirection /= sepDirection.template lpNorm<1>();
+                sepDirection /= sepDirection.template lpNorm<1>();
             }
             performSimplexGradientDescent(Vertices);
             if (hasGotMaxMarginSepHP && this->fn->value(xCurrent) <= this->fn->value(xNew)) {
@@ -64,7 +64,7 @@ namespace mopmc::optimization::optimizers {
             std::cout << "[Minimum norm point optimization] computes max margin separation hyperplane at iteration: " << t <<  " (distance: " << this->fn->value(xNew) << ")\n";
             return EXIT_SUCCESS;
         } else {
-            std::cout << "[Minimum norm point optimization] no separation hyperplane found\n";
+            std::cout << "[Minimum norm point optimization] no separation hyperplane found after " << maxIter << " iterations\n";
             return EXIT_FAILURE;
         }
     }
