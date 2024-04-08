@@ -9,6 +9,7 @@
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
 #include "mopmc-src/convex-functions/MSE.h"
+#include "mopmc-src/Printer.h"
 #include <cmath>
 #include <iostream>
 
@@ -26,7 +27,7 @@ namespace mopmc::optimization::optimizers {
         bool hasGotMaxMarginSepHP = false;
         MaximumMarginSeparationHyperplane<V> separationHyperplaneOptimizer;
         initialize(Vertices);
-        const uint64_t maxIter = 1e3;
+        const uint64_t maxIter = 5e3;
         uint64_t t = 0;
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
@@ -61,7 +62,7 @@ namespace mopmc::optimization::optimizers {
         }
         optimum = xNew;
         if (hasGotMaxMarginSepHP) {
-            std::cout << "[Minimum norm point optimization] computes max margin separation hyperplane at iteration: " << t <<  " (distance: " << this->fn->value(xNew) << ")\n";
+            std::cout << "[Minimum norm point optimization] max margin separation hyperplane computed, terminates at iteration: " << t <<  " (distance: " << this->fn->value(xNew) << ")\n";
             return EXIT_SUCCESS;
         } else {
             std::cout << "[Minimum norm point optimization] no separation hyperplane found after " << maxIter << " iterations\n";
@@ -112,7 +113,7 @@ namespace mopmc::optimization::optimizers {
         for (uint64_t i = prvSize; i < size; ++i) {
             alpha(i) = static_cast<V>(0.);
         }
-        if (size == 1) {
+        if (prvSize == 0) {
             alpha(0) = static_cast<V>(1.);
             activeVertices.insert(0);
         }

@@ -27,18 +27,9 @@ namespace mopmc::optimization::optimizers {
     void ProjectedGradient<V>::interiorProjectionPhase(Vector<V> &point,
                                                        const std::vector<Vector<V>> &BoundaryPoints,
                                                        const std::vector<Vector<V>> &Directions) {
-        /*
-        {
-            std::cout << "[interiorProjectionPhase] point as input: [";
-            for (uint64_t i = 0; i < point.size(); ++i) {
-                std::cout << point(i) << " ";
-            }
-            std::cout << "]\n";
-        }
-         */
-        dimension = point.size();
-        size = BoundaryPoints.size();
-        xNew = point;
+        const uint64_t dimension = point.size();
+        const uint64_t size = BoundaryPoints.size();
+        Vector<V> xNew(point), xCurrent(dimension), xNewTmp(dimension);
         std::set<uint64_t> boundaryIndices, nonboundaryIndices;
         Vector<V> descentDirection(dimension);
         const uint64_t maxIter = 100;
@@ -82,84 +73,38 @@ namespace mopmc::optimization::optimizers {
             lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
             xNew = (1. - lambda) * xCurrent + lambda * xNewTmp;
             ++t;
-            /*
-            {
-                std::cout << "[interiorProjectionPhase] updating outer point: [";
-                for (uint64_t i = 0; i < point.size(); ++i) {
-                    std::cout << xNew(i) << " ";
-                }
-                std::cout << "]\n";
-            }
-             */
             if ((xCurrent - xNew).template lpNorm<1>() < tol) {break;}
             //if (this->fn->value(xCurrent) - this->fn->value(xNew) < tol) { break; }
         }
         point = xNew;
-        /*
-        {
-            std::cout << "[interiorProjectionPhase] point as output: [";
-            for (uint64_t i = 0; i < point.size(); ++i) {
-                std::cout << point(i) << " ";
-            }
-            std::cout << "]\n";
-        }
-         */
-        std::cout << "[interiorProjectionPhase] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
+        std::cout << "[Project gradient - interior phase] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
     }
 
     template<typename V>
     void ProjectedGradient<V>::exteriorProjectionPhase(Vector<V> &point,
                                                        const std::vector<Vector<V>> &BoundaryPoints,
                                                        const std::vector<Vector<V>> &Directions) {
-        /*
-        {
-            std::cout << "[exteriorProjectionPhase] point as input: [";
-            for (uint64_t i = 0; i < point.size(); ++i) {
-                std::cout << point(i) << " ";
-            }
-            std::cout << "]\n";
-        }
-         */
 
         const V step = 10.;
         const uint64_t maxIter = 100;
         const V tolerance = 1e-6;
-        uint64_t iter = 0;
-        Vector<V> tmpPoint0 = point, tmpPoint1, tmpPoint2;
-        while (iter < maxIter) {
-            Vector<V> slope = this->fn->subgradient(tmpPoint0) * (-1.);
-            tmpPoint1 = tmpPoint0 + step * slope;
-            const V lambda = this->lineSearcher.findOptimalRelativeDistance(tmpPoint0, tmpPoint1);
-            tmpPoint1 = (1. - lambda) * tmpPoint0 + lambda * tmpPoint1;
-            tmpPoint2 = dykstrasProjection(tmpPoint1, BoundaryPoints, Directions);
-            if ((tmpPoint0 - tmpPoint2).template lpNorm<Eigen::Infinity>() < tolerance) {
-                ++iter;
+        uint64_t t = 0;
+        Vector<V> xCurrent(point), xNewTmp, xNew;
+        while (t < maxIter) {
+            Vector<V> slope = this->fn->subgradient(xCurrent) * (-1.);
+            xNewTmp = xCurrent + step * slope;
+            const V lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
+            xNewTmp = (1. - lambda) * xCurrent + lambda * xNewTmp;
+            xNew = dykstrasProjection(xNewTmp, BoundaryPoints, Directions);
+            if ((xCurrent - xNew).template lpNorm<Eigen::Infinity>() < tolerance) {
+                ++t;
                 break;
             }
-            tmpPoint0 = tmpPoint2;
-            ++iter;
-            /*
-            {
-                std::cout << "[exteriorProjectionPhase] updating outer point: [";
-                for (uint64_t i = 0; i < point.size(); ++i) {
-                    std::cout << tmpPoint2(i) << " ";
-                }
-                std::cout << "]\n";
-            }
-             */
-
+            xCurrent = xNew;
+            ++t;
         }
-        point = tmpPoint2;
-
-        /*{
-            std::cout << "[exteriorProjectionPhase] point as output: [";
-            for (uint64_t i = 0; i < point.size(); ++i) {
-                std::cout << point(i) << " ";
-            }
-            std::cout << "]\n";
-        }
-         */
-
+        point = xNew;
+        std::cout << "[Project gradient - exterior phase] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
     }
 
     template<typename V>
@@ -253,7 +198,7 @@ namespace mopmc::optimization::optimizers {
         if (projSlope.dot(slope) > 0) {
             return projSlope;
         } else {
-            return Vector<V>::Zero(dimension);
+            return Vector<V>::Zero(currentPoint.size());
         }
     }
 

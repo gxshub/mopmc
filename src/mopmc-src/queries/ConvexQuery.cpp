@@ -13,10 +13,10 @@ namespace mopmc::queries {
         const uint64_t n_objs = this->queryData.objectiveCount;
         Vector<V> threshold = Eigen::Map<Vector<V>>(this->queryData.thresholds.data(), n_objs);
         Vector<V> vertex(n_objs), direction(n_objs), directionOps, innerPoint1(n_objs), outerPoint1(n_objs);
-        direction.setZero();
-        direction(0) = static_cast<V>(1.0);
-        //direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
-        const V toleranceInnerOuterDiff{1.e-18}, toleranceUpdateDiff{1.e-18};
+        //direction.setZero();
+        //direction(0) = static_cast<V>(1.0);
+        direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
+        const V toleranceInnerOuterDiff{1.e-18}, toleranceUpdateDiff{1.e-16};
         const uint_fast64_t maxIter{200};
         V epsilonInnerOuterDiff;
         V margin;
@@ -28,17 +28,20 @@ namespace mopmc::queries {
             this->VIhandler->valueIteration(direction_tmp);
             std::vector<V> vertex_tmp = this->VIhandler->getResults();
             vertex = VectorMap<V>(vertex_tmp.data(), n_objs);
+            //mopmc::Printer<V>::printVector("vertex", vertex);
             Vertices.push_back(vertex);
             BoundaryPoints.push_back(vertex);
             Directions.push_back(direction);
             if (Vertices.size() == 1)
                 innerPoint = vertex;
             ++iter;
+            //mopmc::Printer<V>::printVector("inner point", innerPoint);
             directionOps = static_cast<V>(-1.) * direction;
             std::vector<V> direction_tmp_ops(directionOps.data(), directionOps.data() + directionOps.size());
             this->VIhandler->valueIteration(direction_tmp_ops);
             std::vector<V> vertex_tmp_ops = this->VIhandler->getResults();
             vertex = VectorMap<V>(vertex_tmp_ops.data(), n_objs);
+            //mopmc::Printer<V>::printVector("vertex", vertex);
             Vertices.push_back(vertex);
             BoundaryPoints.push_back(vertex);
             Directions.push_back(directionOps);
@@ -130,6 +133,8 @@ namespace mopmc::queries {
             std::cout << "\nInner point satisfying constraints? " << std::boolalpha << b1
                       << "\nOuter point satisfying constraints? " << std::boolalpha << b2;
         };
+        std::cout << "\n[debug] sum of inner point: " << this->getInnerOptimalPoint().sum();
+        std::cout << "\n[debug] sum of outer point: " << this->getOuterOptimalPoint().sum();
         std::cout << "\n----------------------------------------------\n";
     }
 

@@ -67,8 +67,8 @@ namespace mopmc::optimization::optimizers {
                                                 const std::vector<Vector<V>> &Directions,
                                                 const std::set<uint64_t> &indices);
 
-        int64_t dimension{}, size{};
-        Vector<V> xCurrent, xNew, xNewTmp;
+        //int64_t dimension{}, size{};
+        //Vector<V> xCurrent, xNew, xNewTmp;
     };
 }// namespace mopmc::optimization::optimizers
 
