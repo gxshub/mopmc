@@ -24,7 +24,8 @@ namespace mopmc::optimization::optimizers {
         assert(pivot.size() == optimum.size());
         this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
         this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(this->fn);
-        bool hasGotMaxMarginSepHP = false;
+        bool hasAttemptedMaxMarginSepHP(false), hasFoundMaxMarginSepHp(false);
+        //bool hasGotMaxMarginSepHP = false;
         MaximumMarginSeparationHyperplane<V> separationHyperplaneOptimizer;
         initialize(Vertices);
         const uint64_t maxIter = 5e3;
@@ -38,30 +39,48 @@ namespace mopmc::optimization::optimizers {
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
-            if (!hasGotMaxMarginSepHP && checkSeparation(Vertices, pivot - xNew, pivot)) {
-                hasGotMaxMarginSepHP = true;
+            if (!hasAttemptedMaxMarginSepHP && checkSeparation(Vertices, pivot - xNew, pivot)) {
+                hasAttemptedMaxMarginSepHP = true;
                 Vector<V> sign(dimension);
                 for (uint64_t i; i < sign.size(); ++i) {
                     sign(i) = (pivot - xNew)(i) >= 0 ?  static_cast<V>(1.) :  static_cast<V>(-1.);
                 }
-                separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin);
-                // The returned sep direction is actually convex weight vector (non-negative vector).
-                // We convert it into a directional vector with uniformization.
-                //const V c = sepDirection.template lpNorm<1>();
-                for (uint64_t i = 0; i < dimension; ++i) {
-                    sepDirection(i) *= sign(i);
+                if (separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin) == EXIT_SUCCESS) {
+                    hasFoundMaxMarginSepHp = true;
+                    // The returned sep direction is actually convex weight vector (non-negative vector).
+                    // We convert it into a directional vector with uniformization.
+                    //const V c = sepDirection.template lpNorm<1>();
+                    for (uint64_t i = 0; i < dimension; ++i) {
+                        sepDirection(i) *= sign(i);
+                    }
+                    sepDirection /= sepDirection.template lpNorm<1>();
                 }
-                sepDirection /= sepDirection.template lpNorm<1>();
             }
             performSimplexGradientDescent(Vertices);
-            if (hasGotMaxMarginSepHP && this->fn->value(xCurrent) <= this->fn->value(xNew)) {
+            if (this->fn->value(xCurrent) <= this->fn->value(xNew) || t + 1 == maxIter) {
+                if (!hasFoundMaxMarginSepHp) {
+                    Vector<V> sign(dimension);
+                    for (uint64_t i; i < sign.size(); ++i) {
+                        sign(i) = (pivot - xNew)(i) >= 0 ?  static_cast<V>(1.) :  static_cast<V>(-1.);
+                    }
+                    if (separationHyperplaneOptimizer.findMaximumSeparatingDirection(Vertices, pivot, sign, sepDirection, margin) == EXIT_SUCCESS) {
+                        hasFoundMaxMarginSepHp = true;
+                        // The returned sep direction is actually convex weight vector (non-negative vector).
+                        // We convert it into a directional vector with uniformization.
+                        //const V c = sepDirection.template lpNorm<1>();
+                        for (uint64_t i = 0; i < dimension; ++i) {
+                            sepDirection(i) *= sign(i);
+                        }
+                        sepDirection /= sepDirection.template lpNorm<1>();
+                    }
+                }
                 ++t;
                 break;
             }
             ++t;
         }
         optimum = xNew;
-        if (hasGotMaxMarginSepHP) {
+        if (hasFoundMaxMarginSepHp) {
             std::cout << "[Minimum norm point optimization] max margin separation hyperplane computed, terminates at iteration: " << t <<  " (distance: " << this->fn->value(xNew) << ")\n";
             return EXIT_SUCCESS;
         } else {
@@ -73,7 +92,7 @@ namespace mopmc::optimization::optimizers {
     template<typename V>
     bool MinimumNormPoint<V>::checkSeparation(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point) {
         bool exit = true;
-        const V delta = 1e-18;
+        const V delta = 1e-6;
         for (uint64_t i = 0; i < Vertices.size(); ++i) {
             if (Vertices[i].dot(direction) >= point.dot(direction) - delta) {
                 exit = false;

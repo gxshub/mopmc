@@ -62,8 +62,7 @@ namespace mopmc::queries {
                 break;
             }
             // re-normalize direction if necessary
-            const V c1 = direction.template lpNorm<1>();
-            direction /= c1;
+            direction /= direction.template lpNorm<1>();
             epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (iter > 1 && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 ++iter;
