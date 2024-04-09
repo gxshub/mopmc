@@ -36,6 +36,7 @@ namespace mopmc::queries {
 
         virtual void query() = 0 ;
         virtual void printResult() {};
+        virtual uint64_t getMainLoopIterationCount() {return 0;};
 
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn;
         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer;

@@ -34,14 +34,14 @@ namespace mopmc::queries {
         };
         void query() override;
 
-        [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
-            return iter;
+        [[nodiscard]] uint64_t getMainLoopIterationCount() override {
+            return this->iter;
         }
         const Vector<V> &getInnerOptimalPoint() const {
-            return innerPoint;
+            return this->innerPoint;
         }
         const Vector<V> &getOuterOptimalPoint() const {
-            return outerPoint;
+            return this->outerPoint;
         }
         V getInnerOptimalValue() const {
             return this->fn->value(innerPoint);

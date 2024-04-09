@@ -42,17 +42,20 @@ namespace mopmc {
         storm::utility::setUp();
         storm::settings::initializeAll("storm-starter-project", "storm-starter-project");
         storm::Environment env;
-        clock_t time0 = clock();
+        const clock_t time0 = clock();
         auto preprocessedResult = mopmc::ModelBuilder<ModelType>::preprocess(path_to_model, property_string, env);
-        clock_t time05 = clock();
+        const clock_t time05 = clock();
         auto preparedModel = mopmc::ModelBuilder<ModelType>::build(preprocessedResult);
-        clock_t time1 = clock();
+        const clock_t time1 = clock();
         auto data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform_i32_v2(preprocessedResult,
                                                                                              preparedModel);
-        clock_t time2 = clock();
+        const clock_t time2 = clock();
 
         std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>> vIHandler;
-        std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>> q1;
+        std::unique_ptr<mopmc::queries::BaseQuery<ValueType, int>> q1;
+        std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
+        auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), (int64_t) data.thresholds.size());
+
         switch (options.VI) {
             case QueryOptions::CUDA_VI: {
                 vIHandler = std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>>(
@@ -67,16 +70,11 @@ namespace mopmc {
         }
         switch (options.QUERY_TYPE) {
             case QueryOptions::ACHIEVABILITY: {
-                q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>> (
-                        new  mopmc::queries::AchievabilityQuery<ValueType, int>(data, &*vIHandler)
-                        );
-                q1->query();
-                q1->printResult();
+                q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType, int>>(
+                        new mopmc::queries::AchievabilityQuery<ValueType, int>(data, &*vIHandler));
                 break;
             }
             case QueryOptions::CONVEX: {
-                auto h = Eigen::Map<Vector<ValueType>>(data.thresholds.data(), (int64_t) data.thresholds.size());
-                std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>> fn;
                 switch (options.CONVEX_FUN) {
                     case QueryOptions::MSE: {
                         if (options.CONSTRAINED_OPT == QueryOptions::CONSTRAINED) {
@@ -84,7 +82,7 @@ namespace mopmc {
                                     new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         } else {
                             fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
-                              new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
+                                    new mopmc::optimization::convex_functions::MSE<ValueType>(h, data.objectiveCount));
                             //fn = std::unique_ptr<mopmc::optimization::convex_functions::BaseConvexFunction<ValueType>>(
                             //        new mopmc::optimization::convex_functions::MSE<ValueType>(data.objectiveCount));
                         }
@@ -99,29 +97,31 @@ namespace mopmc {
                 mopmc::optimization::optimizers::ProjectedGradient<ValueType> outerOptimizer(&*fn);
                 if (options.CONSTRAINED_OPT == QueryOptions::CONSTRAINED) {
                     mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
-                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
+                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType, int>>(
                             new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
                 } else {
-                   // mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
+                    // mopmc::optimization::optimizers::FrankWolfeMethod<ValueType> innerOptimizer(&*fn);
                     mopmc::optimization::optimizers::MinimumNormPoint<ValueType> innerOptimizer(&*fn);
                     //q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
                     //        new mopmc::queries::UnconstrainedConvexQuery<ValueType, int> (data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler));
-                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType,int>>(
+                    q1 = std::unique_ptr<mopmc::queries::BaseQuery<ValueType, int>>(
                             new mopmc::queries::ConvexQuery<ValueType, int>(data, &*fn, &innerOptimizer, &outerOptimizer, &*vIHandler, false));
                 }
-                q1->query();
-                q1->printResult();
                 break;
             }
         }
+        q1->query();
+        q1->printResult();
 
-        clock_t time3 = clock();
+        const clock_t time3 = clock();
+        const uint64_t mainLoopCount(q1->getMainLoopIterationCount());
 
         std::cout << "       TIME STATISTICS        \n";
         printf("Model building stage 1: %.3f second(s).\n", double(time05 - time0) / CLOCKS_PER_SEC);
         printf("Model building stage 2: %.3f second(s).\n", double(time1 - time05) / CLOCKS_PER_SEC);
         printf("Input data transformation: %.3f second(s).\n", double(time2 - time1) / CLOCKS_PER_SEC);
-        printf("Model checking: %.3f second(s).\n", double(time3 - time2) / CLOCKS_PER_SEC);
+        printf("Model checking: %.3f second(s), %.3f per iteration.\n", double(time3 - time2) / CLOCKS_PER_SEC,
+               double(time3 - time2) / CLOCKS_PER_SEC / static_cast<double>(mainLoopCount));
         printf("Total time: %.3f second(s).\n", double(time3 - time0) / CLOCKS_PER_SEC);
         return true;
     }

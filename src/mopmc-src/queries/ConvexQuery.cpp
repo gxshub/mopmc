@@ -3,8 +3,8 @@
 //
 
 #include "ConvexQuery.h"
-#include "mopmc-src/optimizers/HalfspacesIntersection.h"
 #include "mopmc-src/Printer.h"
+#include "mopmc-src/optimizers/HalfspacesIntersection.h"
 
 namespace mopmc::queries {
     template<typename V, typename I>
@@ -12,9 +12,7 @@ namespace mopmc::queries {
         this->VIhandler->initialize();
         const uint64_t n_objs = this->queryData.objectiveCount;
         Vector<V> threshold = Eigen::Map<Vector<V>>(this->queryData.thresholds.data(), n_objs);
-        Vector<V> vertex(n_objs), direction(n_objs), directionOps, innerPoint1(n_objs), outerPoint1(n_objs);
-        //direction.setZero();
-        //direction(0) = static_cast<V>(1.0);
+        Vector<V> vertex(n_objs), direction(n_objs), innerPoint1(n_objs), outerPoint1(n_objs);
         direction.setConstant(static_cast<V>(-1.0) / n_objs);// initial direction
         const V toleranceInnerOuterDiff{1.e-18}, toleranceUpdateDiff{1.e-16};
         const uint_fast64_t maxIter{200};
@@ -34,17 +32,13 @@ namespace mopmc::queries {
             Directions.push_back(direction);
             if (Vertices.size() == 1)
                 innerPoint = vertex;
-            ++iter;
-            //mopmc::Printer<V>::printVector("inner point", innerPoint);
-            directionOps = static_cast<V>(-1.) * direction;
-            std::vector<V> direction_tmp_ops(directionOps.data(), directionOps.data() + directionOps.size());
-            this->VIhandler->valueIteration(direction_tmp_ops);
-            std::vector<V> vertex_tmp_ops = this->VIhandler->getResults();
-            vertex = VectorMap<V>(vertex_tmp_ops.data(), n_objs);
-            //mopmc::Printer<V>::printVector("vertex", vertex);
-            Vertices.push_back(vertex);
-            BoundaryPoints.push_back(vertex);
-            Directions.push_back(directionOps);
+            if (iter % 2 == 0) {
+                //use the opp direction in each other iteration
+                const V c = direction.template lpNorm<1>();
+                direction /= -c;
+                ++iter;
+                continue;
+            }
             if (this->hasConstraint) {
                 if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, BoundaryPoints, Directions)) {
                     ++iter;
@@ -55,9 +49,7 @@ namespace mopmc::queries {
                 outerPoint = innerPoint;
             }
             this->outerOptimizer->minimize(outerPoint, BoundaryPoints, Directions);
-            //mopmc::Printer<V>::printVector("outerPoint (after gradient decent)", outerPoint);
-            if (iter > 1 && (this->getOuterOptimalPoint() - outerPoint1).template lpNorm<1>()
-                    + (this->getInnerOptimalPoint() - innerPoint1).template lpNorm<1>() < toleranceUpdateDiff) {
+            if (iter > 1 && (this->getOuterOptimalPoint() - outerPoint1).template lpNorm<1>() + (this->getInnerOptimalPoint() - innerPoint1).template lpNorm<1>() < toleranceUpdateDiff) {
                 ++iter;
                 std::cout << "[Main loop] exits due to outer point update (l1 norm <= " << toleranceUpdateDiff << ")\n";
                 break;
@@ -70,7 +62,8 @@ namespace mopmc::queries {
                 break;
             }
             // re-normalize direction if necessary
-            direction /= direction.template lpNorm<1>();
+            const V c1 = direction.template lpNorm<1>();
+            direction /= c1;
             epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (iter > 1 && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 ++iter;
