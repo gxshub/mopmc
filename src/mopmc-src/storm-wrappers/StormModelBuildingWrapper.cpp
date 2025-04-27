@@ -16,6 +16,7 @@
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectiveRewardAnalysis.h>
 #include <storm/models/sparse/Mdp.h>
 #include <storm/storage/prism/Program.h>
+#include <storm/api/export.h>
 #include <string>
 
 namespace mopmc {
@@ -43,13 +44,19 @@ namespace mopmc {
         std::shared_ptr<storm::models::sparse::Mdp<typename M::ValueType>> mdp =
                 storm::api::buildSparseModel<typename M::ValueType>(program, formulas)->template as<M>();
 
-        std::cout << "Number of states in original mdp: " << mdp->getNumberOfStates() << "\n";
-        std::cout << "Number of choices in original mdp: " << mdp->getNumberOfChoices() << "\n";
+        std::shared_ptr<storm::models::sparse::Model<typename M::ValueType>> model_to_export =
+                storm::api::buildSparseModel<typename M::ValueType>(program, formulas)->template as<M>();
+
+        //storm::api::exportSparseModelAsDrn(model_to_export, "exported_model");
+        //storm::api::exportSparseModelAsJson(model_to_export, "exported_model.json");
+
+        std::cout << "number of states in original mdp: " << mdp->getNumberOfStates() << "\n";
+        std::cout << "number of choices in original mdp: " << mdp->getNumberOfChoices() << "\n";
+        std::cout << "number of transitions in original mdp: " << mdp->getTransitionMatrix().getEntryCount() <<"\n";
 
         const auto formula = formulas[0]->asMultiObjectiveFormula();
         typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::ReturnType prepResult =
                 storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::preprocess(env, *mdp, formula);
-
         /*
         auto rewardAnalysis = storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectiveRewardAnalysis<M>::analyze(prepResult);
         std::string s1 = rewardAnalysis.rewardFinitenessType == storm::modelchecker::multiobjective::preprocessing::RewardFinitenessType::AllFinite ? "yes" : "no";
@@ -60,6 +67,7 @@ namespace mopmc {
 
         //std::ostream &outputStream = std::cout;
         //prepResult.preprocessedModel->printModelInformationToStream(outputStream);
+
 
         //Objectives must be total rewards
         if (!prepResult.containsOnlyTotalRewardFormulas()) {
@@ -79,6 +87,9 @@ namespace mopmc {
             typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::ReturnType &preliminaryData) {
 
         ModelBuilder<M> prepModel(preliminaryData);
+        std::cout << "number of states in processed mdp: " << prepModel.getTransitionMatrix().getRowGroupCount() <<"\n";
+        std::cout << "number of choices in processed mdp: " << prepModel.getTransitionMatrix().getRowCount() <<"\n";
+        std::cout << "number of transitions in processed mdp: " << prepModel.getTransitionMatrix().getEntryCount() <<"\n";
         return prepModel;
     }
 

@@ -39,6 +39,10 @@ namespace mopmc::optimization::optimizers {
         Vector<V> alpha;
         std::set<uint64_t> activeVertices;
 
+        Vector<V> getWeights() {
+            return alpha;
+        }
+
     private:
         void initialize(const std::vector<Vector<V>> &Vertices);
         void performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);

@@ -63,7 +63,8 @@ namespace mopmc::queries {
             }
             // re-normalize direction if necessary
             direction /= direction.template lpNorm<1>();
-            epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
+            epsilonInnerOuterDiff = (innerPoint - outerPoint).template lpNorm<1>();
+            // epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (iter > 1 && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 ++iter;
                 std::cout << "[Main loop] exits due to small inner & outer value difference (<=" << toleranceInnerOuterDiff << ")\n";
@@ -71,6 +72,7 @@ namespace mopmc::queries {
             }
             ++iter;
         }
+        this->vertexWeights = this->innerOptimizer->getVertexWeights();
         this->VIhandler->exit();
     }
 
@@ -124,7 +126,8 @@ namespace mopmc::queries {
             bool b2 = checkConstraintSatisfaction(outerPoint);
             std::cout << "\nInner point satisfying constraints? " << std::boolalpha << b1
                       << "\nOuter point satisfying constraints? " << std::boolalpha << b2;
-        };
+        }
+        std::cout << "\nVertex weights: " << this -> getVertexWeights();
         std::cout << "\n[debug] sum of inner point: " << this->getInnerOptimalPoint().sum();
         std::cout << "\n[debug] sum of outer point: " << this->getOuterOptimalPoint().sum();
         std::cout << "\n----------------------------------------------\n";

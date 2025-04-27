@@ -38,6 +38,8 @@ namespace mopmc::optimization::optimizers {
 
         virtual int minimize () { return EXIT_FAILURE; }
 
+        virtual Vector<V> getVertexWeights() {return Vector<V>(0);};
+
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn;
     };
 

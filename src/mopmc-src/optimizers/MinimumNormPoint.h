@@ -36,6 +36,10 @@ namespace mopmc::optimization::optimizers {
         int findNearestPointByDirection(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point,
                                         Vector<V> &weights);
 
+        Vector<V> getVertexWeights() override {
+            return alpha;
+        }
+
     private:
         void initialize(const std::vector<Vector<V>> &Vertices);
         void performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);
@@ -44,7 +48,6 @@ namespace mopmc::optimization::optimizers {
 
         int64_t dimension{}, size{0};
         Vector<V> xCurrent, xNew, xNewTmp, dXCurrent;
-        //std::set<uint64_t> nullVertices;
     };
 
 }// namespace mopmc::optimization::optimizers

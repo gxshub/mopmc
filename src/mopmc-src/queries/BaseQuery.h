@@ -13,6 +13,9 @@
 
 namespace mopmc::queries {
 
+    template<typename V>
+    using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
+
     template<typename V, typename I>
     class BaseQuery {
     public:
@@ -37,6 +40,12 @@ namespace mopmc::queries {
         virtual void query() = 0 ;
         virtual void printResult() {};
         virtual uint64_t getMainLoopIterationCount() {return 0;};
+
+        Vector<V> vertexWeights;
+        Vector<V> getVertexWeights() {
+            return vertexWeights;
+        };
+
 
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn;
         mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer;
