@@ -8,13 +8,13 @@
 #include "convex-functions/Variance.h"
 #include "mopmc-src/solvers/CudaValueIteration.cuh"
 #include "mopmc-src/solvers/ValueIteration.h"
-#include "mopmc-src/storm-wrappers/StormModelBuildingWrapper.h"
 #include "optimizers/FrankWolfeMethod.h"
 #include "optimizers/MinimumNormPoint.h"
 #include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
 #include "queries/UnconstrainedConvexQuery.h"
+#include "ModelBuilder.h"
 #include <Eigen/Dense>
 #include <cstdio>
 #include <ctime>
@@ -34,7 +34,7 @@ namespace mopmc {
     template<typename V>
     using Vector = Eigen::Matrix<V, Eigen::Dynamic, 1>;
 
-    bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions options) {
+    bool run(std::string const &path_to_model, std::string const &property_string, QueryOptions options, bool withProcessing) {
         assert(typeid(ValueType) == typeid(double));
         assert(typeid(IndexType) == typeid(uint64_t));
 
@@ -42,14 +42,21 @@ namespace mopmc {
         storm::utility::setUp();
         storm::settings::initializeAll("storm-starter-project", "storm-starter-project");
         storm::Environment env;
-        const clock_t time0 = clock();
-        auto preprocessedResult = mopmc::ModelBuilder<ModelType>::preprocess(path_to_model, property_string, env);
-        const clock_t time05 = clock();
-        auto preparedModel = mopmc::ModelBuilder<ModelType>::build(preprocessedResult);
-        const clock_t time1 = clock();
-        auto data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform_i32_v2(preprocessedResult,
-                                                                                             preparedModel);
-        const clock_t time2 = clock();
+
+        clock_t time0, time1, time2;
+        QueryData<ValueType, int > data;
+
+        time0 = clock();
+        if (withProcessing) {
+            auto buildAndProcessResult = mopmc::ModelBuilder<ModelType>::buildAndProcess(path_to_model, property_string, env);
+            time1 = clock();
+            data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform(buildAndProcessResult);
+        } else {
+            auto buildResult = mopmc::ModelBuilder<ModelType>::build(path_to_model, property_string);
+            time1 = clock();
+            data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform(buildResult);
+        }
+        time2 = clock();
 
         std::unique_ptr<mopmc::value_iteration::BaseVIHandler<ValueType>> vIHandler;
         std::unique_ptr<mopmc::queries::BaseQuery<ValueType, int>> q1;
@@ -117,8 +124,7 @@ namespace mopmc {
         const uint64_t mainLoopCount(q1->getMainLoopIterationCount());
 
         std::cout << "       TIME STATISTICS        \n";
-        printf("Model building stage 1: %.3f second(s).\n", double(time05 - time0) / CLOCKS_PER_SEC);
-        printf("Model building stage 2: %.3f second(s).\n", double(time1 - time05) / CLOCKS_PER_SEC);
+        printf("Model building stage: %.3f second(s).\n", double(time1 - time0)/ CLOCKS_PER_SEC);
         printf("Input data transformation: %.3f second(s).\n", double(time2 - time1) / CLOCKS_PER_SEC);
         printf("Model checking: %.3f second(s), %.3f per iteration.\n", double(time3 - time2) / CLOCKS_PER_SEC,
                double(time3 - time2) / CLOCKS_PER_SEC / static_cast<double>(mainLoopCount));

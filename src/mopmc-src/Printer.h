@@ -17,16 +17,24 @@ namespace mopmc {
     public:
         [[maybe_unused]] static void printVector(const std::string& str, const Vector<V> &vec) {
             std::cout << str << ": [";
+            bool firstElement = true;
             for (uint64_t i = 0; i < vec.size(); ++i) {
-                std::cout << vec(i) << " ";
+                if (not firstElement) {
+                    std::cout << vec(i) << " ";
+                }
+                firstElement = false;
             }
             std::cout << "]\n";
         }
 
         [[maybe_unused]] static void printVector(const std::string& str, const std::vector<V> &vec) {
             std::cout << str << ": [";
+            bool firstElement = true;
             for (uint64_t i = 0; i < vec.size(); ++i) {
-                std::cout << vec[i] << " ";
+                if (not firstElement) {
+                    std::cout << vec[i] << " ";
+                }
+                firstElement = false;
             }
             std::cout << "]\n";
         }

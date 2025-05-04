@@ -18,15 +18,15 @@
 namespace  mopmc {
 
     template<typename M>
-    class ModelBuilder : public storm::modelchecker::multiobjective::StandardMdpPcaaWeightVectorChecker<M> {
+    class MyModelBuilder : public storm::modelchecker::multiobjective::StandardMdpPcaaWeightVectorChecker<M> {
     public:
-        explicit ModelBuilder(typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::ReturnType returnType) :
+        explicit MyModelBuilder(typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::ReturnType returnType) :
                 storm::modelchecker::multiobjective::StandardMdpPcaaWeightVectorChecker<M>(returnType){};
 
         static typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::ReturnType preprocess(
                 const std::string &path_to_model, const std::string &property_string, storm::Environment &env);
 
-        static ModelBuilder<M> build(
+        static MyModelBuilder<M> build(
                 typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<M>::ReturnType &preliminaryData);
 
         storm::storage::SparseMatrix<typename M::ValueType> getTransitionMatrix() {

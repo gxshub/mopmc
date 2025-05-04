@@ -14,9 +14,10 @@
 
 namespace mopmc {
 
-    bool run(std::string const& path_to_model, std::string const& property_string);
-
-    bool run(std::string const& path_to_model, std::string const& property_string, QueryOptions options);
+    bool run(std::string const& path_to_model,
+             std::string const& property_string,
+             QueryOptions options,
+             bool withProcessing = true);
 
 }
 

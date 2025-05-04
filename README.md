@@ -1,14 +1,14 @@
 # MOPMC: A GPU-Accelerated Probabilistic Model Checking Tool for Multi-Objective Convex Queries
 
-MOPMC is a multi-objective probabilistic model checking tool specialised for _convex queries_ on 
+MOPMC is a multi-objective probabilistic model checking tool specialised for _convex queries_ on
 Markov Decision Processes (MDPs) with multiple objectives.
-A convex query returns an (approximately) optimal point (and value) for a given convex function (viewed as a loss function) 
+A convex query returns an (approximately) optimal point (and value) for a given convex function (viewed as a loss function)
 that is defined on the multi-dimensional objective space.
 Examples of convex functions are MSE, variance, etc.
 Currently, only total reward objectives are supported.
 
 
-Built on top of [Storm](https://www.stormchecker.org)'s model parsing and building C++ API, 
+Built on top of [Storm](https://www.stormchecker.org)'s model parsing and building C++ API,
 MOPMC accepts a PRISM model format (for an MDP) and a PCTL/LTL-style property specification.
 One important feature of MOPMC is the utilisation of GPU hardware acceleration for valuation-iteration computing.
 The convex queries in MOPMC can scale to a large number of objectives.
@@ -20,16 +20,23 @@ For benchmarking, MOPMC also implements the achievability queries, which are sup
 
 ### Built from Source
 
-This build is known to work on Ubuntu 20.04 LTS.
+This build is known to work on Ubuntu 20.04 LTS and compatible with [`Storm stable 1.8.1`](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97).
+(_Note: Other Storm versions can be incompatible._)
 
-Before starting, install Storm and its _dependencies_ from source code. See the Storm [documentation](https://www.stormchecker.org/documentation/obtain-storm/build.html) for the installation procedure.
+#### Storm, CMake and CUDA Toolkit
 
-This project is built with CMake. 
-It may rely on the [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available version 3.17+, to identify the location of Cuda (as specified in the CMakeLists.txt).
-Note that an older version of CMake may have been installed when installing Storm's dependencies. Use `cmake --version` to check the version.
-A more recent version of [CMake](https://cmake.org/download/) (e.g., 3.28.x or above) is recommended.
+See the [Storm installation guideline](https://www.stormchecker.org/documentation/obtain-storm/build.html) for installing Storm and its dependences.
+For CMake, check its version `cmake --version`.
+Both storm and this project are built with CMake.
+Check the minimum requirement for [CMake](https://cmake.org/download/) (at least 3.16 for building Storm and 3.22 for mopmc).
+Use `cmake --version` to check the version.
+If the installed version is lower than 3.22, you must download and set up cmake manually.
+To build Storm for our purpose, run `sudo make install -j <num_of_threads>` rather than `make build`.
+This project uses `find_package(storm)` in `CMakeLists.txt` to find Storm.
 
-Installation of the CUDA Toolkit 12.0 (or above) is required (see the 
+This project uses [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available version 3.17+, to identify the location of Cuda (as specified in the CMakeLists.txt).
+
+Installation of the CUDA Toolkit 12.0 (or above) is required (see the
 [NVIDIA CUDA Installation Guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)).
 This version is essential as it provides 64bit numeric types for the GPU and provides more modern
 sparse matrix multiplication algorithms from NVIDIA CuSparse.
@@ -64,15 +71,15 @@ To test the	 build is working, run the executable using the convenience script:
 ```
 
 ### Use Pre-configured Docker Image
-A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env) 
-Docker image, which is in the Docker Hub. 
+A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env)
+Docker image, which is in the Docker Hub.
 This Docker image contains a Ubuntu 20.04 OS and is built to support __AMD64 (x86_64)__ and __ARM64 (Apple silicon)__ architectures.
 It has been tested in the host OSs __Ubuntu 20.04 LTS__, __Windows 10__ and __MacOS__ ___with or without___ NVIDIA GPU
 (In the latter case, the command of running MOPMC must include the option `-v standard` (see below)).
 
-To run a Docker container with GPU acceleration, the 
+To run a Docker container with GPU acceleration, the
 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) is required.
-Follow the 
+Follow the
 [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 to install the toolkit and configure Docker.
 
@@ -114,7 +121,7 @@ sed -i -e 's/\r$//' ./configure.sh ./build.sh
 -->
 
 ### Use Docker Image with Pre-built MOPMC
-A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image 
+A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image
 with a ready-to-run MOPMC build is available in the Docker Hub.
 __As this project is being actively developed, the pre-built version may not be the latest.__
 
@@ -157,15 +164,15 @@ $STORM_HOME/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop exam
 ```
 
 ## About Model and Property Specification
-MOPMC accepts the standard PRISM model format for MDPs. For property specification, 
-it accepts the PCTL/LTL-style multi-objective achievability properties, 
-which are adopted by existing PMC tools such as Storm and PRISM. 
-For convex queries, it interprets an achievability property in the following way: 
+MOPMC accepts the standard PRISM model format for MDPs. For property specification,
+it accepts the PCTL/LTL-style multi-objective achievability properties,
+which are adopted by existing PMC tools such as Storm and PRISM.
+For convex queries, it interprets an achievability property in the following way:
 Suppose a property specification is given as
 ```multi(R{"time"}<=14.0 [ F "tasks_complete" ], R{"energy"}<=1.25 [  F "tasks_complete" ])```
 for the MDP in `multiobj_scheduler05.nm`, and the loss function is MSE.
 Let $x_t$ and $x_e$ denote the total rewards for `"time"` and `"energy"`, respectively.
 The values $x_t$ and $x_e$ are subject to the computed scheduler for the MDP.
-A convex query returns $x_t$ and $x_e$ that minimise $((x_t-14.0)^2 + (x_e-1.25)^2)/2$. 
-If the loss function is the variance, then the query returns $x_t$ and $x_e$ 
+A convex query returns $x_t$ and $x_e$ that minimise the objective $(x_t^2 + x_e^2)/2$ subject to $x_t\leq 14$ and $x_t\leq 1.25$.
+If the loss function is the variance, then the objective is
 that minimise $((x_t - \overline{x})^2 + (x_e - \overline{x})^2)/2$ where $\overline{x}= (x_t+x_e)/2$.

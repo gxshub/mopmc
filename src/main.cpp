@@ -11,10 +11,11 @@ int main(int ac, char *av[]) {
 
     try {
         po::options_description desc("Allowed options");
-        desc.add_options()("help,h", "produce help message")("model,m", po::value<string>(), "model")
+        desc.add_options()("help,h", "produce help message")
+                          ("model,m", po::value<string>(), "model")
                           ("prop,p", po::value<string>(), "multi-objective property")
                           ("loss,l", po::value<string>()->default_value("mse"), "convex function (mse or var)")
-                                ("constrained,c", po::value<string>()->default_value("y"), "constrained optimization (y or n)")
+                          ("constrained,c", po::value<string>()->default_value("y"), "constrained optimization (y or n)")
                           ("query,q", po::value<string>(), "query type (convex or achievability)")
                           ("value-iteration,v", po::value<string>()->default_value("gpu"), "value iteration method (gpu or standard)");
         po::variables_map vm;
