@@ -19,6 +19,8 @@ list(
         "${dir}/Transformation.h"
         "${dir}/ModelBuilder.cpp"
         "${dir}/ModelBuilder.h"
+        "${dir}/Exporter.cpp"
+        "${dir}/Exporter.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

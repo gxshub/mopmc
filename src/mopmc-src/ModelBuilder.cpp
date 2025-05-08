@@ -23,7 +23,7 @@ namespace mopmc {
 
     template<typename ModelType>
     ModelBuildResult<ModelType> ModelBuilder<ModelType>::build(
-            const std::string &path_to_model, const std::string &property_string) {
+            const std::string &path_to_model, const std::string &property_string, const bool lookup) {
         //env.modelchecker().multi().setMethod(storm::modelchecker::multiobjective::MultiObjectiveMethod::Pcaa);
 
         //auto program = storm::parser::PrismParser::parse(path_to_model);
@@ -48,7 +48,18 @@ namespace mopmc {
         std::cout << "number of states in original mdp: " << model->getNumberOfStates() << "\n";
         std::cout << "number of choices in original mdp: " << model->getNumberOfChoices() << "\n";
         std::cout << "number of transitions in original mdp: " << model->getTransitionMatrix().getEntryCount() <<"\n";
-        return ModelBuildResult<ModelType>(*model, formula);
+
+        auto varInfo = generator->getVariableInformation();
+        auto stateToId = builder.stateStorage.stateToId;
+
+
+        std::shared_ptr<storm::builder::ExplicitStateLookup<uint32_t>> stateLookup = std::make_shared<storm::builder::ExplicitStateLookup<uint32_t>>(varInfo, stateToId);
+
+        if (lookup) {
+            return ModelBuildResult<ModelType>(*model, formula, stateLookup);
+        } else {
+            return ModelBuildResult<ModelType>(*model, formula);
+        }
     }
 
     template<typename ModelType>

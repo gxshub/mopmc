@@ -11,11 +11,14 @@
 
 #include <storm/environment/Environment.h>
 #include <storm/environment/modelchecker/MultiObjectiveModelCheckerEnvironment.h>
+#include <storm/builder/ExplicitModelBuilder.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessor.h>
 #include <storm/modelchecker/multiobjective/preprocessing/SparseMultiObjectivePreprocessorResult.h>
 #include <storm/modelchecker/multiobjective/pcaa/StandardMdpPcaaWeightVectorChecker.h>
 
 namespace mopmc {
+
+    typedef storm::storage::sparse::state_type IndexType;
 
     template<typename ModelType>
     using StormPreprocesReturn = typename storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<ModelType>::ReturnType;
@@ -28,11 +31,18 @@ namespace mopmc {
 
         ModelType model;
         storm::logic::MultiObjectiveFormula formula;
+        std::shared_ptr<storm::builder::ExplicitStateLookup<uint32_t>> stateLookup;
 
         ModelBuildResult() = default;
         ModelBuildResult(const ModelType &model,
+                         const storm::logic::MultiObjectiveFormula &formula,
+                         std::shared_ptr<storm::builder::ExplicitStateLookup<uint32_t>> stateLookup = nullptr) :
+                model(model), formula(formula), stateLookup(std::move(stateLookup)) {};
+        /*
+        ModelBuildResult(const ModelType &model,
                          const storm::logic::MultiObjectiveFormula &formula) :
-                       model(model), formula(formula) {}
+                model(model), formula(formula) {};
+                */
     };
 
     template<typename ModelType>
@@ -46,7 +56,7 @@ namespace mopmc {
                                    const storm::logic::MultiObjectiveFormula &formula,
                                    const StormPreprocesReturn<ModelType> preprocessedResult,
                                    const StormModelChecker<ModelType> &processedResult) :
-                ModelBuildResult<ModelType>(model, formula),
+                ModelBuildResult<ModelType>(model, formula, nullptr),
                 processedModel(processedResult),
                 objectiveInformation(preprocessedResult) {}
 
@@ -61,7 +71,8 @@ namespace mopmc {
 
         static ModelBuildResult<ModelType> build(
                 const std::string &path_to_model,
-                const std::string &property_string);
+                const std::string &property_string,
+                bool lookup = false);
 
         static ModelBuildAndProcessResult<ModelType> buildAndProcess(
                 const std::string &path_to_model,

@@ -37,7 +37,7 @@ namespace mopmc::optimization::optimizers {
                                         Vector<V> &weights);
 
         Vector<V> getVertexWeights() override {
-            return alpha;
+            return alpha / alpha.template lpNorm<1>() ;
         }
 
     private:
