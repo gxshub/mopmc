@@ -30,7 +30,7 @@ namespace mopmc::exporter {
         storm::utility::setUp();
         storm::settings::initializeAll("storm-starter-project", "storm-starter-project");
         bool lookup = true;
-        auto buildResult = mopmc::ModelBuilder<ModelType>::build(path_to_model, property_string, lookup);
+        auto buildResult = mopmc::ModelBuilder<ModelType>::buildOnly(path_to_model, property_string, lookup);
         auto stateToId = buildResult.stateLookup->stateToId;
         auto varInfo = buildResult.stateLookup->varInfo;
         std::map<uint64_t, std::string> stateMap;

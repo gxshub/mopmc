@@ -20,21 +20,24 @@ For benchmarking, MOPMC also implements the achievability queries, which are sup
 
 ### Built from Source
 
-This build is known to work on Ubuntu 20.04 LTS and compatible with [`Storm stable 1.8.1`](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97).
-(_Note: Other Storm versions can be incompatible._)
+#### Ubuntu 20.04 LTS
+This build is known to work on Ubuntu 20.04 LTS
 
-#### Storm, CMake and CUDA Toolkit
+#### Storm
+MOMPC utilises a re-build of [**Storm stable v1.8.1**](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97) as a library for parsing, 
+model building and processing. 
+A slight modification is make to Storm's source code to support model export in MOPMC. 
+The modified version is included in this [fork](https://github.com/gxshub/storm/tree/mopmc-dep), which extends Storm stable v1.8.1.
 
-See the [Storm installation guideline](https://www.stormchecker.org/documentation/obtain-storm/build.html) for installing Storm and its dependences.
-For CMake, check its version `cmake --version`.
-Both storm and this project are built with CMake.
-Check the minimum requirement for [CMake](https://cmake.org/download/) (at least 3.16 for building Storm and 3.22 for mopmc).
-Use `cmake --version` to check the version.
-If the installed version is lower than 3.22, you must download and set up cmake manually.
-To build Storm for our purpose, run `sudo make install -j <num_of_threads>` rather than `make build`.
-This project uses `find_package(storm)` in `CMakeLists.txt` to find Storm.
+The modified storm can be built using **CMake 3.16.3**. Note that other version of CMake may be incompatible with Storm stable v1.8.1.
 
-This project uses [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available version 3.17+, to identify the location of Cuda (as specified in the CMakeLists.txt).
+To build storm as a library, run `sudo make install -j <num_of_threads>` rather than `make`. 
+This way, this project can use `find_package(storm)` in `CMakeLists.txt` to load Storm.
+
+
+#### CUDA Toolkit
+
+This project uses [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available version in CMake 3.17+, to identify the location of CUDA.
 
 Installation of the CUDA Toolkit 12.0 (or above) is required (see the
 [NVIDIA CUDA Installation Guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)).
@@ -69,6 +72,10 @@ To test the	 build is working, run the executable using the convenience script:
 ```shell
 ./test-run.sh
 ```
+
+#### CMake Versions (!)
+Storm v1.8.1 uses **CMake 3.16.3**. MOPMC can be built using CMake **3.28.0** (and requires at least **3.22**).
+Therefore, [different CMake versions](https://cmake.org/download/) are recommended.
 
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env)

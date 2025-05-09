@@ -33,16 +33,10 @@ namespace mopmc {
         storm::logic::MultiObjectiveFormula formula;
         std::shared_ptr<storm::builder::ExplicitStateLookup<uint32_t>> stateLookup;
 
-        ModelBuildResult() = default;
         ModelBuildResult(const ModelType &model,
                          const storm::logic::MultiObjectiveFormula &formula,
                          std::shared_ptr<storm::builder::ExplicitStateLookup<uint32_t>> stateLookup = nullptr) :
                 model(model), formula(formula), stateLookup(std::move(stateLookup)) {};
-        /*
-        ModelBuildResult(const ModelType &model,
-                         const storm::logic::MultiObjectiveFormula &formula) :
-                model(model), formula(formula) {};
-                */
     };
 
     template<typename ModelType>
@@ -51,7 +45,6 @@ namespace mopmc {
         StormModelChecker<ModelType> processedModel;
         StormPreprocesReturn<ModelType> objectiveInformation;
 
-        ModelBuildAndProcessResult() = default;
         ModelBuildAndProcessResult(const ModelType &model,
                                    const storm::logic::MultiObjectiveFormula &formula,
                                    const StormPreprocesReturn<ModelType> preprocessedResult,
@@ -69,7 +62,7 @@ namespace mopmc {
     public:
         explicit ModelBuilder() = default;
 
-        static ModelBuildResult<ModelType> build(
+        static ModelBuildResult<ModelType> buildOnly(
                 const std::string &path_to_model,
                 const std::string &property_string,
                 bool lookup = false);

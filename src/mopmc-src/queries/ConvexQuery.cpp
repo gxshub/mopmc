@@ -117,7 +117,7 @@ namespace mopmc::queries {
     template<typename V, typename I>
     void ConvexQuery<V, I>::printResult() {
         std::cout << "----------------------------------------------\n"
-                  << "CONVEX QUERY"
+                  << "--Convex Query Result--"
                   << "\nwith constraint? " << std::boolalpha << hasConstraint
                   << "\nterminates after " << this->getMainLoopIterationCount() << " iteration(s)\n";
         mopmc::Printer<V>::printVector("Estimated optimal outer point", this->getOuterOptimalPoint());
@@ -129,9 +129,9 @@ namespace mopmc::queries {
             std::cout << "\nInner point satisfying constraints? " << std::boolalpha << b1
                       << "\nOuter point satisfying constraints? " << std::boolalpha << b2;
         }
-        mopmc::Printer<V>::printVector("\n[debug] scheduler distribution", this->queryData.schedulerDistribution);
-        std::cout << "\n[debug] sum of inner point: " << this->getInnerOptimalPoint().sum();
-        std::cout << "\n[debug] sum of outer point: " << this->getOuterOptimalPoint().sum();
+        //mopmc::Printer<V>::printVector("\n[debug] scheduler distribution", this->queryData.schedulerDistribution);
+        //std::cout << "\n[debug] sum of inner point: " << this->getInnerOptimalPoint().sum();
+        //std::cout << "\n[debug] sum of outer point: " << this->getOuterOptimalPoint().sum();
         std::cout << "\n----------------------------------------------\n";
     }
 

@@ -43,7 +43,6 @@ namespace mopmc {
         assert(typeid(ValueType) == typeid(double));
         assert(typeid(IndexType) == typeid(uint64_t));
 
-        // Init loggers
         storm::utility::setUp();
         storm::settings::initializeAll("storm-starter-project", "storm-starter-project");
         storm::Environment env;
@@ -53,14 +52,25 @@ namespace mopmc {
 
         time0 = clock();
         if (withProcessing) {
-            auto buildAndProcessResult = mopmc::ModelBuilder<ModelType>::buildAndProcess(path_to_model, property_string,
+            auto buildAndProcessResult = mopmc::ModelBuilder<ModelType>::buildAndProcess(path_to_model,
+                                                                                         property_string,
                                                                                          env);
             time1 = clock();
             data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform(buildAndProcessResult);
         } else {
-            auto buildResult = mopmc::ModelBuilder<ModelType>::build(path_to_model, property_string);
+            auto buildResult = mopmc::ModelBuilder<ModelType>::buildOnly(path_to_model, property_string);
             time1 = clock();
             data = mopmc::Transformation<ModelType, ValueType, IndexType>::transform(buildResult);
+            bool totalRewardFormulaOnly = true;
+            for (const auto& f : buildResult.formula.getSubformulas()) {
+                if (!f->asUnaryStateFormula().getSubformula().isTotalRewardFormula()){
+                    totalRewardFormulaOnly = false;
+                }
+            }
+            if (!totalRewardFormulaOnly) {
+                std::cout << "! Model must be processed for query with non total rewards.\n";
+                return false;
+            }
         }
         time2 = clock();
 
@@ -127,13 +137,20 @@ namespace mopmc {
         }
         q1->query();
         q1->printResult();
-        if (!pathToExportScheduler.empty()) {
-            mopmc::exporter::writeSchedulerReturn(q1->queryData.collectionOfSchedulers,
-                                                  q1->queryData.schedulerDistribution, pathToExportScheduler);
-        }
 
         const clock_t time3 = clock();
         const uint64_t mainLoopCount(q1->getMainLoopIterationCount());
+
+        // schedulers export
+        if (!pathToExportScheduler.empty()) {
+            if (withProcessing) {
+                std::cout << "! Schedulers export only implemented for query without model processing.\n";
+            } else {
+                mopmc::exporter::writeSchedulerReturn(q1->queryData.collectionOfSchedulers,
+                                                      q1->queryData.schedulerDistribution,
+                                                      pathToExportScheduler);
+            }
+        }
 
         std::cout << "       TIME STATISTICS        \n";
         printf("Model building stage: %.3f second(s).\n", double(time1 - time0) / CLOCKS_PER_SEC);

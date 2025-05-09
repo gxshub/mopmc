@@ -22,7 +22,7 @@
 namespace mopmc {
 
     template<typename ModelType>
-    ModelBuildResult<ModelType> ModelBuilder<ModelType>::build(
+    ModelBuildResult<ModelType> ModelBuilder<ModelType>::buildOnly(
             const std::string &path_to_model, const std::string &property_string, const bool lookup) {
         //env.modelchecker().multi().setMethod(storm::modelchecker::multiobjective::MultiObjectiveMethod::Pcaa);
 
@@ -45,18 +45,16 @@ namespace mopmc {
         std::shared_ptr<ModelType> model = builder.build()->template as<ModelType>();
         storm::logic::MultiObjectiveFormula formula = formulas[0]->asMultiObjectiveFormula();
 
+        std::cout << "--Model Building Output--\n";
         std::cout << "number of states in original mdp: " << model->getNumberOfStates() << "\n";
         std::cout << "number of choices in original mdp: " << model->getNumberOfChoices() << "\n";
         std::cout << "number of transitions in original mdp: " << model->getTransitionMatrix().getEntryCount() <<"\n";
 
-        auto varInfo = generator->getVariableInformation();
-        auto stateToId = builder.stateStorage.stateToId;
-
-
-        std::shared_ptr<storm::builder::ExplicitStateLookup<uint32_t>> stateLookup = std::make_shared<storm::builder::ExplicitStateLookup<uint32_t>>(varInfo, stateToId);
+        storm::builder::ExplicitStateLookup<uint32_t> stateLookup = builder.exportExplicitStateLookup();
+        auto stateLookupPtr = std::make_shared<storm::builder::ExplicitStateLookup<uint32_t>>(stateLookup);
 
         if (lookup) {
-            return ModelBuildResult<ModelType>(*model, formula, stateLookup);
+            return ModelBuildResult<ModelType>(*model, formula, stateLookupPtr);
         } else {
             return ModelBuildResult<ModelType>(*model, formula);
         }
@@ -67,11 +65,18 @@ namespace mopmc {
             const std::string &path_to_model, const std::string &property_string,
             storm::Environment &env) {
 
-        ModelBuildResult buildResult = ModelBuilder<ModelType>::build(path_to_model, property_string);
+        ModelBuildResult buildResult = ModelBuilder<ModelType>::buildOnly(path_to_model, property_string);
         ModelType model = buildResult.model;
         storm::logic::MultiObjectiveFormula formula  = buildResult.formula;
         env.modelchecker().multi().setMethod(storm::modelchecker::multiobjective::MultiObjectiveMethod::Pcaa);
         StormPreprocesReturn<ModelType> prepResult = storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectivePreprocessor<ModelType>::preprocess(env, model, formula);
+        /*
+        auto rewardAnalysis = storm::modelchecker::multiobjective::preprocessing::SparseMultiObjectiveRewardAnalysis<M>::analyze(prepResult);
+        std::string s1 = rewardAnalysis.rewardFinitenessType == storm::modelchecker::multiobjective::preprocessing::RewardFinitenessType::AllFinite ? "yes" : "no";
+        std::string s2 = rewardAnalysis.rewardFinitenessType == storm::modelchecker::multiobjective::preprocessing::RewardFinitenessType::ExistsParetoFinite ? "yes" : "no";
+        std::cout << "[!] The expected reward is finite for all objectives and all schedulers: " << s1 << std::endl;
+        std::cout << "[!] There is a Pareto optimal scheduler yielding finite rewards for all objectives: " << s2 << std::endl;
+         */
         mopmc::StormModelChecker processedResult = StormModelChecker<ModelType>(prepResult);
 
         std::cout << "number of states in pre-processed mdp: " << prepResult.preprocessedModel->getNumberOfStates() << "\n";

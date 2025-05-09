@@ -96,8 +96,9 @@ int main(int ac, char *av[]) {
         if (vm.count("export-scheduler")) {
             pathToExportScheduler = vm["export-scheduler"].as<string>();
         }
+        bool withModelProcessing = pathToExportScheduler.empty();
 
-        mopmc::run(modelFile, propsFile, queryOptions, pathToExportScheduler);
+        mopmc::run(modelFile, propsFile, queryOptions, pathToExportScheduler, withModelProcessing);
 
     } catch (exception &e) {
         cerr << "error: " << e.what() << "\n";
