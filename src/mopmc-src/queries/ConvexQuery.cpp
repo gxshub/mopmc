@@ -41,7 +41,8 @@ namespace mopmc::queries {
                 continue;
             }
             if (this->hasConstraint) {
-                if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(outerPoint, BoundaryPoints, Directions)) {
+                if (!mopmc::optimization::optimizers::HalfspacesIntersection<V>::findNonExteriorPoint(
+                        outerPoint, BoundaryPoints, Directions)) {
                     ++iter;
                     std::cout << "[Main loop] exits as the constraint is not satisfiable\n";
                     break;
@@ -50,17 +51,20 @@ namespace mopmc::queries {
                 outerPoint = innerPoint;
             }
             this->outerOptimizer->minimize(outerPoint, BoundaryPoints, Directions);
-            if (iter > 1 && (this->getOuterOptimalPoint() - outerPointPrev).template lpNorm<1>() + (this->getInnerOptimalPoint() - innerPointPrev).template lpNorm<1>() < toleranceUpdateDiff) {
+            if (iter > 1 && (outerPoint - outerPointPrev).template lpNorm<1>() +
+                            (innerPoint - innerPointPrev).template lpNorm<1>() <
+                            toleranceUpdateDiff) {
                 ++iter;
-                std::cout << "[Main loop] exits due to outer point update (l1 norm <= " << toleranceUpdateDiff << ")\n";
+                std::cout << "[Main loop] exits due to inner/outer points update (l1 norm <= " << toleranceUpdateDiff << ")\n";
                 break;
             }
             outerPointPrev = outerPoint;
             innerPointPrev = innerPoint;
-            if (this->innerOptimizer->optimizeSeparationDirection(direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS) {
+            if (this->innerOptimizer->optimizeSeparationDirection(
+                    direction, innerPoint, margin, Vertices, outerPoint) != EXIT_SUCCESS) {
                 ++iter;
                 std::cout << "[Main loop] exits as no separation hyperplane is found\n";
-                break;
+                //break;
             }
             // re-normalize direction if necessary
             direction /= direction.template lpNorm<1>();
@@ -68,7 +72,8 @@ namespace mopmc::queries {
             // epsilonInnerOuterDiff = this->fn->value(innerPoint) - this->fn->value(outerPoint);
             if (iter > 1 && epsilonInnerOuterDiff < toleranceInnerOuterDiff) {
                 ++iter;
-                std::cout << "[Main loop] exits due to small inner & outer value difference (<=" << toleranceInnerOuterDiff << ")\n";
+                std::cout << "[Main loop] exits due to small inner & outer value difference (<="
+                          << toleranceInnerOuterDiff << ")\n";
                 break;
             }
             ++iter;
@@ -95,22 +100,23 @@ namespace mopmc::queries {
     template<typename V, typename I>
     bool ConvexQuery<V, I>::checkConstraintSatisfaction(const Vector<V> &point) {
         bool res = true;
-        const V roundingErr = 1e-15;
+        const V errorTorPc = 0.001;
         const uint64_t m = this->queryData.objectiveCount;
         Vector<V> h = VectorMap<V>(this->queryData.thresholds.data(), m);
         for (uint_fast64_t i = 0; i < m; ++i) {
             if (this->queryData.isThresholdUpperBound[i]) {
-                if (point(i) > h(i) + roundingErr) {
+                if (point(i) > h(i) * (1 + errorTorPc)) {
                     res = false;
                     break;
                 }
             } else {
-                if (point(i) < h(i) - roundingErr) {
+                if (point(i) < h(i) * (1 - errorTorPc)) {
                     res = false;
                     break;
                 }
             }
         }
+        mopmc::Printer<V>::printVector("check constraint satisfaction: ", point - h);
         return res;
     }
 
@@ -122,18 +128,19 @@ namespace mopmc::queries {
                   << "\nterminates after " << this->getMainLoopIterationCount() << " iteration(s)\n";
         mopmc::Printer<V>::printVector("Estimated optimal outer point", this->getOuterOptimalPoint());
         std::cout << "Approximate distance (at inner point): " << this->getInnerOptimalValue()
-                  << "\nApproximate distance (at outer point): " << this->getOuterOptimalValue();
+                  << "\nApproximate distance (at outer point): " << this->getOuterOptimalValue() << "\n";
         if (this->hasConstraint) {
             bool b1 = checkConstraintSatisfaction(innerPoint);
             bool b2 = checkConstraintSatisfaction(outerPoint);
             std::cout << "\nInner point satisfying constraints? " << std::boolalpha << b1
-                      << "\nOuter point satisfying constraints? " << std::boolalpha << b2;
+                      << "\nOuter point satisfying constraints? " << std::boolalpha << b2 << "\n";
         }
         //mopmc::Printer<V>::printVector("\n[debug] scheduler distribution", this->queryData.schedulerDistribution);
         //std::cout << "\n[debug] sum of inner point: " << this->getInnerOptimalPoint().sum();
         //std::cout << "\n[debug] sum of outer point: " << this->getOuterOptimalPoint().sum();
-        std::cout << "\n----------------------------------------------\n";
+        std::cout << "----------------------------------------------\n";
     }
 
-    template class ConvexQuery<double, int>;
+    template
+    class ConvexQuery<double, int>;
 }// namespace mopmc::queries

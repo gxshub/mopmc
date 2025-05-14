@@ -10,6 +10,7 @@
 #include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>
 #include <set>
+#include <utility>
 #include <vector>
 
 namespace mopmc::optimization::optimizers {
@@ -44,6 +45,7 @@ namespace mopmc::optimization::optimizers {
         void initialize(const std::vector<Vector<V>> &Vertices);
         void performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices);
         bool checkSeparation(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point);
+        std::pair<int64_t, V> getMaximumMarginPoint(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point);
         V getSeparationMargin(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point);
 
         int64_t dimension{}, size{0};

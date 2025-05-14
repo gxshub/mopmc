@@ -28,17 +28,19 @@ namespace mopmc::optimization::optimizers {
         //bool hasGotMaxMarginSepHP = false;
         MaximumMarginSeparationHyperplane<V> separationHyperplaneOptimizer;
         initialize(Vertices);
-        const uint64_t maxIter = 5e3;
-        uint64_t t = 0;
+        const uint64_t maxIter = 1e3;
+        const uint64_t maxIter1 = 5e2;
         if (Vertices.size() == 1) {
             optimum = Vertices[0];
             sepDirection = (pivot - Vertices[0])/((pivot - Vertices[0]).template lpNorm<1>());
             std::cout << "[Minimum norm point optimization] exits for one vertex\n";
             return EXIT_SUCCESS;
         }
+        uint64_t t = 0;
         while (t < maxIter) {
             xCurrent = xNew;
             dXCurrent = this->fn->subgradient(xCurrent);
+            /*
             if (!hasAttemptedMaxMarginSepHP && checkSeparation(Vertices, pivot - xNew, pivot)) {
                 hasAttemptedMaxMarginSepHP = true;
                 Vector<V> sign(dimension);
@@ -55,8 +57,12 @@ namespace mopmc::optimization::optimizers {
                     }
                     sepDirection /= sepDirection.template lpNorm<1>();
                 }
-            }
+            }*/
             performSimplexGradientDescent(Vertices);
+            if (this->fn->value(xCurrent) - this->fn->value(xNew) < 1e-12) {
+                break;
+            }
+            /*
             if (this->fn->value(xCurrent) <= this->fn->value(xNew) || t + 1 == maxIter) {
                 if (!hasFoundMaxMarginSepHp) {
                     Vector<V> sign(dimension);
@@ -77,14 +83,34 @@ namespace mopmc::optimization::optimizers {
                 ++t;
                 break;
             }
+             */
             ++t;
         }
+        xCurrent = xNew;
+        uint64_t t1 = 0;
+        while (t1 < maxIter1){
+            auto pair = getMaximumMarginPoint(Vertices, pivot - xCurrent, pivot);
+            if (pair.second > 1e-12){
+                const int64_t idx = pair.first;
+                const Vector<V> & xTmp= Vertices[idx];
+                V gamma = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xTmp, 1.0);
+                xNew = (static_cast<V>(1.) - gamma) * xCurrent + gamma * xTmp;
+                this->alpha = (static_cast<V>(1.) - gamma) * this->alpha;
+                this->alpha(idx) += gamma;
+            } else{
+                hasFoundMaxMarginSepHp = true;
+                break;
+            }
+            xCurrent = xNew;
+            ++t1;
+        }
+        sepDirection = pivot - xNew;
         optimum = xNew;
         if (hasFoundMaxMarginSepHp) {
-            std::cout << "[Minimum norm point optimization] max margin separation hyperplane computed, terminates at iteration: " << t <<  " (distance: " << this->fn->value(xNew) << ")\n";
+            std::cout << "[Minimum norm point optimization] max margin separation hyperplane computed, terminates at iteration: " << t + t1<<  " (distance: " << this->fn->value(xNew) << ")\n";
             return EXIT_SUCCESS;
         } else {
-            std::cout << "[Minimum norm point optimization] no separation hyperplane found after " << maxIter << " iterations\n";
+            std::cout << "[Minimum norm point optimization] no separation hyperplane found after " << maxIter + maxIter1 << " iterations\n";
             return EXIT_FAILURE;
         }
     }
@@ -101,6 +127,24 @@ namespace mopmc::optimization::optimizers {
         }
         return exit;
     }
+
+    template<typename V>
+    std::pair<int64_t, V> MinimumNormPoint<V>::getMaximumMarginPoint(const std::vector<Vector<V>> &Vertices,
+                                                                     const Vector<V> &direction,
+                                                                     const Vector<V> &point){
+        const V delta = 1e-12;
+        int64_t idx = -1;
+        V margin = 0;
+        for (int64_t i = 0; i < Vertices.size(); ++i) {
+            if (Vertices[i].dot(direction) - point.dot(direction) > margin) {
+
+                idx = i;
+                margin = Vertices[i].dot(direction) - point.dot(direction);
+            }
+        }
+        return {idx, margin};
+    };
+
 
     template<typename V>
     V MinimumNormPoint<V>::getSeparationMargin(const std::vector<Vector<V>> &Vertices, const Vector<V> &direction, const Vector<V> &point) {
