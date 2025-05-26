@@ -38,7 +38,7 @@ namespace mopmc {
     bool run(std::string const &path_to_model,
              std::string const &property_string,
              QueryOptions options,
-             std::string const &pathToExportScheduler,
+             std::string const &schedulerExportFolder,
              bool withProcessing) {
         assert(typeid(ValueType) == typeid(double));
         assert(typeid(IndexType) == typeid(uint64_t));
@@ -142,13 +142,13 @@ namespace mopmc {
         const uint64_t mainLoopCount(q1->getMainLoopIterationCount());
 
         // schedulers export
-        if (!pathToExportScheduler.empty()) {
+        if (!schedulerExportFolder.empty()) {
             if (withProcessing) {
                 std::cout << "! Schedulers export only implemented for query without model processing.\n";
             } else {
                 mopmc::exporter::writeSchedulerReturn(q1->queryData.collectionOfSchedulers,
                                                       q1->queryData.schedulerDistribution,
-                                                      pathToExportScheduler);
+                                                      schedulerExportFolder);
             }
         }
 

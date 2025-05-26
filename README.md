@@ -150,7 +150,7 @@ without NVIDIA GPU.
 ### Running MOPMC
 To run a convex query:
 ```shell
-./build/mopmc -m examples/dive_and_rise/dive_and_rise.nm -p examples/dive_and_rise/dive_and_rise_prop_100.props -q convex 
+./build/mopmc -m examples/dive_and_rise/dive_and_rise.nm -p examples/dive_and_rise/dive_and_rise_prop_v3_100.props -q convex 
 ```
 To run an achievability query:
 ```shell
@@ -163,6 +163,20 @@ To run a query without GPU acceleration for value iteration:
 To see all the running options:
 ```shell
 ./build/mopmc -h
+```
+
+To export model only:
+```shell
+./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm \
+-p examples/dive_and_rise/dive_and_rise_prop_ccq_100.props \
+-e out/dive_and_rise
+```
+
+To run a query and export the returned schedulers:
+```shell
+./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm -p \
+examples/dive_and_rise/dive_and_rise_prop_ccq_100.props -q convex  \
+-x out/dive_and_rise
 ```
 
 To run an achievability query in Storm:

@@ -15,13 +15,12 @@ int main(int ac, char *av[]) {
         desc.add_options()("help,h", "produce help message")
                 ("model,m", po::value<string>(), "model")
                 ("prop,p", po::value<string>(), "multi-objective property")
-                ("export,e", po::value<string>(), "export model")
+                ("export,e", po::value<string>(), "folder to export model")
                 ("query,q", po::value<string>(), "query type (convex or achievability)")
                 ("loss,l", po::value<string>()->default_value("mse"), "convex function (mse or var)")
                 ("constrained,c", po::value<string>()->default_value("y"), "constrained optimization (y or n)")
-                ("value-iteration,v", po::value<string>()->default_value("gpu"),
-                 "value iteration method (gpu or standard)")
-                ("export-scheduler,x", po::value<string>(), "export scheduler");
+                ("value-iteration,v", po::value<string>()->default_value("gpu"), "value iteration method (gpu or standard)")
+                ("export-scheduler,x", po::value<string>(), "folder to export schedulers");
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
         po::notify(vm);
@@ -41,8 +40,8 @@ int main(int ac, char *av[]) {
         }
 
         if (vm.count("export")) {
-            string exportedModelPath = vm["export"].as<string>();
-            mopmc::exporter::exportModel(modelFile, propsFile, exportedModelPath);
+            string modelExportFolderPath = vm["export"].as<string>();
+            mopmc::exporter::exportModel(modelFile, propsFile, modelExportFolderPath);
             return 0;
         }
 
@@ -92,13 +91,13 @@ int main(int ac, char *av[]) {
             }
         }
 
-        string pathToExportScheduler;
+        string schedulerExportFolderPath;
         if (vm.count("export-scheduler")) {
-            pathToExportScheduler = vm["export-scheduler"].as<string>();
+            schedulerExportFolderPath = vm["export-scheduler"].as<string>();
         }
-        bool withModelProcessing = pathToExportScheduler.empty();
+        bool withModelProcessing = schedulerExportFolderPath.empty();
 
-        mopmc::run(modelFile, propsFile, queryOptions, pathToExportScheduler, withModelProcessing);
+        mopmc::run(modelFile, propsFile, queryOptions, schedulerExportFolderPath, withModelProcessing);
 
     } catch (exception &e) {
         cerr << "error: " << e.what() << "\n";
