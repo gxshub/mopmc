@@ -2,8 +2,8 @@
 // Created by guoxin on 24/11/23.
 //
 
-#ifndef MOPMC_FRANKWOLFEINNEROPTIMIZER_H
-#define MOPMC_FRANKWOLFEINNEROPTIMIZER_H
+#ifndef MOPMC_FRANKWOLFEMETHOD_H
+#define MOPMC_FRANKWOLFEMETHOD_H
 
 #include "BaseOptimizer.h"
 #include "mopmc-src/auxiliary/LineSearch.h"
@@ -24,19 +24,24 @@ namespace mopmc::optimization::optimizers {
     enum FWOption { SIMPLEX_GD, AWAY_STEP };
 
     template<typename V>
-    class FrankWolfeInnerOptimizer : public BaseOptimizer<V> {
+    class FrankWolfeMethod : public BaseOptimizer<V> {
     public:
-        explicit FrankWolfeInnerOptimizer() = default;
-        explicit FrankWolfeInnerOptimizer(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
+        explicit FrankWolfeMethod() = default;
+        explicit FrankWolfeMethod(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                                          FWOption optMethod=FWOption::SIMPLEX_GD) : BaseOptimizer<V>(f), fwOption(optMethod) {
             this->lineSearcher = mopmc::optimization::optimizers::LineSearcher<V>(f);
         }
         int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) override;
+        int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) override;
 
         mopmc::optimization::optimizers::LineSearcher<V> lineSearcher;
         FWOption fwOption{};
         Vector<V> alpha;
         std::set<uint64_t> activeVertices;
+
+        Vector<V> getWeights() {
+            return alpha;
+        }
 
     private:
         void initialize(const std::vector<Vector<V>> &Vertices);
@@ -55,4 +60,4 @@ namespace mopmc::optimization::optimizers {
     };
 }// namespace mopmc::optimization::optimizers
 
-#endif//MOPMC_FRANKWOLFEINNEROPTIMIZER_H
+#endif//MOPMC_FRANKWOLFEMETHOD_H

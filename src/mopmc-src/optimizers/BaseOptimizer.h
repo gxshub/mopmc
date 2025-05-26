@@ -21,12 +21,24 @@ namespace mopmc::optimization::optimizers {
         virtual ~BaseOptimizer() = default;
         explicit BaseOptimizer<V>(mopmc::optimization::convex_functions::BaseConvexFunction<V> *f) : fn(f){};
 
-        virtual int minimize (Vector<V> &point, const std::vector<Vector<V>> &Vertices) { return 1; }
+        virtual int minimize (Vector<V> &point, const std::vector<Vector<V>> &Vertices) { return EXIT_FAILURE; }
+
+        virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &BoundaryPoints,
+                     const std::vector<Vector<V>> &Directions) { return EXIT_FAILURE; }
 
         virtual int minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices,
-                     const std::vector<Vector<V>> &Directions) { return 1; }
+                             const Vector<V> &pivot) { return EXIT_FAILURE; }
 
-        virtual int minimize () { return 1; }
+        virtual int minimize(Vector<V> &sepDirection, Vector<V> &point, const std::vector<Vector<V>> &Vertices,
+                             const Vector<V> &pivot) { return EXIT_FAILURE; }
+
+        virtual int optimizeSeparationDirection(Vector<V> &sepDirection, Vector<V> &point, V &margin,
+                             const std::vector<Vector<V>> &Vertices,
+                             const Vector<V> &pivot) { return EXIT_FAILURE; }
+
+        virtual int minimize () { return EXIT_FAILURE; }
+
+        virtual Vector<V> getVertexWeights() {return Vector<V>(0);};
 
         mopmc::optimization::convex_functions::BaseConvexFunction<V> *fn;
     };

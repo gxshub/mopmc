@@ -29,8 +29,12 @@ namespace mopmc {
                 int valueIterationPhaseOne(const std::vector<double> &w, bool toHost = false);
                 int valueIterationPhaseTwo();
 
-                const std::vector<double> &getResults() const override {
+                [[nodiscard]] const std::vector<double> &getResults() const override {
                     return results;
+                }
+
+                [[nodiscard]] const std::vector<int> &getScheduler() const override {
+                    return scheduler;
                 }
 
             private:

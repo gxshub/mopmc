@@ -1,3 +1,6 @@
+# Don't commit output file:
+out/*
+
 # Don't commit storm
 storm
 

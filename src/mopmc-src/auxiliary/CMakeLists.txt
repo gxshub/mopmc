@@ -10,6 +10,8 @@ list(
         "${dir}/LineSearch.h"
         "${dir}/Trigonometry.cpp"
         "${dir}/Trigonometry.h"
+        "${dir}/VectorConversion.cpp"
+        "${dir}/VectorConversion.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

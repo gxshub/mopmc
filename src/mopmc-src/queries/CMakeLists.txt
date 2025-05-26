@@ -5,6 +5,8 @@ list(
         "${dir}/AchievabilityQuery.cpp"
         "${dir}/AchievabilityQuery.h"
         "${dir}/BaseQuery.h"
+        "${dir}/UnconstrainedConvexQuery.cpp"
+        "${dir}/UnconstrainedConvexQuery.h"
         "${dir}/ConvexQuery.cpp"
         "${dir}/ConvexQuery.h"
 )

@@ -19,6 +19,7 @@ namespace mopmc::optimization::convex_functions {
     template<typename V>
     class MSE : public BaseConvexFunction<V> {
     public:
+        explicit MSE(const uint64_t &n);
         explicit MSE(const Vector<V> &c, const uint64_t &n);
         V value(const Vector<V> &x) override;
         Vector<V> subgradient(const Vector<V> &x) override;

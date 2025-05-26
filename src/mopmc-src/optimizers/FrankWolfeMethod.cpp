@@ -2,17 +2,18 @@
 // Created by guoxin on 24/11/23.
 //
 
-#include "FrankWolfeInnerOptimizer.h"
+#include "FrankWolfeMethod.h"
 #include "mopmc-src/auxiliary/Lincom.h"
 #include "mopmc-src/auxiliary/Sorting.h"
 #include "mopmc-src/auxiliary/Trigonometry.h"
+#include "mopmc-src/convex-functions/MSE.h"
 #include <cmath>
 #include <iostream>
 
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int FrankWolfeInnerOptimizer<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
+    int FrankWolfeMethod<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices) {
         initialize(Vertices);
         const uint64_t maxIter = 1e3;
         uint64_t t = 0;
@@ -37,13 +38,13 @@ namespace mopmc::optimization::optimizers {
             }
             ++t;
         }
-        std::cout << "Inner optimization, FW stops at iteration " << t << " (distance " << this->fn->value(xNew) << ")\n";
+        std::cout << "[Inner optimization] FW stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
         point = xNew;
         return 0;
     }
 
     template<typename V>
-    bool FrankWolfeInnerOptimizer<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
+    bool FrankWolfeMethod<V>::checkExit(const std::vector<Vector<V>> &Vertices) {
         const V cosTolerance = std::cos(90.0001 / 180.0 * M_PI);
         bool exit = false;
         V cosMin = 1.;
@@ -54,14 +55,14 @@ namespace mopmc::optimization::optimizers {
             }
         }
         if (cosMin > cosTolerance) {
-            std::cout << "FW loop exits due to small cosine (" << cosMin << ")\n";
+            std::cout << "[Inner optimization] FW loop exits due to small cosine (" << cosMin << ")\n";
             exit = true;
         }
         return exit;
     }
 
     template<typename V>
-    void FrankWolfeInnerOptimizer<V>::initialize(const std::vector<Vector<V>> &Vertices) {
+    void FrankWolfeMethod<V>::initialize(const std::vector<Vector<V>> &Vertices) {
         if (Vertices.empty())
             throw std::runtime_error("The set of vertices cannot be empty");
         const auto sizePrv = size;
@@ -83,7 +84,7 @@ namespace mopmc::optimization::optimizers {
 
 
     template<typename V>
-    void FrankWolfeInnerOptimizer<V>::performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices) {
+    void FrankWolfeMethod<V>::performSimplexGradientDescent(const std::vector<Vector<V>> &Vertices) {
         Vector<V> dAlpha = Vector<V>::Zero(size);
         for (int64_t i = 0; i < size; ++i) {
             dAlpha(i) += dXCurrent.dot(Vertices[i]);
@@ -92,9 +93,6 @@ namespace mopmc::optimization::optimizers {
         Vector<V> dAlphaTmp(size);
         int64_t offsetIndex, numNullVertices = size - activeVertices.size();
         for (offsetIndex = 0; offsetIndex < size; ++offsetIndex) {
-            if (!activeVertices.count(sortedIndices[offsetIndex])) {
-                numNullVertices -= 1;
-            }
             for (uint64_t i = 0; i < size; ++i) {
                 if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
                     dAlphaTmp(sortedIndices[i]) = dAlpha(sortedIndices[i]) - dAlpha(sortedIndices[offsetIndex]);
@@ -105,11 +103,26 @@ namespace mopmc::optimization::optimizers {
             if (dAlphaTmp.sum() <= 0) {
                 break;
             }
+            if (!activeVertices.count(sortedIndices[offsetIndex])) {
+                numNullVertices -= 1;
+            }
         }
         if (offsetIndex == 0) {
             dAlpha.setZero();
             return;
         }
+        const V offset = dAlphaTmp.sum() / (size - numNullVertices);
+        for (int64_t i = 0; i < size; ++i) {
+            if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
+                dAlphaTmp(sortedIndices[i]) -= offset;
+            }
+        }
+        if (dAlphaTmp.isZero()) {
+            return;
+        } else {
+            dAlpha = dAlphaTmp / dAlphaTmp.template lpNorm<1>();
+        }
+        /*
         const V offset = dAlpha.sum() / (size - numNullVertices);
         for (int64_t i = 0; i < size; ++i) {
             if (i < offsetIndex || activeVertices.count(sortedIndices[i])) {
@@ -118,6 +131,7 @@ namespace mopmc::optimization::optimizers {
                 dAlpha(sortedIndices[i]) = 0.;
             }
         }
+         */
         V step = std::numeric_limits<V>::max();
         uint64_t resetIndex = size;
         for (uint64_t vertexIndex = 0; vertexIndex < size; ++vertexIndex) {
@@ -154,7 +168,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerOptimizer<V>::performForwardOrAwayStepDescent(const std::vector<Vector<V>> &Vertices) {
+    void FrankWolfeMethod<V>::performForwardOrAwayStepDescent(const std::vector<Vector<V>> &Vertices) {
         V gamma, gammaMax, epsFwd, epsAwy;
         uint64_t fwdInd{}, awyInd{};
         Vector<V> fwdVec, awyVec;
@@ -165,7 +179,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerOptimizer<V>::forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
+    void FrankWolfeMethod<V>::forwardOrAwayStepUpdate(uint64_t &fwdInd, Vector<V> &fwdVec,
                                                              uint64_t &awyInd, Vector<V> &awyVec,
                                                              V &gamma, V &gammaMax, bool &isFwd) {
         if (static_cast<V>(-1.) * dXCurrent.dot(fwdVec - awyVec) >= 0.) {
@@ -209,7 +223,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerOptimizer<V>::checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps) {
+    void FrankWolfeMethod<V>::checkAwayStep(const std::vector<Vector<V>> &Vertices, uint64_t &awyInd, Vector<V> &awyVec, V &awyEps) {
         awyInd = 0;
         V inc = std::numeric_limits<V>::min();
         for (auto j: this->activeVertices) {
@@ -223,7 +237,7 @@ namespace mopmc::optimization::optimizers {
     }
 
     template<typename V>
-    void FrankWolfeInnerOptimizer<V>::checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps) {
+    void FrankWolfeMethod<V>::checkForwardStep(const std::vector<Vector<V>> &Vertices, uint64_t &fwdInd, Vector<V> &fwdVec, V &fwdEps) {
         fwdInd = 0;
         V dec = std::numeric_limits<V>::max();
         for (uint_fast64_t i = 0; i < Vertices.size(); ++i) {
@@ -236,5 +250,39 @@ namespace mopmc::optimization::optimizers {
         fwdEps = static_cast<V>(-1.) * dXCurrent.dot(Vertices[fwdInd] - xCurrent);
     }
 
-    template class FrankWolfeInnerOptimizer<double>;
+    template<typename V>
+    int FrankWolfeMethod<V>::minimize(Vector<V> &point, const std::vector<Vector<V>> &Vertices, const Vector<V> &pivot) {
+        assert(pivot.size() == point.size());
+        //fwOption = AWAY_STEP;
+        this->fn = new mopmc::optimization::convex_functions::MSE<V>(pivot, pivot.size());
+        initialize(Vertices);
+        const uint64_t maxIter = 1e3;
+        uint64_t t = 0;
+        while (t < maxIter) {
+            xCurrent = xNew;
+            dXCurrent = this->fn->subgradient(xCurrent);
+            if (checkExit(Vertices)) {
+                break;
+            }
+            switch (this->fwOption) {
+                case SIMPLEX_GD: {
+                    performSimplexGradientDescent(Vertices);
+                    break;
+                }
+                case AWAY_STEP: {
+                    performForwardOrAwayStepDescent(Vertices);
+                    break;
+                }
+                default: {
+                    throw std::runtime_error("Selected FW option not implemented in this version");
+                }
+            }
+            ++t;
+        }
+        std::cout << "[Inner optimization] FW stops at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
+        point = xNew;
+        return 0;
+    }
+
+    template class FrankWolfeMethod<double>;
 }// namespace mopmc::optimization::optimizers

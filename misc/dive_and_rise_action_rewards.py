@@ -42,7 +42,7 @@ with open(fname + '.nm', 'w') as file:
 
     for i in range(y_max+1):
         file.write(f"rewards \"target_{i}\"\n")
-        file.write(f'\t (x=x_max)&(y={i})&(z=0): {rwd} ;\n')
+        file.write(f'\t [end] (x=x_max)&(y={i})&(z=0): {rwd} ;\n')
         file.write("endrewards\n")
 
 

@@ -24,6 +24,9 @@ namespace mopmc::value_iteration {
         [[nodiscard]] const std::vector<V> &getResults() const override {
             return results;
         }
+        [[nodiscard]] const std::vector<int> &getScheduler() const override {
+            return scheduler;
+        }
         int valueIteration(const std::vector<V> &w) override;
         int valueIterationPhaseOne(const std::vector<V> &w);
         int valueIterationPhaseTwo();

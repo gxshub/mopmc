@@ -1,6 +1,7 @@
 
 #include "mopmc-src/QueryOptions.h"
 #include "mopmc-src/Runner.h"
+#include "mopmc-src/Exporter.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -11,11 +12,15 @@ int main(int ac, char *av[]) {
 
     try {
         po::options_description desc("Allowed options");
-        desc.add_options()("help,h", "produce help message")("model,m", po::value<string>(), "model")
-                          ("prop,p", po::value<string>(), "multi-objective property")
-                          ("loss,l", po::value<string>()->default_value("mse"), "convex function (mse or var)")
-                          ("query,q", po::value<string>(), "query type (convex or achievability)")
-                          ("value-iteration,v", po::value<string>()->default_value("gpu"), "value iteration method (gpu or standard)");
+        desc.add_options()("help,h", "produce help message")
+                ("model,m", po::value<string>(), "model")
+                ("prop,p", po::value<string>(), "multi-objective property")
+                ("export,e", po::value<string>(), "folder to export model")
+                ("query,q", po::value<string>(), "query type (convex or achievability)")
+                ("loss,l", po::value<string>()->default_value("mse"), "convex function (mse or var)")
+                ("constrained,c", po::value<string>()->default_value("y"), "constrained optimization (y or n)")
+                ("value-iteration,v", po::value<string>()->default_value("gpu"), "value iteration method (gpu or standard)")
+                ("export-scheduler,x", po::value<string>(), "folder to export schedulers");
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
         po::notify(vm);
@@ -32,6 +37,12 @@ int main(int ac, char *av[]) {
         } else {
             cout << "model and/or property not specified\n";
             return 1;
+        }
+
+        if (vm.count("export")) {
+            string modelExportFolderPath = vm["export"].as<string>();
+            mopmc::exporter::exportModel(modelFile, propsFile, modelExportFolderPath);
+            return 0;
         }
 
         mopmc::QueryOptions queryOptions{};
@@ -68,7 +79,26 @@ int main(int ac, char *av[]) {
                 return 1;
             }
         }
-        mopmc::run(modelFile, propsFile, queryOptions);
+        if (vm.count("constrained")) {
+            const auto &s = vm["constrained"].as<string>();
+            if (s == "y") {
+                queryOptions.CONSTRAINED_OPT = mopmc::QueryOptions::CONSTRAINED;
+            } else if (s == "n") {
+                queryOptions.CONSTRAINED_OPT = mopmc::QueryOptions::UNCONSTRAINED;
+            } else {
+                cout << "incorrect constrained option\n";
+                return 1;
+            }
+        }
+
+        string schedulerExportFolderPath;
+        if (vm.count("export-scheduler")) {
+            schedulerExportFolderPath = vm["export-scheduler"].as<string>();
+        }
+        bool withModelProcessing = schedulerExportFolderPath.empty();
+
+        mopmc::run(modelFile, propsFile, queryOptions, schedulerExportFolderPath, withModelProcessing);
+
     } catch (exception &e) {
         cerr << "error: " << e.what() << "\n";
         return 1;

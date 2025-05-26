@@ -22,6 +22,8 @@ namespace mopmc::value_iteration {
 
         [[nodiscard]] virtual const std::vector<double> &getResults() const = 0;
 
+        [[nodiscard]] virtual const std::vector<int> &getScheduler() const = 0;
+
 
     };
 }

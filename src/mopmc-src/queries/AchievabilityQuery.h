@@ -29,18 +29,19 @@ namespace mopmc::queries {
 
         void query() override;
 
-        [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
-            return iter;
+        [[nodiscard]] uint64_t getMainLoopIterationCount() override {
+            return this->iter;
         }
+
         [[nodiscard]] bool getResult() const {
-            return achievable;
+            return this->achievable;
         }
 
         void printResult() override;
 
     private:
         std::vector<Vector<T>> VertexVectors, WeightVectors;
-        uint_fast64_t iter{};
+        uint64_t iter{};
         bool achievable{};
     };
 

@@ -1,9 +1,9 @@
 //
-// Created by guoxin on 3/04/24.
+// Created by guoxin on 16/01/24.
 //
 
-#ifndef MOPMC_CONVEXQUERY_H
-#define MOPMC_CONVEXQUERY_H
+#ifndef MOPMC_UNCONSTRAINEDCONVEXQUERY_H
+#define MOPMC_UNCONSTRAINEDCONVEXQUERY_H
 #include "BaseQuery.h"
 #include "mopmc-src/QueryData.h"
 #include <Eigen/Sparse>
@@ -17,31 +17,28 @@ namespace mopmc::queries {
     using VectorMap = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>;
 
     template<typename V, typename I>
-    class ConvexQuery : public BaseQuery<V, I> {
+    class UnconstrainedConvexQuery : public BaseQuery<V, I> {
     public:
-        ConvexQuery(const mopmc::QueryData<V, I> &data,
+        UnconstrainedConvexQuery(const mopmc::QueryData<V, I> &data,
                     mopmc::optimization::convex_functions::BaseConvexFunction<V> *f,
                     mopmc::optimization::optimizers::BaseOptimizer<V> *innerOptimizer,
                     mopmc::optimization::optimizers::BaseOptimizer<V> *outerOptimizer,
-                    mopmc::value_iteration::BaseVIHandler<V> *valueIteration,
-                    const bool withConstraint = true)
+                    mopmc::value_iteration::BaseVIHandler<V> *valueIteration)
             : BaseQuery<V, I>(data, f, innerOptimizer, outerOptimizer, valueIteration) {
             innerPoint.resize(data.objectiveCount);
             outerPoint.resize(data.objectiveCount);
-            hasConstraint = withConstraint;
-            if (withConstraint)
-                constraintsToHalfspaces();
         };
+
         void query() override;
 
-        [[nodiscard]] uint64_t getMainLoopIterationCount() override {
-            return this->iter;
+        [[nodiscard]] uint_fast64_t getMainLoopIterationCount() const {
+            return iter;
         }
         const Vector<V> &getInnerOptimalPoint() const {
-            return this->innerPoint;
+            return innerPoint;
         }
         const Vector<V> &getOuterOptimalPoint() const {
-            return this->outerPoint;
+            return outerPoint;
         }
         V getInnerOptimalValue() const {
             return this->fn->value(innerPoint);
@@ -53,15 +50,12 @@ namespace mopmc::queries {
         void printResult() override;
 
     private:
-        void constraintsToHalfspaces();
-        bool checkConstraintSatisfaction(const Vector<V> &point);
-        bool hasConstraint{true};
         uint_fast64_t iter{};
         Vector<V> innerPoint, outerPoint;
-        std::vector<Vector<V>> Vertices, BoundaryPoints, Directions;
+        std::vector<Vector<V>> Vertices, Directions;
+        bool assertSeparation(const Vector<V> &point, const Vector<V> &direction);
     };
-
 }// namespace mopmc::queries
 
 
-#endif//MOPMC_CONVEXQUERY_H
+#endif//MOPMC_UNCONSTRAINEDCONVEXQUERY_H

@@ -2,15 +2,15 @@
 // Created by guoxin on 2/02/24.
 //
 
-#include "SeparationHyperplaneOptimizer.h"
+#include "MaximumMarginSeparationHyperplane.h"
 #include "lp_lib.h"
 #include <iostream>
 
 namespace mopmc::optimization::optimizers {
 
     template<typename V>
-    int SeparationHyperplaneOptimizer<V>::findMaximumSeparatingDirection(const std::vector<Vector<V>> &Vertices,
-                                                                         const Vector<V> &gradient,
+    int MaximumMarginSeparationHyperplane<V>::findMaximumSeparatingDirection(const std::vector<Vector<V>> &Vertices,
+                                                                         const Vector<V> &threshold,
                                                                          const Vector<V> &sign,
                                                                          Vector<V> &direction,
                                                                          V &distance) {
@@ -54,7 +54,7 @@ namespace mopmc::optimization::optimizers {
             for (int i = 0; i < Vertices.size(); ++i) {
                 for (int j = 0; j < n_cols - 1; ++j) {
                     col_no[j] = j + 1;
-                    row[j] = sign(j) * (gradient(j) - Vertices[i](j));
+                    row[j] = sign(j) * (threshold(j) - Vertices[i](j));
                     //std::cout << "row[j]: " << row[j] <<"\n";
                 }
                 col_no[n_cols - 1] = n_cols;
@@ -114,6 +114,6 @@ namespace mopmc::optimization::optimizers {
         return ret;
     }
 
-    template class SeparationHyperplaneOptimizer<double>;
+    template class MaximumMarginSeparationHyperplane<double>;
 
 }// namespace mopmc::optimization::optimizers
