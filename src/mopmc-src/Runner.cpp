@@ -13,7 +13,7 @@
 #include "optimizers/ProjectedGradient.h"
 #include "queries/AchievabilityQuery.h"
 #include "queries/ConvexQuery.h"
-#include "queries/UnconstrainedConvexQuery.h"
+#include "mopmc-src/_legacy/queries/UnconstrainedConvexQuery.h"
 #include "ModelBuilder.h"
 #include "Exporter.h"
 #include <Eigen/Dense>

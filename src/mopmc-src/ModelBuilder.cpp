@@ -24,7 +24,6 @@ namespace mopmc {
     template<typename ModelType>
     ModelBuildResult<ModelType> ModelBuilder<ModelType>::buildOnly(
             const std::string &path_to_model, const std::string &property_string, const bool lookup) {
-        //env.modelchecker().multi().setMethod(storm::modelchecker::multiobjective::MultiObjectiveMethod::Pcaa);
 
         //auto program = storm::parser::PrismParser::parse(path_to_model);
         storm::prism::Program program = storm::api::parseProgram(path_to_model);

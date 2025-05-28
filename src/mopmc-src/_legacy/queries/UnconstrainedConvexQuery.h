@@ -4,7 +4,7 @@
 
 #ifndef MOPMC_UNCONSTRAINEDCONVEXQUERY_H
 #define MOPMC_UNCONSTRAINEDCONVEXQUERY_H
-#include "BaseQuery.h"
+#include "mopmc-src/queries/BaseQuery.h"
 #include "mopmc-src/QueryData.h"
 #include <Eigen/Sparse>
 #include <storm/api/storm.h>

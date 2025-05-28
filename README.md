@@ -150,7 +150,7 @@ without NVIDIA GPU.
 ### Running MOPMC
 To run a convex query:
 ```shell
-./build/mopmc -m examples/dive_and_rise/dive_and_rise.nm -p examples/dive_and_rise/dive_and_rise_prop_v3_100.props -q convex 
+./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm -p examples/dive_and_rise/dive_and_rise_prop_ccq_100.props -q convex 
 ```
 To run an achievability query:
 ```shell
@@ -182,6 +182,11 @@ examples/dive_and_rise/dive_and_rise_prop_ccq_100.props -q convex  \
 To run an achievability query in Storm:
 ```shell
 $STORM_HOME/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop examples/multiobj_scheduler05.pctl
+```
+
+To run an achievability query in PRISM:
+```shell
+$PRRIM_HOME/build/bin/storm examples/multiobj_scheduler05.nm examples/multiobj_scheduler05.pctl
 ```
 
 ## About Model and Property Specification

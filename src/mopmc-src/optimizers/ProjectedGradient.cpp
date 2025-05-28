@@ -4,8 +4,10 @@
 
 #include "ProjectedGradient.h"
 #include "HalfspacesIntersection.h"
+#include "mopmc-src/Printer.h"
 #include "lp_lib.h"
 #include <iostream>
+#include <stdexcept>
 
 namespace mopmc::optimization::optimizers {
 
@@ -13,12 +15,11 @@ namespace mopmc::optimization::optimizers {
     int ProjectedGradient<V>::minimize(Vector<V> &point,
                                        const std::vector<Vector<V>> &BoundaryPoints,
                                        const std::vector<Vector<V>> &Directions) {
-
         interiorProjectionPhase(point, BoundaryPoints, Directions);
-        //assert(this->fn->value(xNew) <= this->fn->value(point));
-        exteriorProjectionPhase(point, BoundaryPoints, Directions);
-        //if (!checkNonExteriorPoint(point, BoundaryPoints, Directions))
-        //    throw std::runtime_error("Project gradient should return an non-exterior point");
+        /* comment out exterior project phase as it my lead to a projection outside the halfspaces
+         * to improve in future
+         * */
+        // exteriorProjectionPhase(point, BoundaryPoints, Directions);
         return EXIT_SUCCESS;
     }
 
@@ -39,8 +40,7 @@ namespace mopmc::optimization::optimizers {
             xCurrent = xNew;
             Vector<V> slope = (-1.) * (this->fn->subgradient(xCurrent));
             for (uint64_t i = 0; i < size; ++i) {
-                //if (Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
-                if (slope.dot(Directions[i]) > 0 && Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
+                if (Directions[i].dot(slope) > 0 && Directions[i].dot(BoundaryPoints[i] - xCurrent) < 1e-30) {
                     boundaryIndices.insert(i);
                 } else {
                     nonboundaryIndices.insert(i);
@@ -52,7 +52,7 @@ namespace mopmc::optimization::optimizers {
                 auto elem = boundaryIndices.begin();
                 const Vector<V> &w = Directions[*elem];
                 const Vector<V> &r = BoundaryPoints[*elem];
-                // projection of slope onto the hyperplane <x,w> = b
+                /* projection of slope onto the hyperplane <x,w> = <r,w> */
                 descentDirection = halfspaceProjection(slope, r, w);
             } else {
                 descentDirection = findProjectedDescentDirection(xCurrent, slope, BoundaryPoints, Directions, boundaryIndices);
@@ -84,7 +84,6 @@ namespace mopmc::optimization::optimizers {
     void ProjectedGradient<V>::exteriorProjectionPhase(Vector<V> &point,
                                                        const std::vector<Vector<V>> &BoundaryPoints,
                                                        const std::vector<Vector<V>> &Directions) {
-
         const V step = 10.;
         const uint64_t maxIter = 100;
         const V tolerance = 1e-6;
@@ -96,14 +95,25 @@ namespace mopmc::optimization::optimizers {
             const V lambda = this->lineSearcher.findOptimalRelativeDistance(xCurrent, xNewTmp);
             xNewTmp = (1. - lambda) * xCurrent + lambda * xNewTmp;
             xNew = dykstrasProjection(xNewTmp, BoundaryPoints, Directions);
+
+            if (xNew.array().isNaN().any()) {
+                mopmc::Printer<V>::printVector(" before dykstrasProjection - xNewTmp ", xNewTmp);
+                mopmc::Printer<V>::printVector(" after dykstrasProjection - xNew ", xNew);
+                // do not update xCurrent
+                ++t;
+                break;
+            }
+
+            xCurrent = xNew;
             if ((xCurrent - xNew).template lpNorm<Eigen::Infinity>() < tolerance) {
                 ++t;
                 break;
             }
-            xCurrent = xNew;
             ++t;
         }
-        point = xNew;
+        if (this->fn->value(xCurrent) < this->fn->value(point)){
+            point = xCurrent;
+        }
         std::cout << "[Project gradient - exterior phase] finds minimum point at iteration: " << t << " (distance: " << this->fn->value(xNew) << ")\n";
     }
 
@@ -112,6 +122,8 @@ namespace mopmc::optimization::optimizers {
                                                        const std::vector<Vector<V>> &BoundaryPoints,
                                                        const std::vector<Vector<V>> &Directions,
                                                        const std::set<uint64_t> &indices) {
+
+        const V epsilon = 1e-16;
 
         const uint64_t m = BoundaryPoints[0].size();
         if (indices.empty()) {
@@ -132,7 +144,10 @@ namespace mopmc::optimization::optimizers {
         const V tolerance = 1e-15;
         uint_fast64_t it = 1;
         V tol;
+
         while (it < maxIter) {
+
+
             if ((U[0] - U[d]).template lpNorm<1>() < tolerance) {
                 break;
             }
@@ -145,19 +160,22 @@ namespace mopmc::optimization::optimizers {
             }
             ++it;
         }
-        //std::cout << " - Dykstras projection, stops at " << it << "\n";
-        Vector<V> point1 = U[d];
+        Vector<V> projectedPoint = U[d];
         V lambda = static_cast<V>(0.);
         for (auto idx: indices) {
             const Vector<V> &r = BoundaryPoints[idx];
             const Vector<V> &w = Directions[idx];
             if (w.dot(point - r) > 0) {
-                lambda = std::max(lambda, w.dot(r - point) / w.dot(point1 - point));
+                if (w.dot(projectedPoint - point) < epsilon) {
+                    // fail to generate a projected point
+                    return point;
+                } else {
+                    lambda = std::max(lambda, w.dot(r - point) / w.dot(projectedPoint - point));
+                }
             }
         }
-        //std::cout << "[Projected gradient optimization - Dykstras Projection] iteration: " << it << "\n";
-        point1 = point + lambda * (point1 - point);
-        return point1;
+        projectedPoint = point + lambda * (projectedPoint - point);
+        return projectedPoint;
     }
 
     template<typename V>
@@ -175,8 +193,6 @@ namespace mopmc::optimization::optimizers {
     Vector<V> ProjectedGradient<V>::halfspaceProjection(const Vector<V> &point,
                                                         const Vector<V> &boundaryPoint,
                                                         const Vector<V> &direction) {
-        //assert(direction.size() == boundaryPoint.size());
-        //assert(point.size() == boundaryPoint.size());
         if (direction.dot(point - boundaryPoint) <= 0) {
             return point;
         } else {

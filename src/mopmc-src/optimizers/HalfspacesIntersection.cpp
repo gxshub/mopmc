@@ -3,8 +3,11 @@
 //
 
 #include "HalfspacesIntersection.h"
+#include "mopmc-src/Printer.h"
 #include "lp_lib.h"
 #include <iostream>
+#include <vector>
+#include <cmath>
 
 namespace mopmc::optimization::optimizers {
 
@@ -27,7 +30,10 @@ namespace mopmc::optimization::optimizers {
         if (ret == 0) {
             //[important!] set the unbounded variables.
             // The default bounds are >=0 in lp solve.
-            set_unbounded(lp, n_cols);
+            // set_unbounded(lp, n_cols);
+            for (int i = 1; i <= n_cols; ++i) {
+                set_unbounded(lp, i);
+            }
             // create space large enough for one row
             col_no = (int *) malloc(n_cols * sizeof(*col_no));
             row = (V *) malloc(n_cols * sizeof(*row));
@@ -52,9 +58,10 @@ namespace mopmc::optimization::optimizers {
         if (ret == 0) {
             set_add_rowmode(lp, FALSE);// rowmode should be turned off again when done building the model
             //use a constant objective
-            //col_no[0] = n_cols;
-            //row[0] = 0; /* set the objective in lpsolve */
-            if (!set_obj_fnex(lp, 0, row, col_no))
+            /* set the objective in lpsolve */
+            std::vector<REAL> zero_obj_coes(n_cols);
+            std::fill(zero_obj_coes.begin(), zero_obj_coes.end(), static_cast<REAL>(0.0)); // All zeros
+            if (!set_obj_fnex(lp, n_cols, zero_obj_coes.data(), col_no))
                 ret = 4;
         }
 
@@ -67,24 +74,59 @@ namespace mopmc::optimization::optimizers {
             ret = solve(lp);
             //std::cout<< "** Optimal solution? Ret: " << ret << "\n";
             if (ret == OPTIMAL) {
-                ret = 0;
                 feasible = true;
             }
             else if (ret == INFEASIBLE) {
-                ret = 2;
                 feasible = false;
             }
             else {
-                ret = 5;
                 throw std::runtime_error("Numerical Failure");
             }
         }
 
         if (ret == 0) {
-            get_variables(lp, row);
-            point = VectorMap<V>(row, n_cols);
+            std::vector<V> solution_vars(n_cols);
+            get_variables(lp, solution_vars.data());
+            point = VectorMap<V>(solution_vars.data(), n_cols);
         }
         return feasible;
+    }
+
+    template<typename V>
+    bool HalfspacesIntersection<V>::verifyPointInHalfspaces(
+            const Vector<V>& point,
+            const std::vector<Vector<V>>& BoundaryPoints,
+            const std::vector<Vector<V>>& Directions,
+            V epsilon) { // Use a small epsilon for floating-point comparisons
+
+        // Basic sanity check: ensure sizes match
+        if (BoundaryPoints.size() != Directions.size()) {
+            std::cerr << "Error: BoundaryPoints and Directions vectors must have the same size." << std::endl;
+            return false;
+        }
+        if (point.size() == 0 || BoundaryPoints.empty() || BoundaryPoints[0].size() == 0) {
+            // If there are no halfspaces or the point/vectors are empty, it's trivially true or an error state.
+            // Adapt this based on your exact definition of "empty intersection" or "valid input".
+            return true; // No constraints means it's feasible within the whole space.
+        }
+        for (size_t i = 0; i < BoundaryPoints.size(); ++i) {
+            // Calculate w_i . x
+            V dot_wx = Directions[i].dot(point);
+            // Calculate w_i . r_i
+            V dot_wr = Directions[i].dot(BoundaryPoints[i]);
+            if (dot_wx > dot_wr + epsilon) {
+                std::cerr << "Verification failed for half-space " << i << ":" << std::endl;
+                mopmc::Printer<V>::printVector("  Direction ",  Directions[i]);
+                mopmc::Printer<V>::printVector("  Boundary Point ", BoundaryPoints[i]);
+                mopmc::Printer<V>::printVector("  Test Point  ", point);
+                std::cout << "  w.x = " << dot_wx << std::endl;
+                std::cout << "  w.r = " << dot_wr << std::endl;
+                std::cout << "  Violation: w.x (" << dot_wx << ") > w.r (" << dot_wr << ") + epsilon (" << epsilon << ")" << std::endl;
+                return false; // Point is *not* in this half-space, so it's not in the intersection.
+            }
+        }
+
+        return true; // All half-spaces satisfied
     }
 
     template<typename V>

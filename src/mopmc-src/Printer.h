@@ -15,12 +15,22 @@ namespace mopmc {
     template<typename V>
     class [[maybe_unused]] Printer{
     public:
+        [[maybe_unused]] static void printVector(const Vector<V> &vec) {
+            printVector("", vec);
+        }
+
+        [[maybe_unused]] static void printVector(const std::vector<V> &vec) {
+            printVector("", vec);
+        }
+
         [[maybe_unused]] static void printVector(const std::string& str, const Vector<V> &vec) {
-            std::cout << str;
+            if (!str.empty()) {
+                std::cout << str << ": ";
+            }
             bool firstElement = true;
             for (uint64_t i = 0; i < vec.size(); ++i) {
                 if (firstElement) {
-                    std::cout << ": " << vec(i);
+                    std::cout << "[" << vec(i);
                     firstElement = false;
                 } else {
                     std::cout << " "  << vec(i);
@@ -30,11 +40,13 @@ namespace mopmc {
         }
 
         [[maybe_unused]] static void printVector(const std::string& str, const std::vector<V> &vec) {
-            std::cout << str;
+            if (!str.empty()) {
+                std::cout << str << ": ";
+            }
             bool firstElement = true;
             for (uint64_t i = 0; i < vec.size(); ++i) {
                 if (firstElement) {
-                    std::cout << ": [" << vec[i];
+                    std::cout << "[" << vec[i];
                     firstElement = false;
                 } else {
                     std::cout << " "  << vec[i];
