@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM gxsu/mopmc-env
-ENV PATH="/root/cmake/bin:${PATH}"
+#ENV PATH="/root/cmake/bin:${PATH}"
+ENV CMAKE_HOME=/root/cmake
 WORKDIR /root
 RUN git clone https://github.com/gxshub/mopmc.git
 WORKDIR /root/mopmc
