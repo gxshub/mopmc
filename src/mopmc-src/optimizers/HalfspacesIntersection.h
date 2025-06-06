@@ -24,6 +24,13 @@ namespace mopmc::optimization::optimizers {
         static bool findNonExteriorPoint(Vector<V> &point,
                                          const std::vector<Vector<V>> &BoundaryPoints,
                                          const std::vector<Vector<V>> &Directions);
+
+        static bool verifyPointInHalfspaces(
+                const Vector<V>& point,
+                const std::vector<Vector<V>>& BoundaryPoints,
+                const std::vector<Vector<V>>& Directions,
+                V epsilon = 1e-8);
+
         static bool checkNonExteriorPoint(Vector<V> &point,
                                           const std::vector<Vector<V>> &BoundaryPoints,
                                           const std::vector<Vector<V>> &Directions);
