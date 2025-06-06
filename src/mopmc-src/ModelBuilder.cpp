@@ -44,10 +44,10 @@ namespace mopmc {
         std::shared_ptr<ModelType> model = builder.build()->template as<ModelType>();
         storm::logic::MultiObjectiveFormula formula = formulas[0]->asMultiObjectiveFormula();
 
-        std::cout << "--Model Building Output--\n";
-        std::cout << "number of states in original mdp: " << model->getNumberOfStates() << "\n";
-        std::cout << "number of choices in original mdp: " << model->getNumberOfChoices() << "\n";
-        std::cout << "number of transitions in original mdp: " << model->getTransitionMatrix().getEntryCount() <<"\n";
+        std::cout << "--Model Building--\n";
+        std::cout << "States:\t" << model->getNumberOfStates() << "\n";
+        std::cout << "Choices:\t" << model->getNumberOfChoices() << "\n";
+        std::cout << "Transitions:\t" << model->getTransitionMatrix().getEntryCount() <<"\n";
 
         storm::builder::ExplicitStateLookup<uint32_t> stateLookup = builder.exportExplicitStateLookup();
         auto stateLookupPtr = std::make_shared<storm::builder::ExplicitStateLookup<uint32_t>>(stateLookup);
@@ -78,12 +78,16 @@ namespace mopmc {
          */
         mopmc::StormModelChecker processedResult = StormModelChecker<ModelType>(prepResult);
 
-        std::cout << "number of states in pre-processed mdp: " << prepResult.preprocessedModel->getNumberOfStates() << "\n";
-        std::cout << "number of choices in pre-processed mdp: " << prepResult.preprocessedModel->getNumberOfChoices() << "\n";
-        std::cout << "number of transitions in pre-processed mdp: " << prepResult.preprocessedModel->getTransitionMatrix().getEntryCount() <<"\n";
-        std::cout << "number of states in processed mdp: " << processedResult.getTransitionMatrix().getRowGroupCount() <<"\n";
-        std::cout << "number of choices in processed mdp: " << processedResult.getTransitionMatrix().getRowCount() <<"\n";
-        std::cout << "number of transitions in processed mdp: " << processedResult.getTransitionMatrix().getEntryCount() <<"\n";
+        /* The following shows the model size change during internal model processing.
+         * Reveal them if needed */
+        //std::cout << "--Pre-processed Model (internal)--\n";
+        //std::cout << "*States:\t" << prepResult.preprocessedModel->getNumberOfStates() << "\n";
+        //std::cout << "*Choices:\t" << prepResult.preprocessedModel->getNumberOfChoices() << "\n";
+        //std::cout << "*Transitions:\t" << prepResult.preprocessedModel->getTransitionMatrix().getEntryCount() <<"\n";
+        //std::cout << "--Processed Model (internal)\n";
+        //std::cout << "*States:\t" << processedResult.getTransitionMatrix().getRowGroupCount() <<"\n";
+        //std::cout << "*Choices:\t" << processedResult.getTransitionMatrix().getRowCount() <<"\n";
+        //std::cout << "*Transitions:\t" << processedResult.getTransitionMatrix().getEntryCount() <<"\n";
 
         return ModelBuildAndProcessResult<ModelType> (model, formula, prepResult, processedResult);
     }

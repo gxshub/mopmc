@@ -5,7 +5,7 @@
 #ifndef MOPMC_PROJECTEDGRADIENTV1_H
 #define MOPMC_PROJECTEDGRADIENTV1_H
 
-#include "BaseOptimizer.h"
+#include "mopmc-src/optimizers/BaseOptimizer.h"
 #include "mopmc-src/auxiliary/LineSearch.h"
 #include "mopmc-src/convex-functions/BaseConvexFunction.h"
 #include <Eigen/Dense>

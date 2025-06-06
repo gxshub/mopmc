@@ -13,8 +13,6 @@ list(
         "${dir}/MaximumMarginSeparationHyperplane.h"
         "${dir}/ProjectedGradient.cpp"
         "${dir}/ProjectedGradient.h"
-        #"${dir}/ProjectedGradientV1.cpp"
-        #"${dir}/ProjectedGradientV1.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

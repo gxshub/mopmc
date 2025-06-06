@@ -24,14 +24,14 @@ For benchmarking, MOPMC also implements the achievability queries, which are sup
 This build is known to work on Ubuntu 20.04 LTS
 
 #### Storm
-MOMPC utilises a re-build of [**Storm stable v1.8.1**](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97) as a library for parsing, 
-model building and processing. 
-A slight modification is make to Storm's source code to support model export in MOPMC. 
+MOMPC utilises a re-build of [**Storm stable v1.8.1**](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97) as a library for parsing,
+model building and processing.
+A slight modification is make to Storm's source code to support model export in MOPMC.
 The modified version is included in this [fork](https://github.com/gxshub/storm/tree/mopmc-dep), which extends Storm stable v1.8.1.
 
 The modified storm can be built using **CMake 3.16.3**. Note that other version of CMake may be incompatible with Storm stable v1.8.1.
 
-To build storm as a library, run `sudo make install -j <num_of_threads>` rather than `make`. 
+To build storm as a library, run `sudo make install -j <num_of_threads>` rather than `make`.
 This way, this project can use `find_package(storm)` in `CMakeLists.txt` to load Storm.
 
 
@@ -128,7 +128,7 @@ sed -i -e 's/\r$//' ./configure.sh ./build.sh
 -->
 
 ### Use Docker Image with Pre-built MOPMC
-A [__mopmc__](https://hub.docker.com/repository/docker/gxsu/mopmc/general) Docker image
+An [__MOPMC Docker image__](https://hub.docker.com/repository/docker/gxsu/mopmc/general)
 with a ready-to-run MOPMC build is available in the Docker Hub.
 __As this project is being actively developed, the pre-built version may not be the latest.__
 
@@ -147,18 +147,14 @@ docker run --rm -it gxsu/mopmc
 without NVIDIA GPU.
 
 
-### Running MOPMC
+### Convex Query in MOPMC
 To run a convex query:
 ```shell
-./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm -p examples/dive_and_rise/dive_and_rise_prop_ccq_100.props -q convex 
-```
-To run an achievability query:
-```shell
-./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability
+./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm -p examples/dive_and_rise/dive_and_rise_prop_cq_10.props -q convex 
 ```
 To run a query without GPU acceleration for value iteration:
 ```shell
-./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability -v standard
+./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm -p examples/dive_and_rise/dive_and_rise_prop_cq_10.props -q convex -v standard
 ```
 To see all the running options:
 ```shell
@@ -168,15 +164,23 @@ To see all the running options:
 To export model only:
 ```shell
 ./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm \
--p examples/dive_and_rise/dive_and_rise_prop_ccq_100.props \
+-p examples/dive_and_rise/dive_and_rise_prop_cq_10.props \
 -e out/dive_and_rise
 ```
 
 To run a query and export the returned schedulers:
 ```shell
 ./build/mopmc -m examples/dive_and_rise/dive_and_rise_action_rewards.nm -p \
-examples/dive_and_rise/dive_and_rise_prop_ccq_100.props -q convex  \
+examples/dive_and_rise/dive_and_rise_prop_cq_10.props -q convex  \
 -x out/dive_and_rise
+```
+
+### MOPMC and Other Tools (Achievability Query)
+
+
+To run an achievability query in MPMC:
+```shell
+./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability
 ```
 
 To run an achievability query in Storm:
@@ -186,10 +190,10 @@ $STORM_HOME/build/bin/storm --prism examples/multiobj_scheduler05.nm --prop exam
 
 To run an achievability query in PRISM:
 ```shell
-$PRRIM_HOME/build/bin/storm examples/multiobj_scheduler05.nm examples/multiobj_scheduler05.pctl
+$PRRIM_HOME/bin/storm examples/multiobj_scheduler05.nm examples/multiobj_scheduler05.pctl
 ```
 
-## About Model and Property Specification
+### About Model and Property Specification
 MOPMC accepts the standard PRISM model format for MDPs. For property specification,
 it accepts the PCTL/LTL-style multi-objective achievability properties,
 which are adopted by existing PMC tools such as Storm and PRISM.

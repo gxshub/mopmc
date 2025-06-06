@@ -5,7 +5,7 @@ add_subdirectory(convex-functions)
 add_subdirectory(optimizers)
 add_subdirectory(queries)
 add_subdirectory(solvers)
-add_subdirectory(_future)
+#add_subdirectory(_future)
 #add_subdirectory(_legacy)
 
 list(

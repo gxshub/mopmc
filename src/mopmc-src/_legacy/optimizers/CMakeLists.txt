@@ -8,6 +8,8 @@ list(
         "${dir}/LinOpt.h"
         "${dir}/ProjectedGradientDescent.cpp"
         "${dir}/ProjectedGradientDescent.h"
+        "${dir}/ProjectedGradientV1.cpp"
+        "${dir}/ProjectedGradientV1.h"
 )
 
 set(Sources "${Sources}" PARENT_SCOPE)

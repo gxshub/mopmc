@@ -152,12 +152,13 @@ namespace mopmc {
             }
         }
 
-        std::cout << "       TIME STATISTICS        \n";
-        printf("Model building stage: %.3f second(s).\n", double(time1 - time0) / CLOCKS_PER_SEC);
-        printf("Input data transformation: %.3f second(s).\n", double(time2 - time1) / CLOCKS_PER_SEC);
-        printf("Model checking: %.3f second(s), %.3f per iteration.\n", double(time3 - time2) / CLOCKS_PER_SEC,
+        std::cout << "--TIME STATISTICS--\n";
+        printf("Time for model construction: %.3f second(s).\n", double(time1 - time0) / CLOCKS_PER_SEC);
+        printf("Time for data transformation: %.3f second(s).\n", double(time2 - time1) / CLOCKS_PER_SEC);
+        printf("Time for model checking: %.3f second(s), %.3f per iteration.\n", double(time3 - time2) / CLOCKS_PER_SEC,
                double(time3 - time2) / CLOCKS_PER_SEC / static_cast<double>(mainLoopCount));
         printf("Total time: %.3f second(s).\n", double(time3 - time0) / CLOCKS_PER_SEC);
+        printf("Main loop count: %ld", mainLoopCount);
         return true;
     }
 

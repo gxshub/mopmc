@@ -3,7 +3,7 @@
 //
 
 #include "ProjectedGradientV1.h"
-#include "HalfspacesIntersection.h"
+#include "mopmc-src/optimizers/HalfspacesIntersection.h"
 #include "lp_lib.h"
 #include <iostream>
 

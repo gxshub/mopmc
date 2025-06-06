@@ -6,8 +6,8 @@ import random
 num_args = len(sys.argv)
 
 fname = sys.argv[1]        # The first argument is the filename
-n_targets = int(sys.argv[2])
-value = float(sys.argv[3])
+n_targets = int(sys.argv[2])    # Number of targets
+value = float(sys.argv[3])  # Lower-bound value
 
 y_max = 99  # must be the same as defined in the model file
 inc_index = math.floor(y_max / (n_targets - 1))
