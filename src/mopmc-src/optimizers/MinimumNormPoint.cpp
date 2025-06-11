@@ -65,6 +65,7 @@ namespace mopmc::optimization::optimizers {
         }
         sepDirection = pivot - xNew;
         optimum = xNew;
+        assert(alpha.size() == Vertices.size());
         if (hasFoundMaxMarginSepHp) {
             std::cout << "[Minimum norm point optimization] max margin separation hyperplane computed, terminates at iteration: " << t + t1<<  " (distance: " << this->fn->value(xNew) << ")\n";
             return EXIT_SUCCESS;
