@@ -8,4 +8,4 @@ if [[ $ARCH != "amd64" ]] ; then
   mv ./lp_solve_5.5/lpsolve55/bin/ux64/liblpsolve55.so ./lpSolve
 fi
 
-cd ./build ; $CMAKE_HOME/bin/cmake .. # -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+cd ./build ; $CMAKE_HOME/bin/cmake -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc .. # -Wno-dev -DCMAKE_EXPORT_COMPILE_COMMANDS=1

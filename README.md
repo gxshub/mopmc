@@ -21,29 +21,15 @@ For benchmarking, MOPMC also implements the achievability queries, which are sup
 ### Built from Source
 
 #### Ubuntu 20.04 LTS
-This build is known to work on Ubuntu 20.04 LTS
+This build is known to work on Ubuntu 20.04 LTS.
 
-#### Storm
-MOMPC utilises a re-build of [**Storm stable v1.8.1**](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97) as a library for parsing,
-model building and processing.
-A slight modification is make to Storm's source code to support model export in MOPMC.
-The modified version is included in this [fork](https://github.com/gxshub/storm/tree/mopmc-dep), which extends Storm stable v1.8.1.
-
-The modified storm can be built using **CMake 3.16.3**. Note that other version of CMake may be incompatible with Storm stable v1.8.1.
-
-To build storm as a library, run `sudo make install -j <num_of_threads>` rather than `make`.
-This way, this project can use `find_package(storm)` in `CMakeLists.txt` to load Storm.
-
-
-#### CUDA Toolkit
-
-This project uses [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) CMake script, which is available version in CMake 3.17+, to identify the location of CUDA.
-
-Installation of the CUDA Toolkit 12.0 (or above) is required (see the
+#### CUDA Toolkit 12.0
+This project is implemented with [**CUDA Toolkit 12.0**](https://docs.nvidia.com/cuda/archive/12.0.1/).
+To compile this project, installation of the CUDA Toolkit 12.0 is required (see the
 [NVIDIA CUDA Installation Guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)).
-This version is essential as it provides 64bit numeric types for the GPU and provides more modern
-sparse matrix multiplication algorithms from NVIDIA CuSparse.
-Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that the [version compactibility](https://docs.nvidia.com/deploy/cuda-compatibility/#minor-version-compatibility) between the CUDA Toolkit and the NVIDIA Driver.
+<!-- This version is essential as it provides 64bit numeric types for the GPU and provides more modern
+sparse matrix multiplication algorithms from NVIDIA CuSparse.-->
+Use `nvcc --version` and `nvidia-smi` to check the installed toolkit and driver versions, respectively. Also note that the [version compactibility](https://docs.nvidia.com/cuda/archive/12.0.1/cuda-toolkit-release-notes/index.html#cuda-toolkit-major-component-versions) between the CUDA Toolkit and the NVIDIA Driver.
 <!--
 ```
 +---------------------------------------------------------------------------------------+
@@ -62,6 +48,28 @@ export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PAT
 ```
 This avoids errors by the IDE debug compiler relating to setting `CMAKE_CUDA_ARCHITECTURES`.
 
+The command [`FindCUDAToolkit`](https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html) the CMakeLists.txt identifies the CUDA libraries for this project.
+
+
+#### Storm
+
+MOMPC utilises a re-build of [**Storm stable v1.8.1**](https://github.com/moves-rwth/storm/tree/3f74f3e59acfba3b61c686af01a864962d44af97) as a library for parsing,
+model building and processing.
+A slight modification is make to Storm's source code to support model export in MOPMC.
+The modified version is included in this [fork](https://github.com/gxshub/storm/tree/mopmc-dep), which extends Storm stable v1.8.1.
+
+The modified storm can be built using **CMake 3.16.3**. Note that other version of CMake may be incompatible with Storm stable v1.8.1.
+
+To build storm as a library, run `sudo make install -j <num_of_threads>` rather than `make`.
+This way, this project can use `find_package(storm)` in `CMakeLists.txt` to load Storm.
+
+#### Differennt CMake Versions
+Storm 1.8.1 uses **CMake 3.16.3**. MOPMC requires at least **CMake 3.22**.
+<!-- can be built using CMake **3.28.0** (and requires at least **3.22**).-->
+Therefore, [different CMake versions](https://cmake.org/download/) are recommended.
+
+#### Compile and Test MOPMC
+
 The process of compiling MOPMC from the source is as follows:
 Clone this project, `cd` into the project root, and execute
 
@@ -72,10 +80,6 @@ To test the	 build is working, run the executable using the convenience script:
 ```shell
 ./test-run.sh
 ```
-
-#### CMake Versions (!)
-Storm v1.8.1 uses **CMake 3.16.3**. MOPMC can be built using CMake **3.28.0** (and requires at least **3.22**).
-Therefore, [different CMake versions](https://cmake.org/download/) are recommended.
 
 ### Use Pre-configured Docker Image
 A pre-configured environment for compiling MOMPC is defined in a [__mopmc-env__](https://hub.docker.com/r/gxsu/mopmc-env)
@@ -178,7 +182,7 @@ examples/dive_and_rise/dive_and_rise_prop_cq_10.props -q convex  \
 ### MOPMC and Other Tools (Achievability Query)
 
 
-To run an achievability query in MPMC:
+To run an achievability query in MOPMC:
 ```shell
 ./build/mopmc -m examples/multiobj_scheduler05.nm -p examples/multiobj_scheduler05.pctl -q achievability
 ```
