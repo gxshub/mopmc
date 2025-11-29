@@ -1,0 +1,1 @@
+multi(R{"ctrl_cost"}<=2.0[ C ], R{"headway_cost"}<=0.23[ C ], R{"lane_dep_cost"}<=0.174[ C ], R{"ttc_cost"}<=0.04[ C ])

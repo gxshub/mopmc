@@ -1,0 +1,170 @@
+//Switch model with four configurations for pri and sec controllers 
+mdp
+
+const int MAX_TS = 40; // max number of timesteps
+const int MIN_CC = 4; // min number of consec calls to a sec contr
+//prob to entering sec contr under four confs
+const double p1et=0.3892600276583057; 
+const double p2et=0.6065127954211831; 
+const double p3et=0.3892600276583057; 
+const double p4et=0.6065127954211831; 
+//prob of existing sec contr under four confs (subject to MIN_CC)
+const double p1ex=0.16223244648929785; 
+const double p2ex=0.3096230158730159;
+const double p3ex=0.1594707520891365;
+const double p4ex=0.30118360559522644;
+//prob of observing low headway
+const double p1hw=0.3159133058377391;
+const double p2hw=0.18382917993193545;
+const double p3hw=0.31104828427296416;
+const double p4hw=0.19062850269280188;
+//prob of observing low ttc
+const double p1ttc=0.06765023389708529;
+const double p2ttc=0.03095839279833132;
+const double p3ttc=0.06632851044958146;
+const double p4ttc=0.030837365701632084;
+//prob of being on lane
+const double p1ol=0.8356630774766796;
+const double p2ol=0.8250356789987924;
+const double p3ol=0.8361051056045236;
+const double p4ol=0.8250362229694633;
+
+module BaseSwitch
+  
+  conf: [0..4]; //four configurations
+  sm: [0..2] init 0; //main state variable
+  sp: [0..4] init 0; //primary control state varaible
+  ss: [0..5] init 0; //secondary control state varaible
+
+  // conf 2 only 
+  //[conf] sm=0 -> (sm'=1) & (conf'=1);
+  [conf] sm=0 -> (sm'=1) & (conf'=2);
+  //[conf] sm=0 -> (sm'=1) & (conf'=3);
+  //[conf] sm=0 -> (sm'=1) & (conf'=4);
+
+  [] sm=1 & (sp=0) & (ss=0) & conf=1 -> (1-p1et) : (sp'=1) + p1et : (ss'=1);
+  [] sm=1 & (sp=0) & (ss=0) & conf=2 -> (1-p2et) : (sp'=1) + p2et : (ss'=1);
+  [] sm=1 & (sp=0) & (ss=0) & conf=3 -> (1-p3et) : (sp'=1) + p3et : (ss'=1);
+  [] sm=1 & (sp=0) & (ss=0) & conf=4 -> (1-p4et) : (sp'=1) + p4et : (ss'=1);
+
+  [obs] sp=1 -> (sp'=2);
+  [act_p] sp=2 -> (sp'=3);
+  [ex_p] sp=3 -> (sm'=2) & (sp'=0);
+
+  [obs] ss=1 -> (ss'=2);
+  [act_s] ss=2 -> (ss'=3);
+  [] ss=3 & conf=1 -> (1-p1ex) : (ss'=4) + p1ex : (ss'=5);
+  [] ss=3 & conf=2 -> (1-p2ex) : (ss'=4) + p2ex : (ss'=5);
+  [] ss=3 & conf=3 -> (1-p3ex) : (ss'=4) + p3ex : (ss'=5);
+  [] ss=3 & conf=4 -> (1-p4ex) : (ss'=4) + p4ex : (ss'=5);
+  [re_s] ss=4 -> (ss'=1);
+  [re_s] ss=5 -> (ss'=1);
+  [ex_s] ss=5 -> (sm'=2) & (ss'=0);
+
+  [] sm=2 -> (sm'=0) & (conf'=0);
+
+endmodule
+
+module ConsecCallCounter
+
+  cc: [0..MIN_CC]; //consecutive call counts
+
+  [re_s] cc<MIN_CC -> (cc'=cc+1);
+  [re_s] cc=MIN_CC -> (cc'=MIN_CC);
+  [ex_s] cc=MIN_CC -> (cc'=0);
+
+endmodule
+
+module HWRecorder
+ 
+  shw: [0..3] init 0; //2: low headway, 3: high headway
+
+  [obs] shw=0 -> (shw'=1);
+  [] conf=1 & shw=1 -> p1hw : (shw'=2) + (1-p1hw) : (shw'=3);
+  [] conf=2 & shw=1 -> p2hw : (shw'=2) + (1-p2hw) : (shw'=3);
+  [] conf=3 & shw=1 -> p3hw : (shw'=2) + (1-p3hw) : (shw'=3);
+  [] conf=4 & shw=1 -> p4hw : (shw'=2) + (1-p4hw) : (shw'=3);
+  [ex_p] shw=2 -> (shw'=0);
+  [ex_s] shw=2 -> (shw'=0);
+  [re_s] shw=2 -> (shw'=0);
+  [ex_p] shw=3 -> (shw'=0);
+  [ex_s] shw=3 -> (shw'=0);
+  [re_s] shw=3 -> (shw'=0);
+
+endmodule
+
+module TTCRecorder
+ 
+  sttc: [0..3] init 0; //2: low ttc, 3: high ttc
+
+  [obs] sttc=0 -> (sttc'=1);
+  [] conf=1 & sttc=1 -> p1ttc : (sttc'=2) + (1-p1ttc) : (sttc'=3);
+  [] conf=2 & sttc=1 -> p2ttc : (sttc'=2) + (1-p2ttc) : (sttc'=3);
+  [] conf=3 & sttc=1 -> p3ttc : (sttc'=2) + (1-p3ttc) : (sttc'=3);
+  [] conf=4 & sttc=1 -> p4ttc : (sttc'=2) + (1-p4ttc) : (sttc'=3);
+  [ex_p] sttc=2 -> (sttc'=0);
+  [ex_s] sttc=2 -> (sttc'=0);
+  [re_s] sttc=2 -> (sttc'=0);
+  [ex_p] sttc=3 -> (sttc'=0);
+  [ex_s] sttc=3 -> (sttc'=0);
+  [re_s] sttc=3 -> (sttc'=0);
+
+endmodule
+
+module OLRecorder
+ 
+  sol: [0..3] init 0; //2: on lane, 3: not on lane
+
+  [obs] sol=0 -> (sol'=1);
+  [] conf=1 & sol=1 -> p1ol : (sol'=2) + (1-p1ol) : (sol'=3);
+  [] conf=2 & sol=1 -> p2ol : (sol'=2) + (1-p2ol) : (sol'=3);
+  [] conf=3 & sol=1 -> p3ol : (sol'=2) + (1-p3ol) : (sol'=3);
+  [] conf=4 & sol=1 -> p4ol : (sol'=2) + (1-p4ol) : (sol'=3);
+  [ex_p] sol=2 -> (sol'=0);
+  [ex_s] sol=2 -> (sol'=0);
+  [re_s] sol=2 -> (sol'=0);
+  [ex_p] sol=3 -> (sol'=0);
+  [ex_s] sol=3 -> (sol'=0);
+  [re_s] sol=3 -> (sol'=0);
+
+endmodule
+
+module TimestepCounter
+
+  tc: [0..MAX_TS] init 0;
+  
+  //trigger conf and obs only if tc<MAX_TS
+  [conf] tc<MAX_TS -> true;
+  [obs] tc<MAX_TS -> true;
+
+  //increase timestep counter
+  [act_p] tc<MAX_TS -> (tc'=tc+1);
+  [act_s] tc<MAX_TS -> (tc'=tc+1);
+
+  //add self-loop to avoid deadlocks
+  [] sm<2 & shw=0 & sttc=0 & sol=0 & tc=MAX_TS -> true; 
+
+endmodule
+
+rewards "ctrl_cost"
+  [act_p] true : 1/MAX_TS; 
+  [act_s] true : 2/MAX_TS; 
+endrewards
+
+rewards "headway_cost" // low headway (shw=2) has cost 1/MAX_TS
+  [ex_p] shw=2 : 1/MAX_TS; 
+  [ex_s] shw=2 : 1/MAX_TS; 
+  [re_s] shw=2 : 1/MAX_TS; 
+endrewards
+
+rewards "lane_dep_cost" // not on lane (sol=3) has cost 1/MAX_TS
+  [ex_p] sol=3 : 1/MAX_TS; 
+  [ex_s] sol=3 : 1/MAX_TS; 
+  [re_s] sol=3 : 1/MAX_TS; 
+endrewards
+
+rewards "ttc_cost" // low ttc (sttc=2) has cost 1/MAX_TS
+  [ex_p] sttc=2 : 1/MAX_TS; 
+  [ex_s] sttc=2 : 1/MAX_TS; 
+  [re_s] sttc=2 : 1/MAX_TS; 
+endrewards

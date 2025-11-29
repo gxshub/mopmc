@@ -1,0 +1,4 @@
+multi(R{"ctrl_cost"}min=?[ C ]);
+multi(R{"headway_cost"}min=?[ C ]);
+multi(R{"lane_dep_cost"}min=?[ C ]);
+multi(R{"ttc_cost"}min=?[ C ])

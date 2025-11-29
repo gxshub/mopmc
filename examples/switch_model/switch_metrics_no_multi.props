@@ -1,0 +1,4 @@
+R{"ctrl_cost"}min=?[ C ];
+R{"headway_cost"}min=?[ C ];
+R{"lane_dep_cost"}min=?[ C ];
+R{"ttc_cost"}min=?[ C ]
